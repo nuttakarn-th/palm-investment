@@ -1,0 +1,156 @@
+// Pipeline orchestration — runs the 9-agent investment team with streaming.
+import Anthropic from '@anthropic-ai/sdk';
+import { ROLES } from './roles/index.js';
+
+const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+// USD per 1M tokens
+const PRICING = {
+  'claude-haiku-4-5': { input: 1, output: 5 },
+  'claude-sonnet-4-6': { input: 3, output: 15 },
+};
+
+// Stage layout per pipeline type (PRD §5.1, §5.4)
+export const PIPELINES = {
+  full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  macro: [['piya'], ['pom'], ['nat']],
+  risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
+};
+
+function formatPortfolio(portfolio) {
+  if (!portfolio?.length) return '(ปาล์มยังไม่ได้กรอกพอร์ต)';
+  return portfolio
+    .map((p) => {
+      const parts = [
+        `${p.ticker} [${(p.market || '').toUpperCase()}]`,
+        p.amount ? `ลงทุน ${p.amount} บาท` : null,
+        p.buyPrice ? `ราคาซื้อ ${p.buyPrice}` : null,
+        p.currentPrice ? `ราคาปัจจุบัน ${p.currentPrice}` : null,
+        p.buyDate ? `ซื้อ ${p.buyDate}` : null,
+        p.note || null,
+      ].filter(Boolean);
+      return `- ${parts.join(', ')}`;
+    })
+    .join('\n');
+}
+
+// Which prior outputs each agent needs (keep handoffs lean — PRD §5.3)
+const HANDOFF = {
+  piya: [],
+  min: [],
+  nem: ['piya', 'min'],
+  ko: ['piya', 'min'],
+  rat: ['min', 'nem', 'ko'],
+  lungchai: ['rat'],
+  kaew: ['piya', 'nem', 'ko', 'rat', 'lungchai'],
+  pom: ['piya', 'rat', 'lungchai', 'kaew'],
+  nat: ['pom', 'kaew', 'rat'],
+};
+
+function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
+  const sections = [
+    `## คำสั่งจาก CEO (ปาล์ม)\n${command}`,
+    `## พอร์ตปัจจุบัน\n${formatPortfolio(portfolio)}`,
+  ];
+  for (const dep of HANDOFF[role.key] || []) {
+    if (outputs[dep]) {
+      const r = ROLES[dep];
+      sections.push(`## ผลวิเคราะห์จาก ${r.nickname} (${r.title})\n${outputs[dep]}`);
+    }
+  }
+  if (mode === 'weekly') {
+    sections.push('## โหมด\nนี่คือ Weekly Report ประจำสัปดาห์ — เน้นรีวิวพอร์ต ความเสี่ยง และแผนสัปดาห์หน้า');
+  }
+  sections.push('ทำหน้าที่ของคุณตาม role ที่กำหนด ตอบตามรูปแบบผลลัพธ์ กระชับ');
+  return sections.join('\n\n');
+}
+
+async function runAgent({ role, command, portfolio, outputs, mode, emit, signal }) {
+  emit({ type: 'agent_start', agent: role.key });
+  let text = '';
+
+  const stream = anthropic.messages.stream({
+    model: role.model,
+    max_tokens: role.maxTokens,
+    system: role.system,
+    messages: [
+      {
+        role: 'user',
+        content: buildUserPrompt({ role, command, portfolio, outputs, mode }),
+      },
+    ],
+  });
+
+  signal?.addEventListener('abort', () => stream.abort(), { once: true });
+
+  stream.on('text', (delta) => {
+    text += delta;
+    emit({ type: 'agent_delta', agent: role.key, text: delta });
+  });
+
+  const final = await stream.finalMessage();
+  const usage = {
+    input: final.usage.input_tokens,
+    output: final.usage.output_tokens,
+  };
+  const price = PRICING[role.model] || PRICING['claude-haiku-4-5'];
+  const cost = (usage.input * price.input + usage.output * price.output) / 1_000_000;
+
+  emit({ type: 'agent_done', agent: role.key, usage, cost });
+  return { text, usage, cost };
+}
+
+/**
+ * Run a pipeline. `emit(event)` is called for every streaming event.
+ * Returns the completed report object.
+ */
+export async function runPipeline({ command, portfolio = [], pipeline = 'full', mode = 'manual', emit = () => {}, signal }) {
+  const stages = PIPELINES[pipeline] || PIPELINES.full;
+  const outputs = {};
+  const totals = { input: 0, output: 0, cost: 0 };
+  const startedAt = Date.now();
+
+  emit({ type: 'pipeline_start', pipeline, stages, startedAt });
+
+  for (let i = 0; i < stages.length; i++) {
+    if (signal?.aborted) throw new Error('aborted');
+    const stage = stages[i];
+    emit({ type: 'stage_start', index: i, agents: stage });
+
+    const results = await Promise.all(
+      stage.map((key) =>
+        runAgent({ role: ROLES[key], command, portfolio, outputs, mode, emit, signal })
+      )
+    );
+
+    stage.forEach((key, j) => {
+      outputs[key] = results[j].text;
+      totals.input += results[j].usage.input;
+      totals.output += results[j].usage.output;
+      totals.cost += results[j].cost;
+    });
+
+    emit({ type: 'stage_done', index: i, totals: { ...totals } });
+  }
+
+  const report = {
+    id: `rpt_${Date.now().toString(36)}`,
+    createdAt: new Date().toISOString(),
+    type: mode === 'weekly' ? 'weekly' : pipeline === 'full' ? 'analysis' : pipeline,
+    command,
+    pipeline,
+    summary: outputs.nat || outputs.pom || '',
+    finalCall: extractFinalCall(outputs.pom || ''),
+    outputs,
+    totals,
+    durationMs: Date.now() - startedAt,
+  };
+
+  emit({ type: 'pipeline_done', report });
+  return report;
+}
+
+function extractFinalCall(pomText) {
+  const m = pomText.match(/Final Call:\**\s*([^\n]+)/i);
+  return m ? m[1].replace(/\*/g, '').trim() : '';
+}
