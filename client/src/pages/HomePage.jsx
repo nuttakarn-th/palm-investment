@@ -71,11 +71,10 @@ export default function HomePage({ onEnter }) {
 
         {/* Headline — Kanit 800, exactly 2 rows, no mid-line wrap */}
         <h1
-          className="mb-3 leading-[1.2] tracking-tight text-white"
+          className="mb-3 leading-[1.2] tracking-tight text-white text-[2rem] md:text-[2.1rem]"
           style={{
             fontFamily: "'Kanit', sans-serif",
             fontWeight: 800,
-            fontSize: 'clamp(1.2rem, 2.4vw, 2.1rem)',
           }}
         >
           {content.headline.split('\n').map((line, i) => (
