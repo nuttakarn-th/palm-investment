@@ -24,17 +24,21 @@ export default function HomePage({ onEnter }) {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
 
-      {/* ── TEAM IMAGE — bottom, full image visible, no crop ── */}
+      {/* ── TEAM IMAGE — bottom, responsive: portrait on mobile, wide on desktop ── */}
       <div className="absolute bottom-0 inset-x-0 pointer-events-none select-none">
-        <img
-          src="/team.png"
-          alt="ทีม Palm Investment OS"
-          className="w-full block"
-          style={{ maxHeight: '56vh', objectFit: 'contain', objectPosition: 'bottom center' }}
-          draggable={false}
-        />
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
+          <source media="(min-width: 768px)" srcSet="/team.png" />
+          <img
+            src="/team.png"
+            alt="ทีม Palm Investment OS"
+            className="mx-auto block"
+            style={{ maxHeight: '65vh', width: 'auto', maxWidth: '100%', objectFit: 'contain', objectPosition: 'bottom center' }}
+            draggable={false}
+          />
+        </picture>
         {/* top fade: blends into black */}
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/70 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black via-black/70 to-transparent" />
       </div>
 
       {/* ── NAV ── */}
