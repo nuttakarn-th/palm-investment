@@ -5,17 +5,11 @@ import '@fontsource/kanit/900.css';
 
 const DEFAULT_CONTENT = {
   badge: 'AI-Powered Investment Team',
-  headline: 'วิเคราะห์ลึก\nตัดสินใจเร็ว\nลงทุนมั่นใจ',
-  subheadline: 'ทีม AI 9 คน วิเคราะห์พอร์ตของคุณแบบ real-time\nครอบคลุม US Stocks · SET · Crypto',
+  headline: 'วิเคราะห์ลึก ตัดสินใจเร็ว\nลงทุนมั่นใจ',
+  subheadline: 'ทีม AI 9 คน วิเคราะห์พอร์ตของคุณแบบ real-time ครอบคลุม US Stocks · SET · Crypto',
   cta: 'เข้าสู่ Mission Control',
+  ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',
 };
-
-const STATS = [
-  { value: '9', label: 'AI Agents' },
-  { value: '3', label: 'ตลาดลงทุน' },
-  { value: '7', label: 'Pipeline Stages' },
-  { value: '24/7', label: 'พร้อมวิเคราะห์' },
-];
 
 export default function HomePage({ onEnter }) {
   const [content, setContent] = useState(DEFAULT_CONTENT);
@@ -28,58 +22,61 @@ export default function HomePage({ onEnter }) {
   }, []);
 
   return (
-    <div
-      className="relative h-screen w-full overflow-hidden bg-black"
-      style={{ fontFamily: 'system-ui, sans-serif' }}
-    >
-      {/* ─── TEAM IMAGE — right side, full height ─── */}
-      <div className="absolute inset-y-0 right-0 w-[58%] pointer-events-none select-none">
+    <div className="relative h-screen w-full overflow-hidden bg-black">
+
+      {/* ── TEAM IMAGE — bottom, full width ── */}
+      <div className="absolute bottom-0 inset-x-0 h-[62%] pointer-events-none select-none">
         <img
           src="/team.png"
           alt="ทีม Palm Investment OS"
-          className="h-full w-full object-cover object-left-bottom"
+          className="w-full h-full object-cover object-top"
           draggable={false}
         />
-        {/* gradient: black on left blending into image */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+        {/* top fade: image melts into black */}
+        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black via-black/80 to-transparent" />
         {/* subtle bottom vignette */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent" />
+        {/* side darkening */}
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-black/60 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-black/60 to-transparent" />
       </div>
 
-      {/* ─── NAV ─── */}
-      <nav className="relative z-20 flex items-center justify-between px-10 py-6">
-        <div className="flex items-center gap-2.5">
-          <span className="text-2xl leading-none">🎯</span>
-          <span className="text-white font-bold tracking-tight text-[15px]">
+      {/* ── NAV ── */}
+      <nav className="relative z-20 flex items-center justify-between px-8 py-5">
+        <div className="flex items-center gap-2">
+          <span className="text-xl leading-none">🎯</span>
+          <span className="text-white font-bold tracking-tight text-[14px]">
             PALM INVESTMENT <span className="text-[#4F8EF7]">OS</span>
           </span>
         </div>
         <button
           onClick={onEnter}
-          className="rounded-lg bg-white/10 border border-white/20 backdrop-blur px-5 py-2 text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+          className="rounded-lg border border-white/20 bg-white/8 backdrop-blur px-5 py-2 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+          style={{ fontFamily: "'Kanit', sans-serif" }}
         >
           Mission Control →
         </button>
       </nav>
 
-      {/* ─── HERO CONTENT ─── */}
-      <div className="relative z-10 flex h-[calc(100vh-80px)] flex-col justify-center px-10 lg:px-16 max-w-[640px]">
+      {/* ── CENTERED HERO CONTENT ── */}
+      <div className="relative z-10 flex flex-col items-center text-center px-5 pt-6">
 
         {/* Badge */}
-        <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-[#4F8EF7]/40 bg-[#4F8EF7]/10 px-4 py-1.5">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#4F8EF7]/40 bg-[#4F8EF7]/10 px-4 py-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-[#4F8EF7] animate-pulse" />
-          <span className="text-xs font-semibold text-[#4F8EF7] tracking-widest uppercase">
+          <span className="text-[11px] font-semibold text-[#4F8EF7] tracking-widest uppercase"
+            style={{ fontFamily: "'Kanit', sans-serif" }}>
             {content.badge}
           </span>
         </div>
 
-        {/* Headline — Kanit font */}
+        {/* Headline — Kanit, centered, large */}
         <h1
-          className="mb-6 whitespace-pre-line leading-[1.0] tracking-tight text-white"
+          className="mb-4 whitespace-pre-line leading-[1.05] tracking-tight text-white"
           style={{
             fontFamily: "'Kanit', sans-serif",
             fontWeight: 900,
-            fontSize: 'clamp(3rem, 7vw, 5.5rem)',
+            fontSize: 'clamp(2.6rem, 6.5vw, 5rem)',
           }}
         >
           {content.headline}
@@ -87,66 +84,32 @@ export default function HomePage({ onEnter }) {
 
         {/* Subheadline */}
         <p
-          className="mb-8 whitespace-pre-line text-[#888] leading-relaxed"
-          style={{ fontSize: 'clamp(0.9rem, 1.5vw, 1.1rem)' }}
+          className="mb-7 max-w-lg text-[#777] leading-relaxed"
+          style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1rem)' }}
         >
           {content.subheadline}
         </p>
 
-        {/* CTA */}
-        <button
-          onClick={onEnter}
-          className="mb-10 w-fit flex items-center gap-3 rounded-xl bg-[#4F8EF7] px-8 py-4 text-white font-bold hover:bg-[#3a7de8] active:scale-95 transition-all shadow-2xl shadow-[#4F8EF7]/30"
-          style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: '1rem' }}
-        >
-          <span>▶</span>
-          <span>{content.cta}</span>
-        </button>
+        {/* CTA buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={onEnter}
+            className="flex items-center gap-2 rounded-xl bg-[#4F8EF7] px-7 py-3.5 font-bold text-white hover:bg-[#3a7de8] active:scale-95 transition-all shadow-xl shadow-[#4F8EF7]/25"
+            style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: '0.95rem' }}
+          >
+            <span>▶</span> {content.cta}
+          </button>
 
-        {/* Stats row */}
-        <div className="flex gap-8 border-t border-white/10 pt-6">
-          {STATS.map((s) => (
-            <div key={s.label}>
-              <div
-                className="text-white leading-none mb-1"
-                style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 800, fontSize: '1.6rem' }}
-              >
-                {s.value}
-              </div>
-              <div className="text-[#555] text-xs">{s.label}</div>
-            </div>
-          ))}
+          <button
+            onClick={onEnter}
+            className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/6 backdrop-blur px-6 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/12 hover:text-white transition-all"
+            style={{ fontFamily: "'Kanit', sans-serif" }}
+          >
+            🔍 {content.ctaSub}
+          </button>
         </div>
       </div>
 
-      {/* ─── AGENT PILLS — bottom left ─── */}
-      <div className="absolute bottom-6 left-10 z-20 flex flex-wrap gap-1.5 max-w-[560px]">
-        {[
-          { name: 'ปิยะ', role: 'Macro', color: '#4F8EF7' },
-          { name: 'มิน', role: 'Data', color: '#4F8EF7' },
-          { name: 'เนม', role: 'Fundamental', color: '#A78BFA' },
-          { name: 'โก้', role: 'Technical', color: '#A78BFA' },
-          { name: 'รัฐ', role: 'Risk', color: '#FB923C' },
-          { name: 'ลุงชาย', role: 'Portfolio', color: '#FB923C' },
-          { name: 'แก้ว', role: 'Strategy', color: '#34D399' },
-          { name: 'ป้อม', role: 'CIO', color: '#F9A8D4' },
-          { name: 'นัท', role: 'Presenter', color: '#FCD34D' },
-        ].map((a) => (
-          <span
-            key={a.name}
-            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold"
-            style={{
-              background: `${a.color}18`,
-              color: a.color,
-              border: `1px solid ${a.color}35`,
-              fontFamily: "'Kanit', sans-serif",
-            }}
-          >
-            <span className="h-1 w-1 rounded-full" style={{ background: a.color }} />
-            {a.name} · {a.role}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
