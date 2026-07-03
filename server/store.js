@@ -33,7 +33,7 @@ export const DEFAULT_SETTINGS = {
   defaultMarket: 'all', // us | set | crypto | all
   homepage: {
     badge: 'AI-Powered Investment Team',
-    headline: 'วิเคราะห์ลึก\nตัดสินใจเร็ว\nลงทุนมั่นใจ',
+    headline: 'ลงทุนฉลาดขึ้น มั่นใจขึ้น\nด้วยทีม AI 9 คน',
     subheadline: 'ทีม AI 9 คน วิเคราะห์พอร์ตโฟลิโอของคุณแบบ real-time ครอบคลุมทุกตลาด US Stocks, SET และ Crypto',
     cta: 'เข้าสู่ Mission Control',
     ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',

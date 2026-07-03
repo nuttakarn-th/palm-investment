@@ -5,8 +5,8 @@ import '@fontsource/kanit/900.css';
 
 const DEFAULT_CONTENT = {
   badge: 'AI-Powered Investment Team',
-  headline: 'วิเคราะห์ลึก ตัดสินใจเร็ว\nลงทุนมั่นใจ',
-  subheadline: 'ทีม AI 9 คน วิเคราะห์พอร์ตของคุณแบบ real-time ครอบคลุม US Stocks · SET · Crypto',
+  headline: 'ลงทุนฉลาดขึ้น มั่นใจขึ้น\nด้วยทีม AI 9 คน',
+  subheadline: 'วิเคราะห์พอร์ตของคุณแบบ real-time ครอบคลุมทุกตลาด US Stocks · SET · Crypto',
   cta: 'เข้าสู่ Mission Control',
   ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',
 };
@@ -24,21 +24,17 @@ export default function HomePage({ onEnter }) {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
 
-      {/* ── TEAM IMAGE — bottom, full width ── */}
-      <div className="absolute bottom-0 inset-x-0 h-[62%] pointer-events-none select-none">
+      {/* ── TEAM IMAGE — bottom, full image visible, no crop ── */}
+      <div className="absolute bottom-0 inset-x-0 pointer-events-none select-none">
         <img
           src="/team.png"
           alt="ทีม Palm Investment OS"
-          className="w-full h-full object-cover object-top"
+          className="w-full block"
+          style={{ maxHeight: '56vh', objectFit: 'contain', objectPosition: 'bottom center' }}
           draggable={false}
         />
-        {/* top fade: image melts into black */}
-        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black via-black/80 to-transparent" />
-        {/* subtle bottom vignette */}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent" />
-        {/* side darkening */}
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-black/60 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-black/60 to-transparent" />
+        {/* top fade: blends into black */}
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black via-black/70 to-transparent" />
       </div>
 
       {/* ── NAV ── */}
@@ -51,8 +47,7 @@ export default function HomePage({ onEnter }) {
         </div>
         <button
           onClick={onEnter}
-          className="rounded-lg border border-white/20 bg-white/8 backdrop-blur px-5 py-2 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
-          style={{ fontFamily: "'Kanit', sans-serif" }}
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '6px 20px', fontSize: '14px', fontWeight: 600, color: '#fff', fontFamily: "'Kanit', sans-serif", cursor: 'pointer' }}
         >
           Mission Control →
         </button>
@@ -70,22 +65,24 @@ export default function HomePage({ onEnter }) {
           </span>
         </div>
 
-        {/* Headline — Kanit, centered, large */}
+        {/* Headline — Kanit 800, exactly 2 rows, no mid-line wrap */}
         <h1
-          className="mb-4 whitespace-pre-line leading-[1.05] tracking-tight text-white"
+          className="mb-3 leading-[1.2] tracking-tight text-white"
           style={{
             fontFamily: "'Kanit', sans-serif",
-            fontWeight: 900,
-            fontSize: 'clamp(2.6rem, 6.5vw, 5rem)',
+            fontWeight: 800,
+            fontSize: 'clamp(1.2rem, 2.4vw, 2.1rem)',
           }}
         >
-          {content.headline}
+          {content.headline.split('\n').map((line, i) => (
+            <span key={i} style={{ whiteSpace: 'nowrap', display: 'block' }}>{line}</span>
+          ))}
         </h1>
 
         {/* Subheadline */}
         <p
-          className="mb-7 max-w-lg text-[#777] leading-relaxed"
-          style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1rem)' }}
+          className="mb-6 max-w-lg text-[#777] leading-relaxed"
+          style={{ fontSize: 'clamp(0.8rem, 1.1vw, 0.9rem)' }}
         >
           {content.subheadline}
         </p>
@@ -94,15 +91,15 @@ export default function HomePage({ onEnter }) {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={onEnter}
-            className="flex items-center gap-2 rounded-xl bg-[#4F8EF7] px-7 py-3.5 font-bold text-white hover:bg-[#3a7de8] active:scale-95 transition-all shadow-xl shadow-[#4F8EF7]/25"
-            style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: '0.95rem' }}
+            className="flex items-center gap-2 rounded-xl bg-[#4F8EF7] px-6 py-3 font-bold text-white hover:bg-[#3a7de8] active:scale-95 transition-all shadow-xl shadow-[#4F8EF7]/25"
+            style={{ fontFamily: "'Kanit', sans-serif", fontWeight: 700, fontSize: '0.875rem' }}
           >
             <span>▶</span> {content.cta}
           </button>
 
           <button
             onClick={onEnter}
-            className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/6 backdrop-blur px-6 py-3.5 text-sm font-semibold text-white/80 hover:bg-white/12 hover:text-white transition-all"
+            className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/6 backdrop-blur px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/12 hover:text-white transition-all"
             style={{ fontFamily: "'Kanit', sans-serif" }}
           >
             🔍 {content.ctaSub}
