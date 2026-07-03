@@ -6,12 +6,28 @@ import CEOSummary from './components/CEOSummary.jsx';
 import ReportHistory from './components/ReportHistory.jsx';
 import ReportModal from './components/ReportModal.jsx';
 import Settings from './components/Settings.jsx';
+import HomePage from './pages/HomePage.jsx';
 import { usePipeline } from './hooks/usePipeline.js';
 import { usePortfolio } from './hooks/usePortfolio.js';
 import { useSettings } from './hooks/useSettings.js';
 import { useHistory } from './hooks/useHistory.js';
 
 export default function App() {
+  const [page, setPage] = useState(() => {
+    // show home unless user already clicked "enter"
+    return sessionStorage.getItem('palm_entered') ? 'app' : 'home';
+  });
+
+  if (page === 'home') {
+    return (
+      <HomePage
+        onEnter={() => {
+          sessionStorage.setItem('palm_entered', '1');
+          setPage('app');
+        }}
+      />
+    );
+  }
   const pipe = usePipeline();
   const portfolio = usePortfolio();
   const { settings, save } = useSettings();

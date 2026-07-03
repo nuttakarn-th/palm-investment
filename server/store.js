@@ -31,6 +31,13 @@ export const DEFAULT_SETTINGS = {
   telegramChatId: '',
   weeklyEnabled: true,
   defaultMarket: 'all', // us | set | crypto | all
+  homepage: {
+    badge: 'AI-Powered Investment Team',
+    headline: 'วิเคราะห์ลึก\nตัดสินใจเร็ว\nลงทุนมั่นใจ',
+    subheadline: 'ทีม AI 9 คน วิเคราะห์พอร์ตโฟลิโอของคุณแบบ real-time ครอบคลุมทุกตลาด US Stocks, SET และ Crypto',
+    cta: 'เข้าสู่ Mission Control',
+    ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',
+  },
 };
 
 export const store = {

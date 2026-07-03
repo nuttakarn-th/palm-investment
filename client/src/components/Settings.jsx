@@ -6,6 +6,8 @@ export default function Settings({ settings, onSave, onClose }) {
   const [weeklyRunning, setWeeklyRunning] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setHome = (k, v) =>
+    setForm((f) => ({ ...f, homepage: { ...(f.homepage || {}), [k]: v } }));
 
   const test = async (kind) => {
     setTesting((t) => ({ ...t, [kind]: '…' }));
@@ -94,6 +96,30 @@ export default function Settings({ settings, onSave, onClose }) {
             >
               {weeklyRunning ? '⏳ กำลังรัน… (ใช้เวลา 1-2 นาที)' : '▶ รัน Weekly Report เดี๋ยวนี้ (ทดสอบ cron)'}
             </button>
+          </section>
+
+          <section>
+            <div className="text-xs font-semibold text-[#FB923C] mb-2">🏠 Homepage Content</div>
+            <label className={label}>Badge text (บรรทัดเล็กด้านบน)</label>
+            <input className={input} value={form.homepage?.badge ?? ''} onChange={(e) => setHome('badge', e.target.value)} placeholder="AI-Powered Investment Team" />
+            <label className={`${label} mt-2`}>Headline (คำพาดหัว — ขึ้นบรรทัดใหม่ด้วย \n)</label>
+            <textarea
+              className={`${input} resize-none`}
+              rows={3}
+              value={form.homepage?.headline ?? ''}
+              onChange={(e) => setHome('headline', e.target.value)}
+              placeholder={'วิเคราะห์ลึก\nตัดสินใจเร็ว\nลงทุนมั่นใจ'}
+            />
+            <label className={`${label} mt-2`}>Subheadline (คำอธิบายใต้หัว)</label>
+            <textarea
+              className={`${input} resize-none`}
+              rows={2}
+              value={form.homepage?.subheadline ?? ''}
+              onChange={(e) => setHome('subheadline', e.target.value)}
+            />
+            <label className={`${label} mt-2`}>CTA Button Text</label>
+            <input className={input} value={form.homepage?.cta ?? ''} onChange={(e) => setHome('cta', e.target.value)} placeholder="เข้าสู่ Mission Control" />
+            <p className="text-[10px] text-neutral-600 mt-1.5">* บันทึกแล้วรีเฟรชหน้า Homepage เพื่อดูการเปลี่ยนแปลง</p>
           </section>
 
           <section>
