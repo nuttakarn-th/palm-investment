@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '@fontsource/kanit/700.css';
@@ -135,7 +135,7 @@ const AGENTS = [
 
 // ── Radar Chart ───────────────────────────────────────────────────────────────
 
-function RadarChart({ stat, color, size = 160 }) {
+function RadarChart({ stat, color, size = 160, fill = false }) {
   const keys = Object.keys(stat);
   const vals = Object.values(stat);
   const n = keys.length;
@@ -151,7 +151,11 @@ function RadarChart({ stat, color, size = 160 }) {
   const valuePts = vals.map((v, i) => { const p = pt(i, (v / 100) * maxR); return `${p.x},${p.y}`; }).join(' ');
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg
+      viewBox={`0 0 ${size} ${size}`}
+      preserveAspectRatio="xMidYMid meet"
+      style={fill ? { width: '100%', height: '100%' } : { width: size, height: size }}
+    >
       {[0.25, 0.5, 0.75, 1].map((l) => (
         <polygon key={l} points={gridPts(l)} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />
       ))}
@@ -174,6 +178,47 @@ function RadarChart({ stat, color, size = 160 }) {
         );
       })}
     </svg>
+  );
+}
+
+// ── Stats Tab (measures container, sizes radar to fill) ───────────────────────
+
+function StatsTabContent({ agent }) {
+  const areaRef = useRef(null);
+  const [radarSize, setRadarSize] = useState(150);
+
+  useLayoutEffect(() => {
+    if (!areaRef.current) return;
+    const measure = () => {
+      const h = areaRef.current.getBoundingClientRect().height;
+      if (h > 0) setRadarSize(Math.min(Math.floor(h * 0.92), 300));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(areaRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
+      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0, flexShrink: 0 }}>
+        {agent.bio}
+      </p>
+      <div ref={areaRef} style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0, alignItems: 'center' }}>
+        <RadarChart stat={agent.stat} color={agent.color} size={radarSize} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
+          {Object.entries(agent.stat).map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '9px', color: '#555', width: '28px', fontFamily: 'monospace' }}>{k}</span>
+              <div style={{ flex: 1, height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: '99px', width: `${v}%`, background: agent.color }} />
+              </div>
+              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', width: '20px', textAlign: 'right', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -261,38 +306,17 @@ function ModalContent({ agent, onClose }) {
         </div>
 
         {/* Tab content — fills remaining space, no scroll */}
-        <div style={{ flex: 1, padding: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, padding: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
 
-          {tab === 'stats' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
-              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0,
-                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {agent.bio}
-              </p>
-              <div style={{ flex: 1, display: 'flex', gap: '10px', alignItems: 'center', minHeight: 0 }}>
-                <RadarChart stat={agent.stat} color={agent.color} size={148} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '9px' }}>
-                  {Object.entries(agent.stat).map(([k, v]) => (
-                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '9px', color: '#555', width: '28px', fontFamily: 'monospace' }}>{k}</span>
-                      <div style={{ flex: 1, height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: '99px', width: `${v}%`, background: agent.color }} />
-                      </div>
-                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', width: '20px', textAlign: 'right', fontFamily: 'monospace' }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {tab === 'stats' && <StatsTabContent agent={agent} />}
 
           {tab === 'abilities' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
               {agent.abilities.map((ab, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 16px', borderRadius: '14px', background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
-                  <span style={{ fontSize: '24px', lineHeight: 1, flexShrink: 0 }}>{ab.icon}</span>
+                <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', padding: '0 18px', borderRadius: '14px', background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
+                  <span style={{ fontSize: '28px', lineHeight: 1, flexShrink: 0 }}>{ab.icon}</span>
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '4px', fontFamily: "'Kanit', sans-serif" }}>{ab.name}</div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '5px', fontFamily: "'Kanit', sans-serif" }}>{ab.name}</div>
                     <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{ab.desc}</div>
                   </div>
                 </div>
@@ -301,22 +325,22 @@ function ModalContent({ agent, onClose }) {
           )}
 
           {tab === 'ask' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>ตัวอย่างคำถาม</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px', flexShrink: 0 }}>ตัวอย่างคำถาม</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
                   {agent.samples.map((s, i) => (
-                    <div key={i} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '11px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '0 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                       💬 {s}
                     </div>
                   ))}
                 </div>
               </div>
-              <div>
+              <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>Synergy กับ</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {agent.synergies.map((s) => (
-                    <span key={s} style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30`, fontWeight: 600 }}>
+                    <span key={s} style={{ fontSize: '12px', padding: '7px 16px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30`, fontWeight: 600 }}>
                       ✦ {s}
                     </span>
                   ))}
