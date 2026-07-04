@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '@fontsource/kanit/700.css';
 import '@fontsource/kanit/800.css';
@@ -178,9 +179,9 @@ function RadarChart({ stat, color, size = 160 }) {
 
 // ── Character Modal ───────────────────────────────────────────────────────────
 
-function CharacterModal({ agent, onClose }) {
+function ModalContent({ agent, onClose }) {
   const [tab, setTab] = useState('stats');
-  if (!agent) return null;
+  const canClose = useRef(false);
   const isSonnet = agent.model === 'Sonnet';
   const TABS = [
     { key: 'stats',     label: 'Stats' },
@@ -188,10 +189,16 @@ function CharacterModal({ agent, onClose }) {
     { key: 'ask',       label: 'ถามได้' },
   ];
 
-  return (
+  // Delay backdrop close to prevent ghost-click on Android closing modal instantly
+  useEffect(() => {
+    const t = setTimeout(() => { canClose.current = true; }, 350);
+    return () => clearTimeout(t);
+  }, []);
+
+  return createPortal(
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.88)' }}
+      onClick={() => { if (canClose.current) onClose(); }}
     >
       <div
         style={{
@@ -320,8 +327,14 @@ function CharacterModal({ agent, onClose }) {
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
+}
+
+function CharacterModal({ agent, onClose }) {
+  if (!agent) return null;
+  return <ModalContent agent={agent} onClose={onClose} />;
 }
 
 // ── Agent Card (Flip) ─────────────────────────────────────────────────────────
