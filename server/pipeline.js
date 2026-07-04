@@ -4,6 +4,50 @@ import { ROLES } from './roles/index.js';
 
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from env
 
+const WEB_SEARCH_TOOL = {
+  name: 'web_search',
+  description:
+    'Search the web for current financial news, market data, stock prices, and economic indicators. Use for up-to-date information that training data may not have.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: 'Search query in English for best results (e.g. "NVDA stock price 2025", "Fed rate decision June 2025")',
+      },
+    },
+    required: ['query'],
+  },
+};
+
+async function braveSearch(query, signal) {
+  try {
+    const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&search_lang=en`;
+    const res = await fetch(url, {
+      headers: {
+        'X-Subscription-Token': process.env.BRAVE_API_KEY,
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip',
+      },
+      signal,
+    });
+    if (!res.ok) return `[Search unavailable: HTTP ${res.status}]`;
+    const data = await res.json();
+    const results = data.web?.results || [];
+    if (results.length === 0) return '[No results found]';
+    return results
+      .slice(0, 5)
+      .map((r, i) => {
+        const date = r.page_age ? `${r.page_age.slice(0, 10)} | ` : '';
+        return `[${i + 1}] ${r.title}\n${r.url}\n${date}${r.description || ''}`;
+      })
+      .join('\n\n');
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    return `[Search error: ${e.message}]`;
+  }
+}
+
 // USD per 1M tokens
 const PRICING = {
   'claude-haiku-4-5': { input: 1, output: 5 },
@@ -67,37 +111,58 @@ function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
 
 async function runAgent({ role, command, portfolio, outputs, mode, emit, signal }) {
   emit({ type: 'agent_start', agent: role.key });
-  let text = '';
 
-  const stream = anthropic.messages.stream({
-    model: role.model,
-    max_tokens: role.maxTokens,
-    system: role.system,
-    messages: [
-      {
-        role: 'user',
-        content: buildUserPrompt({ role, command, portfolio, outputs, mode }),
-      },
-    ],
-  });
+  const tools = role.usesSearch && process.env.BRAVE_API_KEY ? [WEB_SEARCH_TOOL] : [];
+  let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode }) }];
 
-  signal?.addEventListener('abort', () => stream.abort(), { once: true });
+  let fullText = '';
+  const totalUsage = { input: 0, output: 0 };
 
-  stream.on('text', (delta) => {
-    text += delta;
-    emit({ type: 'agent_delta', agent: role.key, text: delta });
-  });
+  while (true) {
+    const stream = anthropic.messages.stream({
+      model: role.model,
+      max_tokens: role.maxTokens,
+      system: role.system,
+      tools,
+      messages,
+    });
 
-  const final = await stream.finalMessage();
-  const usage = {
-    input: final.usage.input_tokens,
-    output: final.usage.output_tokens,
-  };
+    signal?.addEventListener('abort', () => stream.abort(), { once: true });
+
+    stream.on('text', (delta) => {
+      fullText += delta;
+      emit({ type: 'agent_delta', agent: role.key, text: delta });
+    });
+
+    const final = await stream.finalMessage();
+    totalUsage.input += final.usage.input_tokens;
+    totalUsage.output += final.usage.output_tokens;
+
+    if (final.stop_reason !== 'tool_use') break;
+
+    const toolResults = [];
+    for (const block of final.content) {
+      if (block.type === 'tool_use' && block.name === 'web_search') {
+        emit({ type: 'agent_search', agent: role.key, query: block.input.query });
+        const result = await braveSearch(block.input.query, signal);
+        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+      }
+    }
+
+    if (toolResults.length === 0) break;
+
+    messages = [
+      ...messages,
+      { role: 'assistant', content: final.content },
+      { role: 'user', content: toolResults },
+    ];
+  }
+
   const price = PRICING[role.model] || PRICING['claude-haiku-4-5'];
-  const cost = (usage.input * price.input + usage.output * price.output) / 1_000_000;
+  const cost = (totalUsage.input * price.input + totalUsage.output * price.output) / 1_000_000;
 
-  emit({ type: 'agent_done', agent: role.key, usage, cost });
-  return { text, usage, cost };
+  emit({ type: 'agent_done', agent: role.key, usage: totalUsage, cost });
+  return { text: fullText, usage: totalUsage, cost };
 }
 
 /**

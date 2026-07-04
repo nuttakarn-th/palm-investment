@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { PIPELINE_STAGES } from '../agents.js';
 
-const IDLE_AGENT = { status: 'pending', text: '', usage: null };
+const IDLE_AGENT = { status: 'pending', text: '', usage: null, lastSearch: null };
 
 export function usePipeline() {
   const [status, setStatus] = useState('idle'); // idle | running | done | error
@@ -69,10 +69,16 @@ export function usePipeline() {
               [event.agent]: { ...a[event.agent], text: (a[event.agent]?.text || '') + event.text },
             }));
             break;
+          case 'agent_search':
+            setAgents((a) => ({
+              ...a,
+              [event.agent]: { ...a[event.agent], lastSearch: event.query },
+            }));
+            break;
           case 'agent_done':
             setAgents((a) => ({
               ...a,
-              [event.agent]: { ...a[event.agent], status: 'done', usage: event.usage },
+              [event.agent]: { ...a[event.agent], status: 'done', usage: event.usage, lastSearch: null },
             }));
             setTotals((t) => ({
               input: t.input + event.usage.input,

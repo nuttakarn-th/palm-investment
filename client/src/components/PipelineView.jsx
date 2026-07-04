@@ -24,7 +24,7 @@ const TEAM_LABEL = {
 };
 
 function getStatusText(agentKey, state) {
-  const { status, text, usage } = state || {};
+  const { status, text, usage, lastSearch } = state || {};
   if (status === 'done') {
     const tok = (usage?.input ?? 0) + (usage?.output ?? 0);
     return `เสร็จแล้ว ✓  ${tok.toLocaleString()} tokens`;
@@ -33,6 +33,7 @@ function getStatusText(agentKey, state) {
   if (status === 'active') {
     const cleaned = (text || '').trim().replace(/^#+\s*/, '').replace(/\*+/g, '');
     if (cleaned.length > 30) return cleaned.slice(0, 100) + (cleaned.length > 100 ? '…' : '');
+    if (lastSearch) return `🔍 ${lastSearch}`;
     return WORKING_MSG[agentKey] || 'กำลังทำงาน...';
   }
   return 'รอรับข้อมูลจาก stage ก่อน';
