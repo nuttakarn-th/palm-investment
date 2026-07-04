@@ -127,9 +127,7 @@ export default function HomePage() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <Link to="/pricing" style={{ color: '#aaa', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
-              Pricing
-            </Link>
+
             <button
               onClick={() => navigate('/app')}
               style={{
@@ -353,44 +351,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── SECTION 5: PRICING TEASER ── */}
-      <div style={{ padding: '80px 32px', textAlign: 'center' }}>
-        <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 1.9rem)', fontWeight: 800, color: '#fff', marginBottom: '12px' }}>
-            เริ่มต้นฟรี ไม่ต้องใส่บัตรเครดิต
-          </h2>
-          <p style={{ color: '#555', fontSize: '14px', marginBottom: '28px' }}>
-            อัปเกรดเป็น Pro เมื่อพร้อม · ยกเลิกได้ทุกเมื่อ
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link
-              to="/pricing"
-              style={{
-                background: '#4F8EF7', color: '#fff',
-                borderRadius: '12px', padding: '12px 28px',
-                fontSize: '15px', fontWeight: 700,
-                textDecoration: 'none', display: 'inline-block',
-              }}
-            >
-              ดูแพลนราคา
-            </Link>
-            <button
-              onClick={() => navigate('/app')}
-              style={{
-                background: 'transparent',
-                border: '1px solid #242424',
-                borderRadius: '12px', padding: '12px 28px',
-                fontSize: '15px', fontWeight: 600, color: '#888',
-                cursor: 'pointer', ...font,
-              }}
-            >
-              เริ่มใช้งานฟรี →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── SECTION 6: FOOTER ── */}
+      {/* ── FOOTER ── */}
       <Footer />
     </div>
   );

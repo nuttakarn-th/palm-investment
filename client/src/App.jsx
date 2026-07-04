@@ -21,7 +21,7 @@ import PageTransition from './components/PageTransition.jsx';
 
 import HomePage from './pages/HomePage.jsx';
 import TeamPage from './pages/TeamPage.jsx';
-import PricingPage from './pages/PricingPage.jsx';
+
 import PrivacyPage from './pages/PrivacyPage.jsx';
 import TermsPage from './pages/TermsPage.jsx';
 
@@ -240,14 +240,6 @@ function AnimatedRoutes() {
         element={
           <PageTransition key="app">
             <AppPage />
-          </PageTransition>
-        }
-      />
-      <Route
-        path="/pricing"
-        element={
-          <PageTransition key="pricing">
-            <PricingPage />
           </PageTransition>
         }
       />

@@ -74,7 +74,7 @@ export default function Footer() {
             {[
               { to: '/', label: 'หน้าแรก' },
               { to: '/team', label: 'ทีม AI' },
-              { to: '/pricing', label: 'Pricing' },
+
               { to: '/privacy', label: 'Privacy' },
               { to: '/terms', label: 'Terms' },
             ].map(({ to, label }) => (
