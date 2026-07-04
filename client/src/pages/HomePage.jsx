@@ -184,7 +184,7 @@ export default function HomePage() {
             <img
               src={content.bgImage}
               alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 72%', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }}
               draggable={false}
             />
           ) : (
@@ -194,7 +194,7 @@ export default function HomePage() {
               <img
                 src="/team.png"
                 alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 72%', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', display: 'block' }}
                 draggable={false}
               />
             </picture>
@@ -202,7 +202,7 @@ export default function HomePage() {
           {/* Fade edges */}
           <div style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, #080808 0%, transparent 12%, transparent 38%, rgba(8,8,8,0.65) 55%, #080808 76%)',
+            background: 'linear-gradient(to bottom, #080808 0%, transparent 7%, transparent 48%, rgba(8,8,8,0.7) 62%, #080808 80%)',
           }} />
           {/* Stats + scroll — overlaid on bottom gradient */}
           <div style={{
