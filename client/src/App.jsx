@@ -252,30 +252,29 @@ function AppPage() {
 
                     {/* objectives */}
                     {[
-                      { n:'01', color:'#4F8EF7', title:'เพิ่มหุ้นในพอร์ต', desc:'กด "+ เพิ่ม" ในแถบซ้าย ใส่ Ticker เช่น NVDA, PTT, BTC แล้วใส่ราคาซื้อ — ราคาปัจจุบันดึงอัตโนมัติ', action:() => setSidebarOpen(true), btn:'⊕ DEPLOY ASSETS' },
-                      { n:'02', color:'#34D399', title:'เลือก Preset หรือพิมพ์คำสั่ง', desc:'เลือก Preset สำเร็จรูป เช่น "วิเคราะห์หุ้น" หรือพิมพ์คำสั่งเองใน Command Box' },
-                      { n:'03', color:'#FCD34D', title:'กด RUN PIPELINE', desc:'ทีม AI 9 คนจะทำงานใน 7 ขั้นตอน วิเคราะห์พอร์ตแล้วส่งรายงานภายใน ~2 นาที' },
+                      { n:'01', color:'#4F8EF7', title:'เพิ่มหุ้นในพอร์ต', desc:'กด "+ เพิ่ม" ในแถบซ้าย ใส่ Ticker เช่น NVDA, PTT, BTC แล้วใส่ราคาซื้อ', action:() => setSidebarOpen(true), btn:'⊕ DEPLOY ASSETS' },
+                      { n:'02', color:'#34D399', title:'เลือก Preset หรือพิมพ์คำสั่ง', desc:'เลือก Preset สำเร็จรูป หรือพิมพ์คำสั่งเองใน Command Box' },
+                      { n:'03', color:'#FCD34D', title:'กด RUN PIPELINE', desc:'ทีม AI 9 คนทำงาน 7 ขั้นตอน ส่งรายงานภายใน ~2 นาที' },
                     ].map(({ n, color, title, desc, action, btn }, i) => (
-                      <div key={n} style={{ display:'flex', gap:'12px', alignItems:'flex-start', marginBottom: i < 2 ? '16px' : 0 }}>
-                        {/* step number */}
-                        <div style={{ flexShrink:0, width:'34px', height:'34px', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center',
+                      <div key={n} style={{ display:'flex', gap:'14px', alignItems:'flex-start', marginBottom: i < 2 ? '20px' : 0 }}>
+                        <div style={{ flexShrink:0, width:'42px', height:'42px', borderRadius:'12px', display:'flex', alignItems:'center', justifyContent:'center',
                           background:`${color}12`, border:`1px solid ${color}35`,
                           animation: n==='01' ? 'obj-glow 2.5s ease-in-out infinite' : undefined }}>
-                          <span style={{ fontSize:'11px', fontWeight:900, color, fontVariantNumeric:'tabular-nums' }}>{n}</span>
+                          <span style={{ fontSize:'13px', fontWeight:900, color, fontVariantNumeric:'tabular-nums' }}>{n}</span>
                         </div>
                         <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:'13px', fontWeight:700, color:'#d4d4d4', marginBottom:'3px' }}>{title}</div>
-                          <div style={{ fontSize:'11px', color:'#383838', lineHeight:1.55 }}>{desc}</div>
+                          <div style={{ fontSize:'15px', fontWeight:700, color:'#d8d8d8', marginBottom:'4px' }}>{title}</div>
+                          <div style={{ fontSize:'12px', color:'#3a3a3a', lineHeight:1.55 }}>{desc}</div>
                           {btn && (
                             <button onClick={action} style={{
-                              marginTop:'10px', fontSize:'10px', fontWeight:800, padding:'6px 16px',
-                              borderRadius:'8px', border:`1px solid ${color}45`, background:`${color}12`, color,
+                              marginTop:'12px', fontSize:'11px', fontWeight:800, padding:'8px 20px',
+                              borderRadius:'10px', border:`1px solid ${color}45`, background:`${color}12`, color,
                               cursor:'pointer', letterSpacing:'.08em', textTransform:'uppercase',
                               animation:'obj-glow 2.5s ease-in-out infinite',
                             }}>{btn}</button>
                           )}
                         </div>
-                        <span style={{ color:`${color}35`, fontSize:'10px', fontWeight:700, flexShrink:0, paddingTop:'8px' }}>▷</span>
+                        <span style={{ color:`${color}35`, fontSize:'12px', fontWeight:700, flexShrink:0, paddingTop:'10px' }}>▷</span>
                       </div>
                     ))}
 
