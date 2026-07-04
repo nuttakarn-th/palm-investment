@@ -100,6 +100,31 @@ function AppPage() {
 
   return (
     <div className="min-h-screen bg-[#080808]">
+      <style>{`
+        @keyframes mission-glow {
+          0%,100% { box-shadow:0 0 20px rgba(79,142,247,0.05),inset 0 1px 0 rgba(79,142,247,0.04); border-color:#1a2233; }
+          50%      { box-shadow:0 0 42px rgba(79,142,247,0.14),inset 0 1px 0 rgba(79,142,247,0.1); border-color:rgba(79,142,247,0.28); }
+        }
+        @keyframes obj-glow {
+          0%,100% { box-shadow:0 0 0 0 rgba(79,142,247,0); }
+          50%      { box-shadow:0 0 10px 2px rgba(79,142,247,0.22); }
+        }
+        @keyframes badge-beat {
+          0%,100% { opacity:1; transform:scale(1); }
+          50%      { opacity:.75; transform:scale(0.96); }
+        }
+        @keyframes scanbar-app {
+          0%   { transform:translateY(-60px); }
+          100% { transform:translateY(1200px); }
+        }
+        @keyframes dot-blink {
+          0%,100% { opacity:1; } 49%{ opacity:1; } 50%{ opacity:0; } 99%{ opacity:0; }
+        }
+        @keyframes tick-in {
+          from { opacity:0; transform:scale(0.7) translateX(-6px); }
+          to   { opacity:1; transform:scale(1) translateX(0); }
+        }
+      `}</style>
       {/* HEADER */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#1a1a1a] bg-[#080808]/90 backdrop-blur px-4 py-3">
         <div className="flex items-center gap-3">
@@ -204,81 +229,115 @@ function AppPage() {
         </aside>
 
         {/* MAIN */}
-        <main className="flex-1 p-4 lg:p-6 space-y-6 overflow-x-auto min-w-0">
+        <main className="flex-1 p-4 lg:p-6 space-y-6 overflow-x-auto min-w-0"
+          style={{ backgroundImage:'radial-gradient(circle,#141414 1px,transparent 1px)', backgroundSize:'28px 28px' }}>
           <PipelineView pipeline={pipe.pipeline} agents={pipe.agents} status={pipe.status} />
 
-          {/* Onboarding guide — shown when idle and nothing has run yet */}
+          {/* Mission briefing — shown when idle */}
           {pipe.status === 'idle' && (
             <div className="max-w-2xl mx-auto">
               {portfolio.items.length === 0 ? (
-                <div className="rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] p-6 space-y-5">
-                  <div className="text-center mb-2">
-                    <div className="text-xs text-neutral-600 uppercase tracking-widest mb-1">เริ่มต้นใช้งาน</div>
-                    <div className="text-base font-semibold text-neutral-300">3 ขั้นตอน พร้อมใช้ภายใน 2 นาที</div>
-                  </div>
-                  {[
-                    {
-                      n: '1', color: '#4F8EF7',
-                      title: 'เพิ่มหุ้นในพอร์ต',
-                      desc: 'กด "+ เพิ่ม" ในแถบซ้าย ใส่ Ticker เช่น NVDA, PTT, BTC แล้วใส่ราคาซื้อ — ราคาปัจจุบันดึงอัตโนมัติ',
-                      action: () => setSidebarOpen(true),
-                      btn: '+ เพิ่มหุ้นตอนนี้',
-                    },
-                    {
-                      n: '2', color: '#34D399',
-                      title: 'เลือก Preset หรือพิมพ์คำสั่ง',
-                      desc: 'เลือก Preset สำเร็จรูป เช่น "วิเคราะห์หุ้น" หรือพิมพ์คำสั่งเองใน Command Box',
-                    },
-                    {
-                      n: '3', color: '#F59E0B',
-                      title: 'กด RUN PIPELINE',
-                      desc: 'ทีม AI 9 คนจะทำงานใน 7 ขั้นตอน วิเคราะห์พอร์ตแล้วส่งรายงานให้ภายใน ~2 นาที',
-                    },
-                  ].map(({ n, color, title, desc, action, btn }) => (
-                    <div key={n} className="flex gap-4 items-start">
-                      <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                        style={{ background: `${color}18`, border: `1px solid ${color}40`, color }}>
-                        {n}
+                /* ── No portfolio: Mission Briefing card ── */
+                <div style={{ position:'relative', overflow:'hidden', borderRadius:'18px', border:'1px solid #1a2233', background:'#090909', padding:'20px', animation:'mission-glow 4s ease-in-out infinite' }}>
+                  {/* scan bar */}
+                  <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
+                    background:'linear-gradient(transparent,rgba(79,142,247,0.03),transparent)',
+                    animation:'scanbar-app 6s linear infinite' }} />
+
+                  <div style={{ position:'relative', zIndex:1 }}>
+                    {/* header badge */}
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'18px' }}>
+                      <div style={{ display:'inline-flex', alignItems:'center', gap:'7px', padding:'4px 12px', borderRadius:'99px',
+                        border:'1px solid rgba(79,142,247,0.28)', background:'rgba(79,142,247,0.08)',
+                        animation:'badge-beat 2.8s ease-in-out infinite' }}>
+                        <span style={{ fontSize:'8px', color:'#4F8EF7' }}>◆</span>
+                        <span style={{ fontSize:'9px', fontWeight:700, letterSpacing:'.14em', color:'#4F8EF7', textTransform:'uppercase' }}>Mission Briefing</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-neutral-200 mb-0.5">{title}</div>
-                        <div className="text-xs text-neutral-600 leading-relaxed">{desc}</div>
-                        {btn && (
-                          <button onClick={action}
-                            className="mt-2 text-xs rounded-lg px-3 py-1.5 font-semibold transition"
-                            style={{ background: `${color}18`, border: `1px solid ${color}40`, color }}>
-                            {btn}
-                          </button>
-                        )}
+                      <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
+                        <span style={{ fontSize:'7px', color:'#4F8EF7', animation:'dot-blink 1.2s step-start infinite' }}>●</span>
+                        <span style={{ fontSize:'8px', color:'#1e2e44', letterSpacing:'.1em', fontWeight:700 }}>3 OBJECTIVES</span>
                       </div>
                     </div>
-                  ))}
+
+                    {/* objectives */}
+                    {[
+                      { n:'01', color:'#4F8EF7', title:'เพิ่มหุ้นในพอร์ต', desc:'กด "+ เพิ่ม" ในแถบซ้าย ใส่ Ticker เช่น NVDA, PTT, BTC แล้วใส่ราคาซื้อ — ราคาปัจจุบันดึงอัตโนมัติ', action:() => setSidebarOpen(true), btn:'⊕ DEPLOY ASSETS' },
+                      { n:'02', color:'#34D399', title:'เลือก Preset หรือพิมพ์คำสั่ง', desc:'เลือก Preset สำเร็จรูป เช่น "วิเคราะห์หุ้น" หรือพิมพ์คำสั่งเองใน Command Box' },
+                      { n:'03', color:'#FCD34D', title:'กด RUN PIPELINE', desc:'ทีม AI 9 คนจะทำงานใน 7 ขั้นตอน วิเคราะห์พอร์ตแล้วส่งรายงานภายใน ~2 นาที' },
+                    ].map(({ n, color, title, desc, action, btn }, i) => (
+                      <div key={n} style={{ display:'flex', gap:'12px', alignItems:'flex-start', marginBottom: i < 2 ? '16px' : 0 }}>
+                        {/* step number */}
+                        <div style={{ flexShrink:0, width:'34px', height:'34px', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center',
+                          background:`${color}12`, border:`1px solid ${color}35`,
+                          animation: n==='01' ? 'obj-glow 2.5s ease-in-out infinite' : undefined }}>
+                          <span style={{ fontSize:'11px', fontWeight:900, color, fontVariantNumeric:'tabular-nums' }}>{n}</span>
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:'13px', fontWeight:700, color:'#d4d4d4', marginBottom:'3px' }}>{title}</div>
+                          <div style={{ fontSize:'11px', color:'#383838', lineHeight:1.55 }}>{desc}</div>
+                          {btn && (
+                            <button onClick={action} style={{
+                              marginTop:'10px', fontSize:'10px', fontWeight:800, padding:'6px 16px',
+                              borderRadius:'8px', border:`1px solid ${color}45`, background:`${color}12`, color,
+                              cursor:'pointer', letterSpacing:'.08em', textTransform:'uppercase',
+                              animation:'obj-glow 2.5s ease-in-out infinite',
+                            }}>{btn}</button>
+                          )}
+                        </div>
+                        <span style={{ color:`${color}35`, fontSize:'10px', fontWeight:700, flexShrink:0, paddingTop:'8px' }}>▷</span>
+                      </div>
+                    ))}
+
+                    {/* footer */}
+                    <div style={{ marginTop:'18px', borderTop:'1px solid #121212', paddingTop:'12px', display:'flex', alignItems:'center', justifyContent:'center', gap:'7px' }}>
+                      <span style={{ fontSize:'8px', color:'#4F8EF7', animation:'dot-blink 1.8s step-start infinite' }}>●</span>
+                      <span style={{ fontSize:'9px', color:'#1e2e44', letterSpacing:'.1em', fontWeight:700 }}>AGENTS WAITING FOR ORDERS</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] p-6">
-                  <div className="text-xs text-neutral-600 uppercase tracking-widest mb-3">พอร์ตคุณ</div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {portfolio.items.map((item) => {
-                      const live = marketData.getPrice(item.ticker, item.market);
-                      const pct = live
-                        ? ((live.price - parseFloat(item.buyPrice)) / parseFloat(item.buyPrice)) * 100
-                        : null;
-                      return (
-                        <div key={item.id} className="rounded-lg border border-[#1e1e1e] bg-[#111] px-3 py-2 text-xs">
-                          <div className="font-semibold text-neutral-200">{item.ticker}</div>
-                          {live && (
-                            <div className={`mt-0.5 font-medium ${pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                              {pct >= 0 ? '+' : ''}{pct?.toFixed(1)}%
-                            </div>
-                          )}
-                          {!live && item.buyPrice && <div className="text-neutral-700 mt-0.5">ราคาซื้อ {item.buyPrice}</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="text-xs text-neutral-600">
-                    พร้อมแล้ว — เลือก Preset หรือพิมพ์คำสั่งในแถบซ้าย แล้วกด{' '}
-                    <span className="text-[#4F8EF7] font-semibold">RUN PIPELINE</span>
+                /* ── Has portfolio: Active Positions card ── */
+                <div style={{ position:'relative', overflow:'hidden', borderRadius:'18px', border:'1px solid #1a2233', background:'#090909', padding:'18px', animation:'mission-glow 5s ease-in-out infinite' }}>
+                  <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
+                    background:'linear-gradient(transparent,rgba(79,142,247,0.025),transparent)',
+                    animation:'scanbar-app 7s linear infinite' }} />
+                  <div style={{ position:'relative', zIndex:1 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px' }}>
+                      <div style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'3px 11px', borderRadius:'99px',
+                        border:'1px solid rgba(52,211,153,0.28)', background:'rgba(52,211,153,0.07)' }}>
+                        <span style={{ fontSize:'7px', color:'#34D399', animation:'dot-blink 1.4s step-start infinite' }}>●</span>
+                        <span style={{ fontSize:'9px', fontWeight:700, letterSpacing:'.12em', color:'#34D399', textTransform:'uppercase' }}>Active Positions</span>
+                      </div>
+                      <span style={{ fontSize:'9px', color:'#1e2e44', fontWeight:700, letterSpacing:'.1em' }}>{portfolio.items.length} ASSETS LOADED</span>
+                    </div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:'7px', marginBottom:'14px' }}>
+                      {portfolio.items.map((item) => {
+                        const live = marketData.getPrice(item.ticker, item.market);
+                        const pct = live ? ((live.price - parseFloat(item.buyPrice)) / parseFloat(item.buyPrice)) * 100 : null;
+                        const pos = pct === null ? null : pct >= 0;
+                        return (
+                          <div key={item.id} style={{
+                            padding:'8px 12px', borderRadius:'10px', background:'#0f0f0f',
+                            border:`1px solid ${pos === null ? '#1e1e1e' : pos ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                            boxShadow: pos === true ? '0 0 10px rgba(52,211,153,0.06)' : pos === false ? '0 0 10px rgba(248,113,113,0.06)' : 'none',
+                          }}>
+                            <div style={{ fontSize:'12px', fontWeight:700, color:'#d0d0d0', letterSpacing:'.04em' }}>{item.ticker}</div>
+                            {pct !== null ? (
+                              <div style={{ fontSize:'11px', fontWeight:700, color: pos ? '#34D399' : '#f87171', marginTop:'2px', fontVariantNumeric:'tabular-nums' }}>
+                                {pos ? '+' : ''}{pct.toFixed(1)}%
+                              </div>
+                            ) : item.buyPrice ? (
+                              <div style={{ fontSize:'10px', color:'#2a2a2a', marginTop:'2px' }}>฿{item.buyPrice}</div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ fontSize:'11px', color:'#2a3a4a', display:'flex', alignItems:'center', gap:'6px' }}>
+                      <span style={{ fontSize:'8px', color:'#4F8EF7', animation:'dot-blink 1.6s step-start infinite' }}>●</span>
+                      พร้อม — เลือก Preset หรือพิมพ์คำสั่งในแถบซ้าย แล้วกด
+                      <span style={{ color:'#4F8EF7', fontWeight:700 }}>▶ RUN PIPELINE</span>
+                    </div>
                   </div>
                 </div>
               )}

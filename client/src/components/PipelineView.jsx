@@ -202,11 +202,74 @@ export default function PipelineView({ pipeline, agents, status }) {
       : stages.findIndex((s) => s.some((k) => (agents[k]?.status ?? 'pending') !== 'done')) + 1 || stages.length;
 
   if (status === 'idle') {
+    const groups = [
+      { label: 'Research',  keys: ['piya', 'min'],    color: '#4F8EF7' },
+      { label: 'Analysis',  keys: ['nem', 'ko'],      color: '#A78BFA' },
+      { label: 'Risk',      keys: ['rat', 'lungchai'], color: '#FB923C' },
+      { label: 'Strategy · Committee · Report', keys: ['kaew', 'pom', 'nat'], color: '#34D399' },
+    ];
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="text-4xl mb-3">🎯</div>
-        <div className="text-sm font-bold text-neutral-400">พร้อมวิเคราะห์พอร์ตของคุณ</div>
-        <div className="text-xs mt-1.5 text-neutral-700">9 agents standby · 7 pipeline stages · 3 ตลาด</div>
+      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', border: '1px solid #141414', background: '#080808', padding: '14px 16px' }}>
+        <style>{`
+          @keyframes agent-breath { 0%,100%{opacity:.32} 50%{opacity:.75} }
+          @keyframes scan-idle { 0%{transform:translateY(-80px)} 100%{transform:translateY(500px)} }
+          @keyframes hud-blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
+        `}</style>
+
+        {/* scan line */}
+        <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
+          background:'linear-gradient(transparent,rgba(79,142,247,0.025),transparent)',
+          animation:'scan-idle 5s linear infinite' }} />
+
+        <div style={{ position:'relative', zIndex:1 }}>
+          {/* header */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'12px' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+              <span style={{ fontSize:'8px', color:'#4F8EF7', animation:'hud-blink 1.2s step-start infinite' }}>■</span>
+              <span style={{ fontSize:'9px', letterSpacing:'.15em', color:'#2a2a2a', fontWeight:700, textTransform:'uppercase' }}>Pipeline Status</span>
+            </div>
+            <span style={{ fontSize:'9px', letterSpacing:'.12em', fontWeight:700, color:'#283040' }}>SYSTEM STANDBY</span>
+          </div>
+
+          {/* agent groups */}
+          <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+            {groups.map(({ label, keys, color }, gi) => (
+              <div key={label}>
+                <div style={{ fontSize:'8px', letterSpacing:'.12em', fontWeight:700, color:`${color}55`, textTransform:'uppercase', marginBottom:'4px' }}>{label}</div>
+                <div style={{ display:'flex', gap:'5px' }}>
+                  {keys.map((k, i) => {
+                    const agent = AGENTS[k];
+                    return (
+                      <div key={k} style={{
+                        flex:1, display:'flex', alignItems:'center', gap:'7px', padding:'6px 8px', borderRadius:'10px',
+                        background:`${color}07`, border:`1px solid ${color}18`,
+                        animation:`agent-breath 3s ease-in-out ${(gi*2+i)*0.25}s infinite`,
+                      }}>
+                        <AgentAvatar agent={agent} size={26} status="pending" />
+                        <div style={{ minWidth:0, flex:1 }}>
+                          <div style={{ fontSize:'11px', fontWeight:700, color:'#303030', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{agent.nickname}</div>
+                          <div style={{ fontSize:'8px', color:'#222', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{agent.title}</div>
+                        </div>
+                        <span style={{ fontSize:'7px', color:`${color}38`, flexShrink:0, fontWeight:700 }}>○</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* stage pipeline bar */}
+          <div style={{ display:'flex', alignItems:'center', marginTop:'12px' }}>
+            {PIPELINE_STAGES.full.flatMap((_, i) => [
+              i > 0 ? <div key={`l${i}`} style={{ flex:1, height:'1px', background:'#181818' }} /> : null,
+              <div key={`s${i}`} style={{
+                fontSize:'8px', fontWeight:700, padding:'2px 7px', borderRadius:'99px', flexShrink:0,
+                background:'#0d0d0d', border:'1px solid #191919', color:'#222',
+              }}>S{i+1}</div>,
+            ]).filter(Boolean)}
+          </div>
+        </div>
       </div>
     );
   }
