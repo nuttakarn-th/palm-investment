@@ -89,13 +89,13 @@ export default function HomePage() {
     <div style={{ background: '#080808', minHeight: '100vh', ...font }}>
 
       {/* ── SECTION 1: HERO ── */}
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
 
         {/* ── TEXT ZONE (solid dark — no image underneath) ── */}
-        <div style={{ flexShrink: 0, padding: '0 24px 40px' }}>
+        <div style={{ flexShrink: 0, padding: '0 20px 20px' }}>
 
           {/* Nav */}
-          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0' }}>
+          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '20px' }}>🎯</span>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
@@ -107,8 +107,8 @@ export default function HomePage() {
               style={{
                 background: 'rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: '8px', padding: '6px 20px',
-                fontSize: '14px', fontWeight: 600, color: '#fff',
+                borderRadius: '8px', padding: '6px 16px',
+                fontSize: '13px', fontWeight: 600, color: '#fff',
                 ...font, cursor: 'pointer',
               }}
             >
@@ -117,61 +117,61 @@ export default function HomePage() {
           </nav>
 
           {/* Content */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '4px' }}>
             {/* Badge */}
             <div style={{
-              marginBottom: '20px',
+              marginBottom: '14px',
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               borderRadius: '99px',
               border: '1px solid rgba(79,142,247,0.4)',
               background: 'rgba(79,142,247,0.1)',
-              padding: '6px 16px',
+              padding: '5px 14px',
             }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4F8EF7', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#4F8EF7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, color: '#4F8EF7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 {content.badge}
               </span>
             </div>
 
             {/* Headline */}
-            <h1 style={{ margin: '0 0 14px', lineHeight: 1.2, color: '#fff', fontSize: 'clamp(2rem, 5vw, 2.6rem)', fontWeight: 800 }}>
+            <h1 style={{ margin: '0 0 10px', lineHeight: 1.2, color: '#fff', fontSize: 'clamp(1.8rem, 5vw, 2.6rem)', fontWeight: 800 }}>
               {content.headline.split('\n').map((line, i) => (
                 <span key={i} style={{ display: 'block' }}>{line}</span>
               ))}
             </h1>
 
             {/* Sub */}
-            <p style={{ margin: '0 0 32px', maxWidth: '480px', color: '#666', lineHeight: 1.7, fontSize: '14px' }}>
+            <p style={{ margin: '0 0 22px', maxWidth: '480px', color: '#666', lineHeight: 1.6, fontSize: '13px' }}>
               {content.subheadline}
             </p>
 
-            {/* CTAs — 2 only */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+            {/* CTAs — side by side */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', width: '100%', maxWidth: '400px' }}>
               <button
                 onClick={() => navigate('/app')}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   background: '#4F8EF7', color: '#fff',
                   border: 'none', borderRadius: '12px',
-                  padding: '13px 28px', fontSize: '15px', fontWeight: 700,
+                  padding: '12px 16px', fontSize: '14px', fontWeight: 700,
                   cursor: 'pointer', ...font,
-                  boxShadow: '0 8px 28px rgba(79,142,247,0.35)',
+                  boxShadow: '0 8px 24px rgba(79,142,247,0.35)',
                 }}
               >
-                ▶ {content.cta}
+                ▶ เข้าสู่ระบบ
               </button>
               <button
                 onClick={() => navigate('/team')}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   background: 'transparent',
                   border: '1px solid rgba(79,142,247,0.35)',
-                  borderRadius: '12px', padding: '13px 24px',
-                  fontSize: '15px', fontWeight: 600, color: '#4F8EF7',
+                  borderRadius: '12px', padding: '12px 16px',
+                  fontSize: '14px', fontWeight: 600, color: '#4F8EF7',
                   cursor: 'pointer', ...font,
                 }}
               >
-                👥 พบกับทีม AI
+                👥 พบทีม AI
               </button>
             </div>
           </div>
