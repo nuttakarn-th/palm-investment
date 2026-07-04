@@ -27,7 +27,7 @@ export default function CommandBox({ onRun, running }) {
   return (
     <div className="space-y-3">
       <div>
-        <div className="text-[11px] uppercase tracking-wider text-neutral-500 mb-2">Command Box</div>
+        <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-2">Command Box</div>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -51,7 +51,7 @@ export default function CommandBox({ onRun, running }) {
       </div>
 
       <div>
-        <div className="text-[11px] uppercase tracking-wider text-neutral-500 mb-2">Presets</div>
+        <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-2">Presets</div>
         <div className="grid grid-cols-2 gap-1.5">
           {PRESETS.map((p) => (
             <button

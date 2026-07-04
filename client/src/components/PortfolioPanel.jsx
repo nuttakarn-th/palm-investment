@@ -60,7 +60,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="text-[11px] uppercase tracking-wider text-neutral-500">Portfolio</div>
+          <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">Portfolio</div>
           {marketData && (
             <LiveBadge loading={marketData.loading} lastUpdate={marketData.lastUpdate} />
           )}

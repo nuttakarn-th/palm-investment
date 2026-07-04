@@ -17,7 +17,7 @@ export default function ReportHistory({ reports, onOpen }) {
 
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wider text-neutral-500 mb-2">Report History</div>
+      <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-2">Report History</div>
       <div className="flex gap-1 mb-2 flex-wrap">
         {FILTERS.map((f) => (
           <button

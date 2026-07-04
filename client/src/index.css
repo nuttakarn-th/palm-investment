@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "@fontsource/sarabun/300.css";
+@import "@fontsource/sarabun/400.css";
+@import "@fontsource/sarabun/500.css";
+@import "@fontsource/sarabun/600.css";
+@import "@fontsource/sarabun/700.css";
 
 :root {
   color-scheme: dark;
@@ -7,7 +12,7 @@
 body {
   background: #080808;
   color: #e5e5e5;
-  font-family: Inter, "Noto Sans Thai", system-ui, -apple-system, sans-serif;
+  font-family: 'Sarabun', system-ui, -apple-system, sans-serif;
 }
 
 /* pulsing LIVE badge */
@@ -38,6 +43,16 @@ body {
 }
 .arrow-fill {
   animation: arrow-fill 0.6s ease-out forwards;
+}
+
+/* agent progress bar — pulsing while active */
+@keyframes pulse-bar {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 1; }
+}
+.agent-bar-active {
+  width: 100%;
+  animation: pulse-bar 1.4s ease-in-out infinite;
 }
 
 /* thin scrollbars */

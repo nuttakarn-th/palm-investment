@@ -120,11 +120,11 @@ function AppPage() {
           />
           <button
             onClick={() => navigate('/')}
-            className="font-bold tracking-wide text-sm hover:opacity-80 transition-opacity text-left"
+            className="font-bold tracking-wider text-sm hover:opacity-80 transition-opacity text-left"
           >
             🎯 PALM <span className="text-[#4F8EF7]">OS</span>
           </button>
-          <span className="hidden sm:inline text-[10px] text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase">
+          <span className="hidden sm:inline text-[10px] font-bold text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase tracking-widest">
             Mission Control
           </span>
         </div>
