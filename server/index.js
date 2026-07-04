@@ -119,7 +119,11 @@ if (fs.existsSync(clientDist)) {
   app.get(/^(?!\/api).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }
 
-app.listen(PORT, () => {
-  console.log(`[server] Palm Investment OS API on http://localhost:${PORT}`);
-  startScheduler();
-});
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`[server] Palm Investment OS API on http://localhost:${PORT}`);
+    startScheduler();
+  });
+}
+
+export default app;

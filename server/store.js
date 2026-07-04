@@ -5,7 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data');
+const DATA_DIR = process.env.VERCEL === '1'
+  ? '/tmp/palm-data'
+  : path.join(path.dirname(fileURLToPath(import.meta.url)), 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 function file(name) {
