@@ -279,11 +279,7 @@ export default function HomePage() {
           90%  { transform: skewX(0.5deg); }
           100% { opacity: 1; transform: none; filter: none; }
         }
-        @keyframes scanDown {
-          from { top: -60px; }
-          to   { top: 100%; }
-        }
-        @keyframes bounceDown {
+@keyframes bounceDown {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(8px); }
         }
@@ -344,15 +340,8 @@ export default function HomePage() {
           background: 'linear-gradient(to bottom, #080808 0%, #080808 40%, rgba(8,8,8,0.5) 52%, rgba(8,8,8,0.0) 62%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 84%, #080808 95%)',
         }} />
 
-        {/* Layer 3 — Effects: particles + scanline sweep full hero */}
+        {/* Layer 3 — Effects: particles */}
         {bootState === 'done' && <Particles />}
-        {bootState === 'done' && (
-          <div style={{
-            position: 'absolute', left: 0, right: 0, height: '80px', pointerEvents: 'none', zIndex: 3,
-            background: 'linear-gradient(to bottom, transparent, rgba(79,142,247,0.04), transparent)',
-            animation: 'scanDown 7s linear infinite',
-          }} />
-        )}
 
         {/* Layer 4 — Content: nav + text + stats as a full-height flex column */}
         <div style={{ position: 'relative', zIndex: 4, height: '100%', display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
