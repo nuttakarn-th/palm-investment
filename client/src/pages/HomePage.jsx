@@ -11,28 +11,33 @@ const DEFAULT_CONTENT = {
   ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',
 };
 
+function getInitialContent() {
+  try {
+    const local = JSON.parse(localStorage.getItem('palm-os:settings') || '{}');
+    if (local.homepage) return { ...DEFAULT_CONTENT, ...local.homepage };
+  } catch {}
+  return DEFAULT_CONTENT;
+}
+
 export default function HomePage({ onEnter, onTeam }) {
-  const [content, setContent] = useState(DEFAULT_CONTENT);
+  // Initialize synchronously from localStorage — no flash of default content
+  const [content, setContent] = useState(getInitialContent);
 
   useEffect(() => {
-    // Read localStorage first (source of truth after user saves Settings)
-    let localHome = {};
-    try {
-      const local = JSON.parse(localStorage.getItem('palm-os:settings') || '{}');
-      if (local.homepage) localHome = local.homepage;
-    } catch {}
-
+    // Sync with server in background (updates if saved from another device/session)
     fetch('/api/settings')
       .then((r) => r.json())
       .then((s) => {
-        // localStorage always wins over server (same merge order as useSettings)
-        setContent({ ...DEFAULT_CONTENT, ...(s.homepage || {}), ...localHome });
+        if (!s.homepage) return;
+        // Re-read localStorage so it always wins over server
+        let localHome = {};
+        try {
+          const local = JSON.parse(localStorage.getItem('palm-os:settings') || '{}');
+          if (local.homepage) localHome = local.homepage;
+        } catch {}
+        setContent({ ...DEFAULT_CONTENT, ...s.homepage, ...localHome });
       })
-      .catch(() => {
-        if (Object.keys(localHome).length) {
-          setContent((c) => ({ ...c, ...localHome }));
-        }
-      });
+      .catch(() => {});
   }, []);
 
   return (
