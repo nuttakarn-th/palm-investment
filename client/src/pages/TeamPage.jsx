@@ -180,13 +180,6 @@ function RadarChart({ stat, color, size = 160 }) {
 
 function CharacterModal({ agent, onClose }) {
   const [tab, setTab] = useState('stats');
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
   if (!agent) return null;
   const isSonnet = agent.model === 'Sonnet';
   const TABS = [
@@ -472,6 +465,11 @@ function AgentCard({ agent, onOpenModal }) {
 export default function TeamPage() {
   const navigate = useNavigate();
   const [modalAgent, setModalAgent] = useState(null);
+
+  useEffect(() => {
+    document.body.style.overflow = modalAgent ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [modalAgent]);
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
