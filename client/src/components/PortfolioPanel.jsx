@@ -35,6 +35,27 @@ export default function PortfolioPanel({ portfolio, marketData }) {
     rows: items.filter((x) => x.market === m),
   }));
 
+  // Aggregate totals: current_value = invested * (livePrice / buyPrice)
+  // Works across currencies because we're scaling the THB investment by the price ratio
+  const totals = items.reduce(
+    (acc, item) => {
+      const invested = parseFloat(item.amount) || 0;
+      const buy = parseFloat(item.buyPrice) || 0;
+      const live = marketData?.getPrice(item.ticker, item.market);
+      acc.invested += invested;
+      if (live?.price && buy) {
+        acc.current += invested * (live.price / buy);
+      } else {
+        acc.current += invested;
+        acc.unpriced += invested;
+      }
+      return acc;
+    },
+    { invested: 0, current: 0, unpriced: 0 },
+  );
+  const totalPnlPct =
+    totals.invested > 0 ? ((totals.current - totals.invested) / totals.invested) * 100 : null;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -65,6 +86,39 @@ export default function PortfolioPanel({ portfolio, marketData }) {
 
       {items.length === 0 && !draft && (
         <div className="text-[11px] text-neutral-700 py-2">ยังไม่มีข้อมูลพอร์ต — กด "+ เพิ่ม"</div>
+      )}
+
+      {/* Total portfolio value */}
+      {items.length > 0 && totals.invested > 0 && (
+        <div className="mb-3 rounded-lg border border-[#1e1e1e] bg-[#0d0d0d] px-3 py-2.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[9px] uppercase tracking-widest text-neutral-700 mb-0.5">มูลค่ารวม</div>
+              <div
+                className="font-mono text-sm font-bold text-neutral-200 tabular-nums"
+                title="ประมาณการณ์ — ลงทุน × (ราคาปัจจุบัน / ราคาซื้อ)"
+              >
+                ฿{Math.round(totals.current).toLocaleString()}
+              </div>
+            </div>
+            {totalPnlPct !== null && (
+              <div className="text-right">
+                <div className="text-[9px] uppercase tracking-widest text-neutral-700 mb-0.5">P&L รวม</div>
+                <div
+                  className={`font-mono text-sm font-bold tabular-nums ${totalPnlPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                >
+                  {totalPnlPct >= 0 ? '+' : ''}{totalPnlPct.toFixed(1)}%
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="mt-1.5 text-[10px] text-neutral-700">
+            ลงทุน ฿{Math.round(totals.invested).toLocaleString()}
+            {totals.unpriced > 0 && (
+              <span className="ml-1 text-neutral-800">(บางตัวยังไม่มีราคา)</span>
+            )}
+          </div>
+        </div>
       )}
 
       {groups.map((g) =>

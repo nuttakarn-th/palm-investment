@@ -1,27 +1,54 @@
-// Minimal markdown renderer for the CEO summary (headers, bold, bullets).
-function renderMd(md) {
-  return md.split('\n').map((line, i) => {
-    const bold = (s) =>
-      s.split(/(\*\*[^*]+\*\*)/g).map((part, j) =>
-        part.startsWith('**') ? (
-          <strong key={j} className="text-white">
-            {part.slice(2, -2)}
-          </strong>
-        ) : (
-          part
-        )
-      );
-    if (line.startsWith('# ')) return <h1 key={i} className="text-lg font-bold text-[#FCD34D] mt-2 mb-2">{bold(line.slice(2))}</h1>;
-    if (line.startsWith('## ')) return <h2 key={i} className="text-sm font-semibold text-neutral-200 mt-3 mb-1">{bold(line.slice(3))}</h2>;
-    if (line.startsWith('- [ ] ')) return <div key={i} className="text-sm text-neutral-300 ml-1">☐ {bold(line.slice(6))}</div>;
-    if (line.startsWith('- ')) return <div key={i} className="text-sm text-neutral-300 ml-1">• {bold(line.slice(2))}</div>;
-    if (/^\d+\.\s/.test(line)) return <div key={i} className="text-sm text-neutral-300 ml-1">{bold(line)}</div>;
-    if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**'))
-      return <div key={i} className="text-[11px] text-neutral-600 italic mt-2">{line.replaceAll('*', '')}</div>;
-    if (!line.trim()) return <div key={i} className="h-1.5" />;
-    return <div key={i} className="text-sm text-neutral-300">{bold(line)}</div>;
-  });
-}
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const MD_COMPONENTS = {
+  h1: ({ children }) => (
+    <h1 className="text-lg font-bold text-[#FCD34D] mt-2 mb-2 leading-snug">{children}</h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-sm font-semibold text-neutral-200 mt-3 mb-1 leading-snug">{children}</h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-sm font-semibold text-neutral-400 mt-2 mb-0.5 leading-snug">{children}</h3>
+  ),
+  p: ({ children }) => (
+    <p className="text-sm text-neutral-300 mb-2 leading-relaxed">{children}</p>
+  ),
+  ul: ({ children }) => <ul className="mb-2 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 space-y-0.5 list-decimal ml-4">{children}</ol>,
+  li: ({ children }) => <li className="text-sm text-neutral-300 ml-3 list-disc">{children}</li>,
+  strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="text-neutral-500 text-xs not-italic">{children}</em>,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-[#F59E0B] pl-3 text-neutral-500 text-sm mb-2">{children}</blockquote>
+  ),
+  pre: ({ children }) => (
+    <pre className="mb-3 overflow-x-auto rounded bg-[#111] border border-[#1e1e1e] p-3">{children}</pre>
+  ),
+  code: ({ className, children }) => {
+    const isBlock = /language-/.test(className || '');
+    return isBlock ? (
+      <code className="text-xs font-mono text-neutral-300">{children}</code>
+    ) : (
+      <code className="bg-[#1a1a1a] rounded px-1 py-0.5 text-xs font-mono text-neutral-300">{children}</code>
+    );
+  },
+  table: ({ children }) => (
+    <div className="overflow-x-auto mb-3">
+      <table className="w-full text-xs border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead>{children}</thead>,
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr: ({ children }) => <tr>{children}</tr>,
+  th: ({ children }) => (
+    <th className="text-left text-neutral-400 border-b border-[#242424] pb-1.5 pr-4 font-semibold">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="text-neutral-300 border-b border-[#1a1a1a] py-1.5 pr-4">{children}</td>
+  ),
+  hr: () => <hr className="border-[#1e1e1e] my-3" />,
+};
 
 export default function CEOSummary({ report, notified, onReset }) {
   if (!report) return null;
@@ -46,7 +73,9 @@ export default function CEOSummary({ report, notified, onReset }) {
         </div>
       </div>
 
-      <div>{renderMd(report.summary)}</div>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+        {report.summary}
+      </ReactMarkdown>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#1e1e1e] pt-3 text-[11px] text-neutral-600">
         <span>
