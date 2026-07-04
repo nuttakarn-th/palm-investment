@@ -18,24 +18,7 @@ export default function App() {
     return sessionStorage.getItem('palm_entered') ? 'app' : 'home';
   });
 
-  const goHome = () => {
-    sessionStorage.removeItem('palm_entered');
-    setPage('home');
-  };
-  const goApp = () => {
-    sessionStorage.setItem('palm_entered', '1');
-    setPage('app');
-  };
-  const goTeam = () => setPage('team');
-
-  if (page === 'home') {
-    return <HomePage onEnter={goApp} onTeam={goTeam} />;
-  }
-
-  if (page === 'team') {
-    return <TeamPage onBack={goHome} onEnter={goApp} />;
-  }
-
+  // All hooks must be called unconditionally — before any early returns
   const pipe = usePipeline();
   const portfolio = usePortfolio();
   const { settings, save } = useSettings();
@@ -57,9 +40,27 @@ export default function App() {
     }
   }, [pipe.status, pipe.report]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const goHome = () => {
+    sessionStorage.removeItem('palm_entered');
+    setPage('home');
+  };
+  const goApp = () => {
+    sessionStorage.setItem('palm_entered', '1');
+    setPage('app');
+  };
+  const goTeam = () => setPage('team');
+
   const onRun = ({ command, pipeline, mode }) => {
     pipe.run({ command, portfolio: portfolio.items, pipeline: pipeline || 'full', mode: mode || 'manual' });
   };
+
+  if (page === 'home') {
+    return <HomePage onEnter={goApp} onTeam={goTeam} />;
+  }
+
+  if (page === 'team') {
+    return <TeamPage onBack={goHome} onEnter={goApp} />;
+  }
 
   const running = pipe.status === 'running';
   const tokens = pipe.totals.input + pipe.totals.output;
