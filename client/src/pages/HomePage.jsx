@@ -89,15 +89,101 @@ export default function HomePage() {
     <div style={{ background: '#080808', minHeight: '100vh', ...font }}>
 
       {/* ── SECTION 1: HERO ── */}
-      <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
 
-        {/* Background */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {/* ── TEXT ZONE (solid dark — no image underneath) ── */}
+        <div style={{ flexShrink: 0, padding: '0 24px 40px' }}>
+
+          {/* Nav */}
+          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>🎯</span>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
+                PALM INVESTMENT <span style={{ color: '#4F8EF7' }}>OS</span>
+              </span>
+            </div>
+            <button
+              onClick={() => navigate('/app')}
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '8px', padding: '6px 20px',
+                fontSize: '14px', fontWeight: 600, color: '#fff',
+                ...font, cursor: 'pointer',
+              }}
+            >
+              Mission Control →
+            </button>
+          </nav>
+
+          {/* Content */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '8px' }}>
+            {/* Badge */}
+            <div style={{
+              marginBottom: '20px',
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              borderRadius: '99px',
+              border: '1px solid rgba(79,142,247,0.4)',
+              background: 'rgba(79,142,247,0.1)',
+              padding: '6px 16px',
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4F8EF7', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#4F8EF7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                {content.badge}
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 style={{ margin: '0 0 14px', lineHeight: 1.2, color: '#fff', fontSize: 'clamp(2rem, 5vw, 2.6rem)', fontWeight: 800 }}>
+              {content.headline.split('\n').map((line, i) => (
+                <span key={i} style={{ display: 'block' }}>{line}</span>
+              ))}
+            </h1>
+
+            {/* Sub */}
+            <p style={{ margin: '0 0 32px', maxWidth: '480px', color: '#666', lineHeight: 1.7, fontSize: '14px' }}>
+              {content.subheadline}
+            </p>
+
+            {/* CTAs — 2 only */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate('/app')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: '#4F8EF7', color: '#fff',
+                  border: 'none', borderRadius: '12px',
+                  padding: '13px 28px', fontSize: '15px', fontWeight: 700,
+                  cursor: 'pointer', ...font,
+                  boxShadow: '0 8px 28px rgba(79,142,247,0.35)',
+                }}
+              >
+                ▶ {content.cta}
+              </button>
+              <button
+                onClick={() => navigate('/team')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'transparent',
+                  border: '1px solid rgba(79,142,247,0.35)',
+                  borderRadius: '12px', padding: '13px 24px',
+                  fontSize: '15px', fontWeight: 600, color: '#4F8EF7',
+                  cursor: 'pointer', ...font,
+                }}
+              >
+                👥 พบกับทีม AI
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── IMAGE ZONE (no text overlay) ── */}
+        <div style={{ flex: 1, minHeight: '320px', position: 'relative', overflow: 'hidden' }}>
           {content.bgImage ? (
             <img
               src={content.bgImage}
-              alt="background"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }}
+              alt="ทีม"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
               draggable={false}
             />
           ) : (
@@ -107,130 +193,25 @@ export default function HomePage() {
               <img
                 src="/team.png"
                 alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
                 draggable={false}
               />
             </picture>
           )}
+          {/* Fade edges — top blends into dark text zone, bottom into next section */}
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.40) 50%, rgba(0,0,0,0.20) 100%)',
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, #080808 0%, transparent 18%, transparent 72%, #080808 100%)',
           }} />
-        </div>
-
-        {/* Nav */}
-        <nav style={{ position: 'relative', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>🎯</span>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
-              PALM INVESTMENT <span style={{ color: '#4F8EF7' }}>OS</span>
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-
-            <button
-              onClick={() => navigate('/app')}
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '8px',
-                padding: '6px 20px',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#fff',
-                ...font,
-                cursor: 'pointer',
-              }}
-            >
-              Mission Control →
-            </button>
-          </div>
-        </nav>
-
-        {/* Hero content */}
-        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '20px 20px 0' }}>
-          {/* Badge */}
+          {/* Scroll hint */}
           <div style={{
-            marginBottom: '20px',
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            borderRadius: '99px',
-            border: '1px solid rgba(79,142,247,0.4)',
-            background: 'rgba(79,142,247,0.1)',
-            padding: '6px 16px',
+            position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            animation: 'bounceDown 2s ease-in-out infinite', zIndex: 10,
           }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4F8EF7', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#4F8EF7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              {content.badge}
-            </span>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', letterSpacing: '0.12em' }}>SCROLL</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '18px' }}>↓</span>
           </div>
-
-          {/* Headline */}
-          <h1 style={{ marginBottom: '12px', lineHeight: 1.2, color: '#fff', fontSize: 'clamp(1.9rem, 4vw, 2.4rem)', fontWeight: 800 }}>
-            {content.headline.split('\n').map((line, i) => (
-              <span key={i} style={{ whiteSpace: 'nowrap', display: 'block' }}>{line}</span>
-            ))}
-          </h1>
-
-          {/* Sub */}
-          <p style={{ marginBottom: '28px', maxWidth: '520px', color: '#777', lineHeight: 1.6, fontSize: '14px' }}>
-            {content.subheadline}
-          </p>
-
-          {/* CTAs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
-            <button
-              onClick={() => navigate('/app')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: '#4F8EF7', color: '#fff',
-                border: 'none', borderRadius: '12px',
-                padding: '12px 24px', fontSize: '14px', fontWeight: 700,
-                cursor: 'pointer', ...font,
-                boxShadow: '0 8px 24px rgba(79,142,247,0.3)',
-              }}
-            >
-              <span>▶</span> {content.cta}
-            </button>
-
-            <button
-              onClick={() => navigate('/app')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '12px', padding: '12px 20px',
-                fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)',
-                cursor: 'pointer', ...font,
-              }}
-            >
-              🔍 {content.ctaSub}
-            </button>
-
-            <button
-              onClick={() => navigate('/team')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'rgba(79,142,247,0.08)',
-                border: '1px solid rgba(79,142,247,0.3)',
-                borderRadius: '12px', padding: '12px 20px',
-                fontSize: '14px', fontWeight: 600, color: '#4F8EF7',
-                cursor: 'pointer', ...font,
-              }}
-            >
-              👥 พบกับทีม AI
-            </button>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div style={{
-          position: 'absolute', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-          animation: 'bounceDown 2s ease-in-out infinite',
-          zIndex: 10,
-        }}>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', letterSpacing: '0.1em' }}>SCROLL</span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '20px' }}>↓</span>
         </div>
 
         <style>{`
