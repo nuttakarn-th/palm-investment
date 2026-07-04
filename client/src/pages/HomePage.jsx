@@ -257,8 +257,8 @@ export default function HomePage() {
         .hero-wrap { height: 100vh; height: 100svh; }
         .pipeline-scroll::-webkit-scrollbar { display: none; }
 
-        /* Portrait: shrink text area, push image higher to fill the gap */
-        @media (orientation: portrait) {
+        /* Tablet portrait only: shrink text area, push image higher to fill the tall viewport */
+        @media (min-width: 768px) and (orientation: portrait) {
           .hero-text-block { height: 30% !important; justify-content: flex-start !important; padding-top: 16px !important; }
           .hero-bg-layer   { height: 74% !important; }
           .hero-gradient   { background: linear-gradient(to bottom, #080808 0%, #080808 20%, rgba(8,8,8,0.55) 32%, rgba(8,8,8,0.0) 44%, rgba(8,8,8,0.0) 70%, rgba(8,8,8,0.65) 84%, #080808 95%) !important; }
@@ -327,8 +327,8 @@ export default function HomePage() {
             />
           ) : (
             <picture>
-              <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
-              <source media="(min-width: 768px)" srcSet="/team.png" />
+              <source media="(orientation: portrait)" srcSet="/team-mobile.png" />
+              <source media="(orientation: landscape)" srcSet="/team.png" />
               <img
                 src="/team.png" alt="ทีม Palm Investment OS"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
