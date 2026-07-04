@@ -88,8 +88,9 @@ export default function HomePage() {
   return (
     <div style={{ background: '#080808', minHeight: '100vh', ...font }}>
 
+      <style>{`.hero-wrap{height:100vh;height:100svh}`}</style>
       {/* ── SECTION 1: HERO ── */}
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
+      <div className="hero-wrap" style={{ display: 'flex', flexDirection: 'column', background: '#080808' }}>
 
         {/* ── TEXT ZONE (solid dark — no image underneath) ── */}
         <div style={{ flexShrink: 0, padding: '0 20px 20px' }}>
@@ -183,7 +184,7 @@ export default function HomePage() {
             <img
               src={content.bgImage}
               alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 72%', display: 'block' }}
               draggable={false}
             />
           ) : (
@@ -193,7 +194,7 @@ export default function HomePage() {
               <img
                 src="/team.png"
                 alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 72%', display: 'block' }}
                 draggable={false}
               />
             </picture>
@@ -201,7 +202,7 @@ export default function HomePage() {
           {/* Fade edges */}
           <div style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, #080808 0%, transparent 14%, transparent 58%, #080808 100%)',
+            background: 'linear-gradient(to bottom, #080808 0%, transparent 12%, transparent 38%, rgba(8,8,8,0.65) 55%, #080808 76%)',
           }} />
           {/* Stats + scroll — overlaid on bottom gradient */}
           <div style={{
@@ -216,8 +217,8 @@ export default function HomePage() {
                 { value: '3', label: 'ตลาด' },
               ].map(({ value, label }) => (
                 <div key={label} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '22px', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</div>
+                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</div>
                 </div>
               ))}
               <div style={{ textAlign: 'center' }}>
@@ -230,7 +231,7 @@ export default function HomePage() {
                   <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
                   Real-time
                 </div>
-                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'bounceDown 2s ease-in-out infinite' }}>
@@ -242,8 +243,8 @@ export default function HomePage() {
 
         <style>{`
           @keyframes bounceDown {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(8px); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
           }
           @keyframes pulse {
             0%, 100% { opacity: 1; }
