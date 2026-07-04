@@ -15,10 +15,24 @@ export default function HomePage({ onEnter, onTeam }) {
   const [content, setContent] = useState(DEFAULT_CONTENT);
 
   useEffect(() => {
+    // Read localStorage first (source of truth after user saves Settings)
+    let localHome = {};
+    try {
+      const local = JSON.parse(localStorage.getItem('palm-os:settings') || '{}');
+      if (local.homepage) localHome = local.homepage;
+    } catch {}
+
     fetch('/api/settings')
       .then((r) => r.json())
-      .then((s) => { if (s.homepage) setContent({ ...DEFAULT_CONTENT, ...s.homepage }); })
-      .catch(() => {});
+      .then((s) => {
+        // localStorage always wins over server (same merge order as useSettings)
+        setContent({ ...DEFAULT_CONTENT, ...(s.homepage || {}), ...localHome });
+      })
+      .catch(() => {
+        if (Object.keys(localHome).length) {
+          setContent((c) => ({ ...c, ...localHome }));
+        }
+      });
   }, []);
 
   return (
