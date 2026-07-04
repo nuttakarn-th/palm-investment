@@ -102,7 +102,7 @@ function Particles() {
   return (
     <canvas
       ref={ref}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}
     />
   );
 }
@@ -308,25 +308,60 @@ export default function HomePage() {
       `}</style>
 
       {/* ── HERO ── */}
-      <div className="hero-wrap" style={{ display: 'flex', flexDirection: 'column', background: '#080808', position: 'relative', overflow: 'hidden' }}>
+      <div className="hero-wrap" style={{ position: 'relative', overflow: 'hidden', background: '#080808' }}>
 
-        {/* Particles */}
+        {/* Layer 1 — BG Image */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+          {content.bgImage ? (
+            <img
+              src={content.bgImage} alt="ทีม"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+              draggable={false}
+            />
+          ) : (
+            <picture>
+              <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
+              <source media="(min-width: 768px)" srcSet="/team.png" />
+              <img
+                src="/team.png" alt="ทีม Palm Investment OS"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+                draggable={false}
+              />
+            </picture>
+          )}
+        </div>
+
+        {/* Layer 2 — Gradient overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+          background: [
+            'linear-gradient(to bottom,',
+            'rgba(8,8,8,0.93) 0%,',
+            'rgba(8,8,8,0.85) 22%,',
+            'rgba(8,8,8,0.65) 40%,',
+            'rgba(8,8,8,0.25) 56%,',
+            'rgba(8,8,8,0.05) 66%,',
+            'rgba(8,8,8,0.00) 73%,',
+            'rgba(8,8,8,0.45) 86%,',
+            'rgba(8,8,8,0.70) 100%)',
+          ].join(' '),
+        }} />
+
+        {/* Layer 3 — Effects: particles + scanline */}
         {bootState === 'done' && <Particles />}
-
-        {/* Moving scanline */}
         {bootState === 'done' && (
           <div style={{
-            position: 'absolute', left: 0, right: 0, height: '80px', pointerEvents: 'none', zIndex: 2,
+            position: 'absolute', left: 0, right: 0, height: '80px', pointerEvents: 'none', zIndex: 3,
             background: 'linear-gradient(to bottom, transparent, rgba(79,142,247,0.045), transparent)',
             animation: 'scanDown 7s linear infinite',
           }} />
         )}
 
-        {/* TEXT ZONE */}
-        <div style={{ flexShrink: 0, padding: '0 20px 20px', position: 'relative', zIndex: 3 }}>
+        {/* Layer 4 — Content: nav + text + stats */}
+        <div style={{ position: 'relative', zIndex: 4, height: '100%', display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
 
           {/* Nav */}
-          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
+          <nav style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '20px' }}>🎯</span>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
@@ -345,7 +380,12 @@ export default function HomePage() {
             </button>
           </nav>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '20px' }}>
+          {/* Text — centered, weighted upward so image zone shows below */}
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+            paddingBottom: '20%',
+          }}>
 
             {/* Badge */}
             <div style={{
@@ -362,7 +402,7 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* Headline — glitch entrance */}
+            {/* Headline */}
             <h1 style={{
               margin: '0 0 10px', lineHeight: 1.15, color: '#fff',
               fontSize: 'clamp(2.4rem, 9vw, 3.6rem)', fontWeight: 800,
@@ -376,7 +416,7 @@ export default function HomePage() {
 
             {/* Subheadline */}
             <p style={{
-              margin: '0 0 22px', maxWidth: '480px', color: '#666', lineHeight: 1.6, fontSize: '13px',
+              margin: '0 0 22px', maxWidth: '480px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, fontSize: '13px',
               whiteSpace: 'pre-line',
               ...fadeIn(3),
             }}>
@@ -384,10 +424,7 @@ export default function HomePage() {
             </p>
 
             {/* CTAs */}
-            <div style={{
-              display: 'flex', gap: '10px', justifyContent: 'center',
-              ...fadeIn(4),
-            }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', ...fadeIn(4) }}>
               <button
                 onClick={() => navigate('/app')}
                 style={{
@@ -413,39 +450,11 @@ export default function HomePage() {
               </button>
             </div>
           </div>
-        </div>
 
-        {/* IMAGE ZONE */}
-        <div style={{ flex: 1, minHeight: '320px', position: 'relative', overflow: 'hidden', zIndex: 3 }}>
-          {content.bgImage ? (
-            <img
-              src={content.bgImage} alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
-              draggable={false}
-            />
-          ) : (
-            <picture>
-              <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
-              <source media="(min-width: 768px)" srcSet="/team.png" />
-              <img
-                src="/team.png" alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
-                draggable={false}
-              />
-            </picture>
-          )}
-
-          {/* Fade edges */}
+          {/* Stats + scroll — pinned to bottom of content layer */}
           <div style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, #080808 0%, transparent 6%, transparent 62%, rgba(8,8,8,0.8) 78%, #080808 92%)',
-          }} />
-
-          {/* Stats + scroll */}
-          <div style={{
-            position: 'absolute', bottom: '16px', left: 0, right: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-            zIndex: 10,
+            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+            paddingBottom: '16px',
             opacity: elem >= 5 ? 1 : 0,
             transition: 'opacity 0.4s ease',
           }}>
@@ -480,10 +489,11 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'bounceDown 2s ease-in-out infinite' }}>
-              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', letterSpacing: '0.12em' }}>SCROLL</span>
-              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px' }}>↓</span>
+              <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', letterSpacing: '0.12em' }}>SCROLL</span>
+              <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '14px' }}>↓</span>
             </div>
           </div>
+
         </div>
       </div>
 
