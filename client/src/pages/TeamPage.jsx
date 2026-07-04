@@ -200,11 +200,11 @@ function StatsTabContent({ agent }) {
   }, []);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
-      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0, flexShrink: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0 }}>
         {agent.bio}
       </p>
-      <div ref={areaRef} style={{ flex: 1, display: 'flex', gap: '12px', minHeight: 0, alignItems: 'center' }}>
+      <div ref={areaRef} style={{ height: '240px', display: 'flex', gap: '12px', alignItems: 'center' }}>
         <RadarChart stat={agent.stat} color={agent.color} size={radarSize} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
           {Object.entries(agent.stat).map(([k, v]) => (
@@ -248,7 +248,7 @@ function ModalContent({ agent, onClose }) {
       <div
         style={{
           width: '100%', maxWidth: '420px',
-          height: 'calc(100vh - 32px)', maxHeight: '740px',
+          maxHeight: 'calc(100vh - 48px)',
           display: 'flex', flexDirection: 'column',
           background: 'linear-gradient(160deg, #111 0%, #0c0c0c 100%)',
           border: `1px solid ${agent.color}44`,
@@ -305,19 +305,19 @@ function ModalContent({ agent, onClose }) {
           ))}
         </div>
 
-        {/* Tab content — fills remaining space, no scroll */}
-        <div style={{ flex: 1, padding: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {/* Tab content — auto height per tab */}
+        <div style={{ padding: '14px', display: 'flex', flexDirection: 'column' }}>
 
           {tab === 'stats' && <StatsTabContent agent={agent} />}
 
           {tab === 'abilities' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {agent.abilities.map((ab, i) => (
-                <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', padding: '0 18px', borderRadius: '14px', background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
-                  <span style={{ fontSize: '28px', lineHeight: 1, flexShrink: 0 }}>{ab.icon}</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 18px', borderRadius: '14px', background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
+                  <span style={{ fontSize: '26px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>{ab.icon}</span>
                   <div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '5px', fontFamily: "'Kanit', sans-serif" }}>{ab.name}</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{ab.desc}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>{ab.desc}</div>
                   </div>
                 </div>
               ))}
@@ -325,18 +325,18 @@ function ModalContent({ agent, onClose }) {
           )}
 
           {tab === 'ask' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px', flexShrink: 0 }}>ตัวอย่างคำถาม</div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minHeight: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>ตัวอย่างคำถาม</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {agent.samples.map((s, i) => (
-                    <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '0 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div key={i} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '13px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', lineHeight: 1.5 }}>
                       💬 {s}
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={{ flexShrink: 0 }}>
+              <div>
                 <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>Synergy กับ</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {agent.synergies.map((s) => (
