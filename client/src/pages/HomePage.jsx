@@ -102,7 +102,7 @@ function Particles() {
   return (
     <canvas
       ref={ref}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2 }}
     />
   );
 }
@@ -308,60 +308,25 @@ export default function HomePage() {
       `}</style>
 
       {/* ── HERO ── */}
-      <div className="hero-wrap" style={{ position: 'relative', overflow: 'hidden', background: '#080808' }}>
+      <div className="hero-wrap" style={{ display: 'flex', flexDirection: 'column', background: '#080808', position: 'relative', overflow: 'hidden' }}>
 
-        {/* Layer 1 — BG Image */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-          {content.bgImage ? (
-            <img
-              src={content.bgImage} alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
-              draggable={false}
-            />
-          ) : (
-            <picture>
-              <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
-              <source media="(min-width: 768px)" srcSet="/team.png" />
-              <img
-                src="/team.png" alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
-                draggable={false}
-              />
-            </picture>
-          )}
-        </div>
-
-        {/* Layer 2 — Gradient overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-          background: [
-            'linear-gradient(to bottom,',
-            'rgba(8,8,8,0.93) 0%,',
-            'rgba(8,8,8,0.85) 22%,',
-            'rgba(8,8,8,0.65) 40%,',
-            'rgba(8,8,8,0.25) 56%,',
-            'rgba(8,8,8,0.05) 66%,',
-            'rgba(8,8,8,0.00) 73%,',
-            'rgba(8,8,8,0.45) 86%,',
-            'rgba(8,8,8,0.70) 100%)',
-          ].join(' '),
-        }} />
-
-        {/* Layer 3 — Effects: particles + scanline */}
+        {/* Particles (z-index 2 — above bg, below text) */}
         {bootState === 'done' && <Particles />}
+
+        {/* Scanline (z-index 3 — clips only within hero-wrap, not across boundary) */}
         {bootState === 'done' && (
           <div style={{
             position: 'absolute', left: 0, right: 0, height: '80px', pointerEvents: 'none', zIndex: 3,
-            background: 'linear-gradient(to bottom, transparent, rgba(79,142,247,0.045), transparent)',
+            background: 'linear-gradient(to bottom, transparent, rgba(79,142,247,0.03), transparent)',
             animation: 'scanDown 7s linear infinite',
           }} />
         )}
 
-        {/* Layer 4 — Content: nav + text + stats */}
-        <div style={{ position: 'relative', zIndex: 4, height: '100%', display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
+        {/* TEXT ZONE */}
+        <div style={{ flexShrink: 0, padding: '0 20px 20px', position: 'relative', zIndex: 4 }}>
 
           {/* Nav */}
-          <nav style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
+          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '20px' }}>🎯</span>
               <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
@@ -380,12 +345,7 @@ export default function HomePage() {
             </button>
           </nav>
 
-          {/* Text — centered, weighted upward so image zone shows below */}
-          <div style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-            paddingBottom: '20%',
-          }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '20px' }}>
 
             {/* Badge */}
             <div style={{
@@ -416,7 +376,7 @@ export default function HomePage() {
 
             {/* Subheadline */}
             <p style={{
-              margin: '0 0 22px', maxWidth: '480px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, fontSize: '13px',
+              margin: '0 0 22px', maxWidth: '480px', color: '#888', lineHeight: 1.6, fontSize: '13px',
               whiteSpace: 'pre-line',
               ...fadeIn(3),
             }}>
@@ -450,11 +410,39 @@ export default function HomePage() {
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Stats + scroll — pinned to bottom of content layer */}
+        {/* IMAGE ZONE */}
+        <div style={{ flex: 1, minHeight: '320px', position: 'relative', overflow: 'hidden', zIndex: 4 }}>
+          {content.bgImage ? (
+            <img
+              src={content.bgImage} alt="ทีม"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+              draggable={false}
+            />
+          ) : (
+            <picture>
+              <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
+              <source media="(min-width: 768px)" srcSet="/team.png" />
+              <img
+                src="/team.png" alt="ทีม Palm Investment OS"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+                draggable={false}
+              />
+            </picture>
+          )}
+
+          {/* Gradient — top fade bridges text→image seam, bottom fades into page */}
           <div style={{
-            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-            paddingBottom: '16px',
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, #080808 0%, transparent 10%, transparent 60%, rgba(8,8,8,0.7) 78%, #080808 92%)',
+          }} />
+
+          {/* Stats + scroll */}
+          <div style={{
+            position: 'absolute', bottom: '16px', left: 0, right: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+            zIndex: 10,
             opacity: elem >= 5 ? 1 : 0,
             transition: 'opacity 0.4s ease',
           }}>
@@ -493,7 +481,6 @@ export default function HomePage() {
               <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '14px' }}>↓</span>
             </div>
           </div>
-
         </div>
       </div>
 
