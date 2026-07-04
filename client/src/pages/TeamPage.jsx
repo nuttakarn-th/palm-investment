@@ -497,6 +497,51 @@ function AgentCard({ agent, onOpenModal }) {
   );
 }
 
+// ── Pipeline Flow ─────────────────────────────────────────────────────────────
+
+function PipelineFlow() {
+  const S = [
+    { label: 'Stage 1', agents: 'ปิยะ + มิน', color: '#4F8EF7' },
+    { label: 'Stage 2', agents: 'เนม + โก้',  color: '#A78BFA' },
+    { label: 'Stage 3', agents: 'รัฐ',         color: '#F97316' },
+    { label: 'Stage 4', agents: 'ลุงชาย',      color: '#F97316' },
+    { label: 'Stage 5', agents: 'แก้ว',        color: '#34D399' },
+    { label: 'Stage 6', agents: 'ป้อม CIO',   color: '#FCD34D' },
+    { label: 'Stage 7', agents: 'นัท',         color: '#22D3EE' },
+  ];
+  const pill = (s) => (
+    <div style={{ padding: '10px 14px', borderRadius: '12px', background: `${s.color}12`, border: `1px solid ${s.color}30` }}>
+      <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: `${s.color}80`, textTransform: 'uppercase', marginBottom: '2px' }}>{s.label}</div>
+      <div style={{ fontSize: '13px', fontWeight: 700, color: s.color, fontFamily: "'Kanit', sans-serif" }}>{s.agents}</div>
+    </div>
+  );
+  const hArr = (ch) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#363636', fontSize: '15px' }}>{ch}</div>
+  );
+  const vArr = (side) => {
+    const base = { padding: '2px 0', display: 'flex', justifyContent: 'center' };
+    if (side === 'right') return <><div /><div /><div style={base}><span style={{ color: '#363636', fontSize: '15px' }}>↓</span></div></>;
+    if (side === 'left')  return <><div style={base}><span style={{ color: '#363636', fontSize: '15px' }}>↓</span></div><div /><div /></>;
+    return <><div /><div /><div style={base}><span style={{ color: '#363636', fontSize: '15px' }}>↓</span></div></>;
+  };
+  return (
+    <div className="mt-12 rounded-2xl border border-white/5 bg-white/2 p-5">
+      <div className="text-xs font-semibold text-neutral-500 mb-5 tracking-widest uppercase">Pipeline Flow</div>
+      <div style={{ maxWidth: '460px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 32px 1fr', alignItems: 'center' }}>
+        {pill(S[0])}{hArr('→')}{pill(S[1])}
+        {vArr('right')}
+        {pill(S[3])}{hArr('←')}{pill(S[2])}
+        {vArr('left')}
+        {pill(S[4])}{hArr('→')}{pill(S[5])}
+        {vArr('right')}
+        <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 'calc((100% - 32px) / 2)' }}>{pill(S[6])}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function TeamPage() {
@@ -554,29 +599,7 @@ export default function TeamPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-2xl border border-white/5 bg-white/2 p-5">
-          <div className="text-xs font-semibold text-neutral-500 mb-3 tracking-widest uppercase">Pipeline Flow</div>
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { label: 'Stage 1', agents: 'ปิยะ + มิน', color: '#4F8EF7' },
-              { label: 'Stage 2', agents: 'เนม + โก้', color: '#A78BFA' },
-              { label: 'Stage 3', agents: 'รัฐ', color: '#F97316' },
-              { label: 'Stage 4', agents: 'ลุงชาย', color: '#F97316' },
-              { label: 'Stage 5', agents: 'แก้ว', color: '#34D399' },
-              { label: 'Stage 6', agents: 'ป้อม CIO', color: '#FCD34D' },
-              { label: 'Stage 7', agents: 'นัท', color: '#22D3EE' },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px]" style={{ background: `${s.color}12`, border: `1px solid ${s.color}30`, color: s.color }}>
-                  <span className="font-bold">{s.label}</span>
-                  <span className="text-white/50">·</span>
-                  <span>{s.agents}</span>
-                </div>
-                {i < 6 && <span className="text-neutral-700">→</span>}
-              </div>
-            ))}
-          </div>
-        </div>
+        <PipelineFlow />
       </div>
 
       <CharacterModal key={modalAgent?.key} agent={modalAgent} onClose={() => setModalAgent(null)} />
