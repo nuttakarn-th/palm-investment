@@ -179,108 +179,145 @@ function RadarChart({ stat, color, size = 160 }) {
 // ── Character Modal ───────────────────────────────────────────────────────────
 
 function CharacterModal({ agent, onClose }) {
+  const [tab, setTab] = useState('stats');
   if (!agent) return null;
   const isSonnet = agent.model === 'Sonnet';
+  const TABS = [
+    { key: 'stats',     label: 'Stats' },
+    { key: 'abilities', label: 'Abilities' },
+    { key: 'ask',       label: 'ถามได้' },
+  ];
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl"
         style={{
+          width: '100%', maxWidth: '420px',
+          height: 'calc(100vh - 32px)', maxHeight: '740px',
+          display: 'flex', flexDirection: 'column',
           background: 'linear-gradient(160deg, #111 0%, #0c0c0c 100%)',
           border: `1px solid ${agent.color}44`,
-          boxShadow: `0 0 60px ${agent.color}30`,
+          boxShadow: `0 0 60px ${agent.color}25`,
+          borderRadius: '20px', overflow: 'hidden',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
-        {/* Top accent */}
-        <div className="h-1 w-full rounded-t-2xl" style={{ background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
+        {/* Accent bar */}
+        <div style={{ height: '3px', flexShrink: 0, background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
 
         {/* Header */}
-        <div className="flex items-start gap-5 p-6 pb-4">
-          <div className="shrink-0 w-24 h-24 rounded-xl overflow-hidden border" style={{ borderColor: `${agent.color}44` }}>
-            <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} className="w-full h-full object-cover" />
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ width: '58px', height: '58px', borderRadius: '12px', overflow: 'hidden', border: `1.5px solid ${agent.color}44`, flexShrink: 0 }}>
+            <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{agent.lv}</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{agent.pipeline}</span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded ml-auto" style={{ color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', flexWrap: 'wrap' }}>
+              {[agent.lv, agent.pipeline].map(lbl => (
+                <span key={lbl} style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '5px', color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{lbl}</span>
+              ))}
+              <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '5px', color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
                 {isSonnet ? '⚡ SONNET' : '◆ HAIKU'}
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</h2>
-            <p className="text-sm text-neutral-400">{agent.title}</p>
-            <div className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
-              {agent.teamIcon} {agent.teamLabel}
-            </div>
-          </div>
-          <button onClick={onClose} className="shrink-0 text-neutral-500 hover:text-white text-lg leading-none">✕</button>
-        </div>
-
-        {/* Bio */}
-        <div className="px-6 pb-4">
-          <p className="text-sm text-neutral-400 leading-relaxed">{agent.bio}</p>
-        </div>
-
-        {/* Stats + Radar */}
-        <div className="flex gap-4 px-6 pb-5">
-          <RadarChart stat={agent.stat} color={agent.color} size={160} />
-          <div className="flex-1 space-y-2.5 pt-2">
-            {Object.entries(agent.stat).map(([k, v]) => (
-              <div key={k} className="flex items-center gap-2">
-                <span className="text-[10px] text-neutral-500 w-8 font-mono">{k}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${v}%`, background: agent.color }} />
-                </div>
-                <span className="text-[10px] text-neutral-400 w-6 text-right font-mono">{v}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Abilities */}
-        <div className="px-6 pb-5">
-          <div className="text-[10px] font-bold tracking-widest text-neutral-600 mb-3 uppercase">Special Abilities</div>
-          <div className="space-y-2">
-            {agent.abilities.map((ab, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl p-3" style={{ background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
-                <span className="text-lg leading-none">{ab.icon}</span>
-                <div>
-                  <div className="text-sm font-bold text-white">{ab.name}</div>
-                  <div className="text-[11px] text-neutral-500 mt-0.5">{ab.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sample queries */}
-        <div className="px-6 pb-5">
-          <div className="text-[10px] font-bold tracking-widest text-neutral-600 mb-3 uppercase">ถามอะไรได้บ้าง</div>
-          <div className="space-y-1.5">
-            {agent.samples.map((s, i) => (
-              <div key={i} className="text-[12px] text-neutral-400 rounded-lg px-3 py-2 bg-white/3 border border-white/5">
-                💬 {s}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Synergies */}
-        <div className="px-6 pb-6">
-          <div className="text-[10px] font-bold tracking-widest text-neutral-600 mb-2 uppercase">Synergy กับ</div>
-          <div className="flex gap-2">
-            {agent.synergies.map((s) => (
-              <span key={s} className="text-xs px-3 py-1 rounded-full" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
-                ✦ {s}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '20px', fontWeight: 800, color: '#fff', fontFamily: "'Kanit', sans-serif", lineHeight: 1.2 }}>{agent.nickname}</span>
+              <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em', padding: '2px 8px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
+                {agent.teamIcon} {agent.teamLabel}
               </span>
-            ))}
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{agent.title}</div>
           </div>
+          <button onClick={onClose} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', fontSize: '18px', lineHeight: 1, cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }}>✕</button>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ flexShrink: 0, display: 'flex', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                flex: 1, padding: '9px 4px', fontSize: '11px', fontWeight: 700,
+                color: tab === t.key ? agent.color : 'rgba(255,255,255,0.28)',
+                borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                borderBottom: `2px solid ${tab === t.key ? agent.color : 'transparent'}`,
+                background: 'none', cursor: 'pointer', fontFamily: "'Kanit', sans-serif",
+                transition: 'color 0.15s', letterSpacing: '0.04em',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content — fills remaining space, no scroll */}
+        <div style={{ flex: 1, padding: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+          {tab === 'stats' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0,
+                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {agent.bio}
+              </p>
+              <div style={{ flex: 1, display: 'flex', gap: '10px', alignItems: 'center', minHeight: 0 }}>
+                <RadarChart stat={agent.stat} color={agent.color} size={148} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '9px' }}>
+                  {Object.entries(agent.stat).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '9px', color: '#555', width: '28px', fontFamily: 'monospace' }}>{k}</span>
+                      <div style={{ flex: 1, height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: '99px', width: `${v}%`, background: agent.color }} />
+                      </div>
+                      <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', width: '20px', textAlign: 'right', fontFamily: 'monospace' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'abilities' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {agent.abilities.map((ab, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 16px', borderRadius: '14px', background: `${agent.color}08`, border: `1px solid ${agent.color}20` }}>
+                  <span style={{ fontSize: '24px', lineHeight: 1, flexShrink: 0 }}>{ab.icon}</span>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '4px', fontFamily: "'Kanit', sans-serif" }}>{ab.name}</div>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{ab.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'ask' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>ตัวอย่างคำถาม</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {agent.samples.map((s, i) => (
+                    <div key={i} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '11px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      💬 {s}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>Synergy กับ</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {agent.synergies.map((s) => (
+                    <span key={s} style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30`, fontWeight: 600 }}>
+                      ✦ {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
@@ -371,7 +408,7 @@ function AgentCard({ agent, onOpenModal }) {
             </div>
           </div>
           <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${agent.color}33, transparent)` }} />
-          <div className="text-center py-1.5 text-[9px] text-neutral-700">กดเพื่อดูด้านหลัง ↩</div>
+          <div className="text-center py-1.5 text-[9px] text-neutral-500">กดเพื่อดูด้านหลัง ↩</div>
         </div>
 
         {/* ── BACK ── */}
@@ -416,7 +453,7 @@ function AgentCard({ agent, onOpenModal }) {
               📋 ดู Character Sheet
             </button>
           </div>
-          <div className="text-center pb-1.5 text-[9px] text-neutral-700">กดเพื่อกลับ ↩</div>
+          <div className="text-center pb-1.5 text-[9px] text-neutral-500">กดเพื่อกลับ ↩</div>
         </div>
       </div>
     </div>
@@ -455,10 +492,23 @@ export default function TeamPage() {
         <p className="text-neutral-500 text-sm max-w-md mx-auto">กดที่การ์ดเพื่อพลิกดูข้อมูล · กด "Character Sheet" เพื่อดูรายละเอียดเต็ม</p>
       </div>
 
+      <style>{`
+        @media (max-width: 639px) {
+          .agent-grid > .agent-card:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+            max-width: 50%;
+            margin: 0 auto;
+            width: 100%;
+          }
+        }
+      `}</style>
+
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="agent-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {AGENTS.map((agent) => (
-            <AgentCard key={agent.key} agent={agent} onOpenModal={setModalAgent} />
+            <div key={agent.key} className="agent-card">
+              <AgentCard agent={agent} onOpenModal={setModalAgent} />
+            </div>
           ))}
         </div>
 
@@ -487,7 +537,7 @@ export default function TeamPage() {
         </div>
       </div>
 
-      <CharacterModal agent={modalAgent} onClose={() => setModalAgent(null)} />
+      <CharacterModal key={modalAgent?.key} agent={modalAgent} onClose={() => setModalAgent(null)} />
     </div>
   );
 }
