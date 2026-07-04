@@ -5,7 +5,7 @@ import { notifyAll } from './notify.js';
 import { store } from './store.js';
 
 export async function runWeeklyReport() {
-  const portfolio = store.getPortfolio();
+  const portfolio = await store.getPortfolio();
   const command = [
     'Weekly Report ประจำสัปดาห์:',
     '1) รีวิว P&L และสุขภาพพอร์ตจากข้อมูลที่กรอกไว้',
@@ -15,7 +15,7 @@ export async function runWeeklyReport() {
   ].join('\n');
 
   const report = await runPipeline({ command, portfolio, pipeline: 'full', mode: 'weekly' });
-  store.addReport(report);
+  await store.addReport(report);
   const notified = await notifyAll(report);
   console.log('[scheduler] weekly report done', report.id, notified);
   return { report, notified };
@@ -25,7 +25,7 @@ export function startScheduler() {
   cron.schedule(
     '0 8 * * 0',
     async () => {
-      const { weeklyEnabled } = store.getSettings();
+      const { weeklyEnabled } = await store.getSettings();
       if (!weeklyEnabled) {
         console.log('[scheduler] weekly report disabled — skipped');
         return;

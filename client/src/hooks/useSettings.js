@@ -23,7 +23,7 @@ export function useSettings() {
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
-      .then((s) => setSettings((cur) => ({ ...cur, ...s })))
+      .then((s) => setSettings((cur) => ({ ...s, ...cur })))
       .catch(() => {});
   }, []);
 

@@ -27,7 +27,6 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.get('/api/roles', (_req, res) => {
-  // system prompts stay server-side; expose display metadata only
   res.json(
     ROLE_LIST.map(({ key, nickname, title, team, model, avatar }) => ({
       key, nickname, title, team, model, avatar,
@@ -65,7 +64,7 @@ app.post('/api/pipeline/run', async (req, res) => {
       emit,
       signal: abort.signal,
     });
-    store.addReport(report);
+    await store.addReport(report);
 
     if (notify) {
       const notified = await notifyAll(report);
@@ -80,13 +79,13 @@ app.post('/api/pipeline/run', async (req, res) => {
 
 // ---- settings / portfolio / reports ----------------------------------------
 
-app.get('/api/settings', (_req, res) => res.json(store.getSettings()));
-app.post('/api/settings', (req, res) => res.json(store.saveSettings(req.body || {})));
+app.get('/api/settings', async (_req, res) => res.json(await store.getSettings()));
+app.post('/api/settings', async (req, res) => res.json(await store.saveSettings(req.body || {})));
 
-app.get('/api/portfolio', (_req, res) => res.json(store.getPortfolio()));
-app.post('/api/portfolio', (req, res) => res.json(store.savePortfolio(req.body || [])));
+app.get('/api/portfolio', async (_req, res) => res.json(await store.getPortfolio()));
+app.post('/api/portfolio', async (req, res) => res.json(await store.savePortfolio(req.body || [])));
 
-app.get('/api/reports', (_req, res) => res.json(store.getReports()));
+app.get('/api/reports', async (_req, res) => res.json(await store.getReports()));
 
 // ---- notifications test + weekly manual trigger ----------------------------
 
@@ -104,6 +103,25 @@ app.post('/api/test/telegram', async (_req, res) => res.json(await sendTelegram(
 
 app.post('/api/weekly/run', async (_req, res) => {
   try {
+    const { report, notified } = await runWeeklyReport();
+    res.json({ ok: true, reportId: report.id, notified });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ---- Vercel Cron — GET /api/cron/weekly (Sunday 08:00 Asia/Bangkok) --------
+
+app.get('/api/cron/weekly', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const settings = await store.getSettings();
+    if (!settings.weeklyEnabled) {
+      return res.json({ ok: true, skipped: true, reason: 'weeklyEnabled = false' });
+    }
     const { report, notified } = await runWeeklyReport();
     res.json({ ok: true, reportId: report.id, notified });
   } catch (e) {
