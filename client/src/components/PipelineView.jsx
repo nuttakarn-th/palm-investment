@@ -189,7 +189,10 @@ export default function PipelineView({ pipeline, agents, status }) {
   const doneCount   = allKeys.filter((k) => agents[k]?.status === 'done').length;
   const activeCount = allKeys.filter((k) => agents[k]?.status === 'active').length;
   const totalCount  = allKeys.length;
-  const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+  // Active agents count as 50% toward progress so bar is never 0% while running
+  const progressPct = totalCount > 0
+    ? Math.round(((doneCount + activeCount * 0.5) / totalCount) * 100)
+    : 0;
 
   const currentStageIdx = stages.findIndex((s) => s.some((k) => agents[k]?.status === 'active'));
   const currentStage =
