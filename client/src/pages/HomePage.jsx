@@ -257,6 +257,13 @@ export default function HomePage() {
         .hero-wrap { height: 100vh; height: 100svh; }
         .pipeline-scroll::-webkit-scrollbar { display: none; }
 
+        /* Portrait: shrink text area, push image higher to fill the gap */
+        @media (orientation: portrait) {
+          .hero-text-block { height: 30% !important; justify-content: flex-start !important; padding-top: 16px !important; }
+          .hero-bg-layer   { height: 74% !important; }
+          .hero-gradient   { background: linear-gradient(to bottom, #080808 0%, #080808 20%, rgba(8,8,8,0.55) 32%, rgba(8,8,8,0.0) 44%, rgba(8,8,8,0.0) 70%, rgba(8,8,8,0.65) 84%, #080808 95%) !important; }
+        }
+
         @keyframes fadeSlideUp {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -311,7 +318,7 @@ export default function HomePage() {
       <div className="hero-wrap" style={{ position: 'relative', overflow: 'hidden', background: '#080808' }}>
 
         {/* Layer 1 — BG Image: occupies bottom 55% only (same scale as before) */}
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', zIndex: 1 }}>
+        <div className="hero-bg-layer" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', zIndex: 1 }}>
           {content.bgImage ? (
             <img
               src={content.bgImage} alt="ทีม"
@@ -332,7 +339,7 @@ export default function HomePage() {
         </div>
 
         {/* Layer 2 — Gradient: solid dark at top, fades to transparent at image, darkens at bottom */}
-        <div style={{
+        <div className="hero-gradient" style={{
           position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
           background: 'linear-gradient(to bottom, #080808 0%, #080808 40%, rgba(8,8,8,0.5) 52%, rgba(8,8,8,0.0) 62%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 84%, #080808 95%)',
         }} />
@@ -371,7 +378,7 @@ export default function HomePage() {
           </nav>
 
           {/* Text — fills the top 45%, centered */}
-          <div style={{
+          <div className="hero-text-block" style={{
             height: '45%', display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', textAlign: 'center',
           }}>
