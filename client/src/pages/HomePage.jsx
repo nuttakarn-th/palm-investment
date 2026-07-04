@@ -22,13 +22,13 @@ function getInitialContent() {
 }
 
 const PIPELINE_STEPS = [
-  { stage: 'Stage 1', agents: 'ปิยะ + มิน', role: 'Research', color: '#4F8EF7' },
-  { stage: 'Stage 2', agents: 'เนม + โก้', role: 'Analysis', color: '#A78BFA' },
-  { stage: 'Stage 3', agents: 'รัฐ', role: 'Position Risk', color: '#F97316' },
-  { stage: 'Stage 4', agents: 'ลุงชาย', role: 'Portfolio Risk', color: '#F97316' },
-  { stage: 'Stage 5', agents: 'แก้ว', role: 'Strategy', color: '#34D399' },
-  { stage: 'Stage 6', agents: 'ป้อม CIO', role: 'Committee', color: '#FCD34D' },
-  { stage: 'Stage 7', agents: 'นัท', role: 'Report', color: '#22D3EE' },
+  { stage: 'Stage 1', agents: 'ปิยะ + มิน', role: 'Research', color: '#4F8EF7', avatars: ['piya.jpg', 'min.jpg'] },
+  { stage: 'Stage 2', agents: 'เนม + โก้', role: 'Analysis', color: '#A78BFA', avatars: ['nem.jpg', 'ko.jpg'] },
+  { stage: 'Stage 3', agents: 'รัฐ', role: 'Position Risk', color: '#FB923C', avatars: ['rat.jpg'] },
+  { stage: 'Stage 4', agents: 'ลุงชาย', role: 'Portfolio Risk', color: '#FB923C', avatars: ['lungchai.jpg'] },
+  { stage: 'Stage 5', agents: 'แก้ว', role: 'Strategy', color: '#34D399', avatars: ['kaew.jpg'] },
+  { stage: 'Stage 6', agents: 'ป้อม CIO', role: 'Committee', color: '#F9A8D4', avatars: ['pom.jpg'] },
+  { stage: 'Stage 7', agents: 'นัท', role: 'Report', color: '#FCD34D', avatars: ['nat.jpg'] },
 ];
 
 const MARKETS = [
@@ -227,113 +227,135 @@ export default function HomePage() {
       </div>
 
       {/* ── SECTION 2: STATS BAR ── */}
-      <div style={{ background: '#0c0c0c', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', padding: '40px 32px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '32px', justifyContent: 'space-around', alignItems: 'center' }}>
+      <div style={{ background: '#0c0c0c', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', padding: '20px' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
           {[
             { value: '9', label: 'AI Agents' },
-            { value: '7', label: 'Pipeline Stages' },
+            { value: '7', label: 'Stages' },
             { value: '3', label: 'ตลาด' },
           ].map(({ value, label }) => (
-            <div key={label} style={{ textAlign: 'center', flex: '1 1 120px' }}>
-              <div style={{ fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '12px', color: '#555', marginTop: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</div>
+            <div key={label} style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: '10px', color: '#555', marginTop: '5px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</div>
             </div>
           ))}
-          <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
             <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              display: 'inline-flex', alignItems: 'center', gap: '5px',
               background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
-              borderRadius: '99px', padding: '6px 14px',
-              fontSize: '13px', fontWeight: 700, color: '#34D399',
+              borderRadius: '99px', padding: '4px 10px',
+              fontSize: '11px', fontWeight: 700, color: '#34D399',
             }}>
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
               Real-time
             </div>
-            <div style={{ fontSize: '12px', color: '#555', marginTop: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
+            <div style={{ fontSize: '10px', color: '#555', marginTop: '5px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
           </div>
         </div>
       </div>
 
-      {/* ── SECTION 3: HOW IT WORKS ── */}
-      <div style={{ padding: '80px 32px', maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+      {/* ── SECTION 3: HOW IT WORKS (horizontal scroll) ── */}
+      <div style={{ padding: '40px 0 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 20px' }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(79,142,247,0.1)',
-            border: '1px solid rgba(79,142,247,0.2)',
-            borderRadius: '99px', padding: '4px 16px',
-            fontSize: '11px', fontWeight: 700,
-            color: '#4F8EF7', letterSpacing: '0.1em',
-            textTransform: 'uppercase', marginBottom: '16px',
+            background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.2)',
+            borderRadius: '99px', padding: '3px 14px',
+            fontSize: '10px', fontWeight: 700, color: '#4F8EF7',
+            letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '10px',
           }}>
             วิธีการทำงาน
           </div>
-          <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: '#fff' }}>
+          <h2 style={{ fontSize: 'clamp(1.3rem, 3vw, 1.8rem)', fontWeight: 800, color: '#fff', margin: 0 }}>
             7 ขั้นตอน วิเคราะห์พอร์ตของคุณ
           </h2>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+        {/* Horizontal scroll track */}
+        <style>{`.pipeline-scroll::-webkit-scrollbar{display:none}`}</style>
+        <div className="pipeline-scroll" style={{
+          display: 'flex', alignItems: 'center',
+          overflowX: 'auto', overflowY: 'visible',
+          scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
+          padding: '8px 20px 16px',
+        }}>
           {PIPELINE_STEPS.map((step, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '480px' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              {/* Card */}
               <div style={{
-                display: 'flex', alignItems: 'center', gap: '20px',
-                background: '#111', border: '1px solid #1e1e1e',
-                borderRadius: '14px', padding: '16px 24px',
-                width: '100%', boxSizing: 'border-box',
+                width: '120px',
+                background: '#111', border: `1px solid ${step.color}30`,
+                borderRadius: '14px', padding: '14px 10px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+                boxShadow: `0 0 0 1px ${step.color}10`,
               }}>
-                {/* Dot */}
-                <div style={{
-                  width: '14px', height: '14px', borderRadius: '50%',
-                  background: step.color, flexShrink: 0,
-                  boxShadow: `0 0 12px ${step.color}60`,
-                }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '11px', color: '#555', marginBottom: '2px' }}>{step.stage}</div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>{step.agents}</div>
-                  <div style={{ fontSize: '12px', color: step.color, fontWeight: 600 }}>{step.role}</div>
+                {/* Avatars */}
+                <div style={{ display: 'flex', position: 'relative', height: '44px', justifyContent: 'center' }}>
+                  {step.avatars.map((av, j) => (
+                    <img
+                      key={j}
+                      src={`/avatars/${av}`}
+                      alt=""
+                      width={40} height={40}
+                      style={{
+                        width: '40px', height: '40px',
+                        borderRadius: '10px', objectFit: 'cover',
+                        border: '2px solid #111',
+                        marginLeft: j > 0 ? '-14px' : '0',
+                        position: 'relative', zIndex: step.avatars.length - j,
+                        outline: `1.5px solid ${step.color}50`,
+                      }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ))}
+                </div>
+                {/* Text */}
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                  <div style={{ fontSize: '9px', color: '#555', marginBottom: '3px', letterSpacing: '0.05em' }}>{step.stage}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff', lineHeight: 1.3, marginBottom: '5px' }}>{step.agents}</div>
+                  <div style={{
+                    display: 'inline-block',
+                    background: `${step.color}18`, borderRadius: '99px',
+                    padding: '2px 8px', fontSize: '9px', fontWeight: 700, color: step.color,
+                  }}>{step.role}</div>
                 </div>
               </div>
-              {/* Connector */}
+              {/* Arrow */}
               {i < PIPELINE_STEPS.length - 1 && (
-                <div style={{
-                  width: '2px', height: '24px',
-                  background: `linear-gradient(to bottom, ${step.color}60, ${PIPELINE_STEPS[i + 1].color}60)`,
-                }} />
+                <div style={{ width: '24px', flexShrink: 0, textAlign: 'center', color: '#2a2a2a', fontSize: '16px' }}>→</div>
               )}
             </div>
           ))}
         </div>
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#2e2e2e', letterSpacing: '0.05em' }}>← เลื่อนดูทั้งหมด →</span>
+        </div>
       </div>
 
-      {/* ── SECTION 4: MARKETS ── */}
-      <div style={{ background: '#0c0c0c', padding: '80px 32px', borderTop: '1px solid #1a1a1a' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, color: '#fff' }}>
+      {/* ── SECTION 4: MARKETS (3-column compact) ── */}
+      <div style={{ background: '#0c0c0c', padding: '36px 16px', borderTop: '1px solid #1a1a1a' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
               ครอบคลุมทุกตลาด
             </h2>
-            <p style={{ color: '#555', fontSize: '14px', marginTop: '8px' }}>
-              วิเคราะห์ได้ทุกตลาดในคำสั่งเดียว
-            </p>
+            <p style={{ color: '#555', fontSize: '12px', margin: 0 }}>วิเคราะห์ได้ทุกตลาดในคำสั่งเดียว</p>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {MARKETS.map((m) => (
-              <div
-                key={m.name}
-                style={{
-                  flex: '1 1 260px', maxWidth: '320px',
-                  background: '#111', border: `1px solid #1e1e1e`,
-                  borderRadius: '16px', padding: '28px 24px',
-                }}
-              >
-                <div style={{ fontSize: '36px', marginBottom: '12px' }}>{m.flag}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', marginBottom: '16px' }}>{m.name}</div>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div key={m.name} style={{
+                background: '#111',
+                border: `1px solid ${m.color}20`,
+                borderTop: `3px solid ${m.color}`,
+                borderRadius: '12px', padding: '14px 10px',
+              }}>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>{m.flag}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', marginBottom: '10px', lineHeight: 1.3 }}>{m.name}</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {m.bullets.map((b, i) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#888' }}>
-                      <span style={{ color: m.color, fontSize: '10px' }}>●</span> {b}
+                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', fontSize: '10px', color: '#666', lineHeight: 1.4 }}>
+                      <span style={{ color: m.color, fontSize: '7px', marginTop: '3px', flexShrink: 0 }}>●</span>{b}
                     </li>
                   ))}
                 </ul>
