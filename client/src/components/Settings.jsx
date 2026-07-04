@@ -1,13 +1,55 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+
+function compressBg(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const MAX_W = 1920, MAX_H = 1080;
+        const ratio = Math.min(MAX_W / img.width, MAX_H / img.height, 1);
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.82), w, h });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function Settings({ settings, onSave, onClose }) {
   const [form, setForm] = useState(settings);
   const [testing, setTesting] = useState({});
   const [weeklyRunning, setWeeklyRunning] = useState(false);
+  const [bgStatus, setBgStatus] = useState('');
+  const fileRef = useRef(null);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setHome = (k, v) =>
     setForm((f) => ({ ...f, homepage: { ...(f.homepage || {}), [k]: v } }));
+
+  const handleBgUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setBgStatus('❌ ไฟล์ใหญ่เกิน 10 MB'); return; }
+    setBgStatus('⏳ กำลังบีบอัด…');
+    try {
+      const { dataUrl, w, h } = await compressBg(file);
+      const kb = Math.round(dataUrl.length * 0.75 / 1024);
+      setHome('bgImage', dataUrl);
+      setBgStatus(`✅ ${w}×${h} px · ~${kb} KB`);
+    } catch {
+      setBgStatus('❌ อ่านภาพไม่ได้');
+    }
+    e.target.value = '';
+  };
 
   const test = async (kind) => {
     setTesting((t) => ({ ...t, [kind]: '…' }));
@@ -119,7 +161,53 @@ export default function Settings({ settings, onSave, onClose }) {
             />
             <label className={`${label} mt-2`}>CTA Button Text</label>
             <input className={input} value={form.homepage?.cta ?? ''} onChange={(e) => setHome('cta', e.target.value)} placeholder="เข้าสู่ Mission Control" />
-            <p className="text-[10px] text-neutral-600 mt-1.5">* บันทึกแล้วรีเฟรชหน้า Homepage เพื่อดูการเปลี่ยนแปลง</p>
+
+            {/* ── Background Image ── */}
+            <div className="mt-4 pt-4 border-t border-[#1e1e1e]">
+              <div className="text-[11px] font-semibold text-[#22D3EE] mb-2">🖼 Background Image</div>
+
+              {form.homepage?.bgImage ? (
+                <div className="relative mb-2 rounded-xl overflow-hidden" style={{ height: '90px' }}>
+                  <img src={form.homepage.bgImage} alt="bg preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => { setHome('bgImage', ''); setBgStatus(''); }}
+                      className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white font-semibold"
+                    >
+                      🗑 ลบภาพ
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  className="mb-2 rounded-xl border-2 border-dashed border-[#2a2a2a] hover:border-[#22D3EE]/50 transition-colors cursor-pointer flex flex-col items-center justify-center py-5 gap-1"
+                >
+                  <span className="text-2xl">📁</span>
+                  <span className="text-[11px] text-neutral-500">คลิกเพื่อเลือกภาพ</span>
+                </div>
+              )}
+
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleBgUpload} />
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="text-[11px] rounded border border-[#333] px-2.5 py-1 text-neutral-400 hover:text-white"
+                >
+                  {form.homepage?.bgImage ? '🔄 เปลี่ยนภาพ' : '📁 เลือกภาพ'}
+                </button>
+                {bgStatus && <span className="text-[11px] text-neutral-500">{bgStatus}</span>}
+              </div>
+
+              <div className="mt-2 rounded-lg bg-[#111] border border-[#1e1e1e] px-3 py-2 text-[10px] text-neutral-600 space-y-0.5">
+                <div>📐 แนะนำ: <span className="text-neutral-400">2560 × 1440 px</span> (16:9 · Full HD Retina)</div>
+                <div>🗜 Format: <span className="text-neutral-400">JPG / WebP</span> (PNG ได้แต่ไฟล์ใหญ่กว่า)</div>
+                <div>📦 ขนาดสูงสุด: <span className="text-neutral-400">10 MB</span> (ระบบบีบอัดอัตโนมัติ)</div>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-neutral-600 mt-2">* บันทึกแล้วรีเฟรชหน้า Homepage เพื่อดูการเปลี่ยนแปลง</p>
           </section>
 
           <section>

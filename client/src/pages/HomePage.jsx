@@ -24,21 +24,31 @@ export default function HomePage({ onEnter, onTeam }) {
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
 
-      {/* ── TEAM IMAGE — bottom, responsive: portrait on mobile, wide on desktop ── */}
-      <div className="absolute bottom-0 inset-x-0 pointer-events-none select-none">
-        <picture>
-          <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
-          <source media="(min-width: 768px)" srcSet="/team.png" />
+      {/* ── BACKGROUND IMAGE — full screen ── */}
+      <div className="absolute inset-0 pointer-events-none select-none">
+        {content.bgImage ? (
           <img
-            src="/team.png"
-            alt="ทีม Palm Investment OS"
-            className="mx-auto block"
-            style={{ maxHeight: '65vh', width: 'auto', maxWidth: '100%', objectFit: 'contain', objectPosition: 'bottom center' }}
+            src={content.bgImage}
+            alt="background"
+            className="w-full h-full"
+            style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
             draggable={false}
           />
-        </picture>
-        {/* top fade: blends into black */}
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black via-black/70 to-transparent" />
+        ) : (
+          <picture>
+            <source media="(max-width: 767px)" srcSet="/team-mobile.png" />
+            <source media="(min-width: 768px)" srcSet="/team.png" />
+            <img
+              src="/team.png"
+              alt="ทีม Palm Investment OS"
+              className="w-full h-full"
+              style={{ objectFit: 'cover', objectPosition: 'center bottom' }}
+              draggable={false}
+            />
+          </picture>
+        )}
+        {/* dark overlay — top heavy so text stays readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/20" />
       </div>
 
       {/* ── NAV ── */}
