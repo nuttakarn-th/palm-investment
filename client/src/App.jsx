@@ -1,4 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
+
 import CommandBox from './components/CommandBox.jsx';
 import PipelineView from './components/PipelineView.jsx';
 import PortfolioPanel from './components/PortfolioPanel.jsx';
@@ -6,19 +15,26 @@ import CEOSummary from './components/CEOSummary.jsx';
 import ReportHistory from './components/ReportHistory.jsx';
 import ReportModal from './components/ReportModal.jsx';
 import Settings from './components/Settings.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import PageTransition from './components/PageTransition.jsx';
+
 import HomePage from './pages/HomePage.jsx';
 import TeamPage from './pages/TeamPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
+import PrivacyPage from './pages/PrivacyPage.jsx';
+import TermsPage from './pages/TermsPage.jsx';
+
 import { usePipeline } from './hooks/usePipeline.js';
 import { usePortfolio } from './hooks/usePortfolio.js';
 import { useSettings } from './hooks/useSettings.js';
 import { useHistory } from './hooks/useHistory.js';
 
-export default function App() {
-  const [page, setPage] = useState(() => {
-    return sessionStorage.getItem('palm_entered') ? 'app' : 'home';
-  });
+// ── AppPage (Mission Control) ─────────────────────────────────────────────────
 
-  // All hooks must be called unconditionally — before any early returns
+function AppPage() {
+  const navigate = useNavigate();
+
+  // All hooks unconditionally at top
   const pipe = usePipeline();
   const portfolio = usePortfolio();
   const { settings, save } = useSettings();
@@ -30,37 +46,31 @@ export default function App() {
   const summaryRef = useRef(null);
 
   useEffect(() => {
-    fetch('/api/health').then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false }));
+    fetch('/api/health')
+      .then((r) => r.json())
+      .then(setHealth)
+      .catch(() => setHealth({ ok: false }));
   }, []);
 
   useEffect(() => {
     if (pipe.status === 'done' && pipe.report) {
       history.addLocal(pipe.report);
-      setTimeout(() => summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+      setTimeout(
+        () =>
+          summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+        300,
+      );
     }
   }, [pipe.status, pipe.report]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const goHome = () => {
-    sessionStorage.removeItem('palm_entered');
-    setPage('home');
-  };
-  const goApp = () => {
-    sessionStorage.setItem('palm_entered', '1');
-    setPage('app');
-  };
-  const goTeam = () => setPage('team');
-
   const onRun = ({ command, pipeline, mode }) => {
-    pipe.run({ command, portfolio: portfolio.items, pipeline: pipeline || 'full', mode: mode || 'manual' });
+    pipe.run({
+      command,
+      portfolio: portfolio.items,
+      pipeline: pipeline || 'full',
+      mode: mode || 'manual',
+    });
   };
-
-  if (page === 'home') {
-    return <HomePage onEnter={goApp} onTeam={goTeam} />;
-  }
-
-  if (page === 'team') {
-    return <TeamPage onBack={goHome} onEnter={goApp} />;
-  }
 
   const running = pipe.status === 'running';
   const tokens = pipe.totals.input + pipe.totals.output;
@@ -75,10 +85,13 @@ export default function App() {
             alt="ปาล์ม (CEO)"
             title="ปาล์ม — CEO"
             className="h-8 w-8 rounded-full object-cover border border-[#333] cursor-pointer"
-            onClick={goHome}
+            onClick={() => navigate('/')}
             onError={(e) => (e.currentTarget.style.display = 'none')}
           />
-          <button onClick={goHome} className="font-bold tracking-wide text-sm hover:opacity-80 transition-opacity text-left">
+          <button
+            onClick={() => navigate('/')}
+            className="font-bold tracking-wide text-sm hover:opacity-80 transition-opacity text-left"
+          >
             🎯 PALM INVESTMENT <span className="text-[#4F8EF7]">OS</span>
           </button>
           <span className="text-[10px] text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase">
@@ -86,19 +99,37 @@ export default function App() {
           </span>
         </div>
         <div className="flex items-center gap-4 text-[11px]">
-          <span className={running ? 'text-[#4F8EF7]' : pipe.status === 'error' ? 'text-red-400' : 'text-neutral-500'}>
-            {running ? '● PIPELINE RUNNING' : pipe.status === 'done' ? '✓ COMPLETE' : pipe.status === 'error' ? '⚠ ERROR' : '○ STANDBY'}
+          <span
+            className={
+              running
+                ? 'text-[#4F8EF7]'
+                : pipe.status === 'error'
+                  ? 'text-red-400'
+                  : 'text-neutral-500'
+            }
+          >
+            {running
+              ? '● PIPELINE RUNNING'
+              : pipe.status === 'done'
+                ? '✓ COMPLETE'
+                : pipe.status === 'error'
+                  ? '⚠ ERROR'
+                  : '○ STANDBY'}
           </span>
           <span className="text-neutral-500">
-            🪙 {tokens.toLocaleString()} <span className="text-neutral-700">·</span> ~${pipe.totals.cost.toFixed(4)}
+            🪙 {tokens.toLocaleString()}{' '}
+            <span className="text-neutral-700">·</span> ~${pipe.totals.cost.toFixed(4)}
           </span>
           {health && !health.hasApiKey && (
-            <span className="text-red-400" title="ตั้ง ANTHROPIC_API_KEY ใน .env แล้ว restart server">
+            <span
+              className="text-red-400"
+              title="ตั้ง ANTHROPIC_API_KEY ใน .env แล้ว restart server"
+            >
               ⚠ NO API KEY
             </span>
           )}
           <button
-            onClick={goTeam}
+            onClick={() => navigate('/team')}
             className="rounded border border-[#242424] px-2 py-1 text-neutral-400 hover:text-white hover:border-neutral-500 transition"
           >
             👥 ทีม
@@ -141,8 +172,82 @@ export default function App() {
         </main>
       </div>
 
-      {showSettings && <Settings settings={settings} onSave={save} onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <Settings settings={settings} onSave={save} onClose={() => setShowSettings(false)} />
+      )}
       <ReportModal report={openReport} onClose={() => setOpenReport(null)} />
     </div>
+  );
+}
+
+// ── Routes wrapper with transitions ──────────────────────────────────────────
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <Routes location={location} key={location.pathname}>
+      <Route
+        path="/"
+        element={
+          <PageTransition key="home">
+            <HomePage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/team"
+        element={
+          <PageTransition key="team">
+            <TeamPage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/app"
+        element={
+          <PageTransition key="app">
+            <AppPage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/pricing"
+        element={
+          <PageTransition key="pricing">
+            <PricingPage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/privacy"
+        element={
+          <PageTransition key="privacy">
+            <PrivacyPage />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/terms"
+        element={
+          <PageTransition key="terms">
+            <TermsPage />
+          </PageTransition>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+// ── Root ─────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ErrorBoundary>
+        <AnimatedRoutes />
+      </ErrorBoundary>
+    </BrowserRouter>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '@fontsource/kanit/700.css';
 import '@fontsource/kanit/800.css';
 
@@ -291,7 +292,13 @@ function CharacterModal({ agent, onClose }) {
 function AgentCard({ agent, onOpenModal }) {
   const [flipped, setFlipped] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const isSonnet = agent.model === 'Sonnet';
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
   const cardStyle = {
     background: 'linear-gradient(160deg, #111 0%, #0a0a0a 100%)',
     border: `1px solid ${agent.color}33`,
@@ -344,11 +351,19 @@ function AgentCard({ agent, onOpenModal }) {
               {agent.teamIcon} {agent.teamLabel}
             </div>
             <div className="space-y-1.5">
-              {Object.entries(agent.stat).slice(0, 3).map(([k, v]) => (
+              {Object.entries(agent.stat).slice(0, 3).map(([k, v], idx) => (
                 <div key={k} className="flex items-center gap-2">
                   <span className="text-[9px] text-neutral-500 w-7 shrink-0">{k}</span>
                   <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${v}%`, background: agent.color }} />
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: mounted ? `${v}%` : '0%',
+                        background: agent.color,
+                        transition: 'width 0.6s ease-out',
+                        transitionDelay: `${idx * 0.1}s`,
+                      }}
+                    />
                   </div>
                   <span className="text-[9px] text-neutral-400 w-5 text-right">{v}</span>
                 </div>
@@ -410,20 +425,21 @@ function AgentCard({ agent, onOpenModal }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function TeamPage({ onBack, onEnter }) {
+export default function TeamPage() {
+  const navigate = useNavigate();
   const [modalAgent, setModalAgent] = useState(null);
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
       <nav className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#080808]/90 backdrop-blur">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors">
           ← กลับ
         </button>
         <div className="flex items-center gap-2">
           <span>🎯</span>
           <span className="font-bold tracking-tight text-sm">PALM INVESTMENT <span className="text-[#4F8EF7]">OS</span></span>
         </div>
-        <button onClick={onEnter} className="text-sm font-semibold text-[#4F8EF7] hover:text-white transition-colors">
+        <button onClick={() => navigate('/app')} className="text-sm font-semibold text-[#4F8EF7] hover:text-white transition-colors">
           Mission Control →
         </button>
       </nav>
