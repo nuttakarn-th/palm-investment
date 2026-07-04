@@ -247,18 +247,29 @@ export default function HomePage() {
 
       {/* ── SECTION 2: STATS BAR ── */}
       <div style={{ background: '#0c0c0c', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', padding: '40px 32px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '32px', justifyContent: 'space-around' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '32px', justifyContent: 'space-around', alignItems: 'center' }}>
           {[
             { value: '9', label: 'AI Agents' },
             { value: '7', label: 'Pipeline Stages' },
             { value: '3', label: 'ตลาด' },
-            { value: 'Real-time', label: 'การวิเคราะห์' },
           ].map(({ value, label }) => (
-            <div key={label} style={{ textAlign: 'center', flex: '1 1 140px' }}>
-              <div style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 800, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '13px', color: '#555', marginTop: '8px' }}>{label}</div>
+            <div key={label} style={{ textAlign: 'center', flex: '1 1 120px' }}>
+              <div style={{ fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: '12px', color: '#555', marginTop: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</div>
             </div>
           ))}
+          <div style={{ textAlign: 'center', flex: '1 1 120px' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
+              borderRadius: '99px', padding: '6px 14px',
+              fontSize: '13px', fontWeight: 700, color: '#34D399',
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
+              Real-time
+            </div>
+            <div style={{ fontSize: '12px', color: '#555', marginTop: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
+          </div>
         </div>
       </div>
 
