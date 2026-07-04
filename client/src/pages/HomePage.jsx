@@ -117,7 +117,7 @@ export default function HomePage() {
           </nav>
 
           {/* Content */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingTop: '20px' }}>
             {/* Badge */}
             <div style={{
               marginBottom: '14px',
@@ -183,7 +183,7 @@ export default function HomePage() {
             <img
               src={content.bgImage}
               alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
               draggable={false}
             />
           ) : (
@@ -193,24 +193,50 @@ export default function HomePage() {
               <img
                 src="/team.png"
                 alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
                 draggable={false}
               />
             </picture>
           )}
-          {/* Fade edges — top blends into dark text zone, bottom into next section */}
+          {/* Fade edges */}
           <div style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'linear-gradient(to bottom, #080808 0%, transparent 18%, transparent 72%, #080808 100%)',
+            background: 'linear-gradient(to bottom, #080808 0%, transparent 14%, transparent 58%, #080808 100%)',
           }} />
-          {/* Scroll hint */}
+          {/* Stats + scroll — overlaid on bottom gradient */}
           <div style={{
-            position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-            animation: 'bounceDown 2s ease-in-out infinite', zIndex: 10,
+            position: 'absolute', bottom: '16px', left: 0, right: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
+            zIndex: 10,
           }}>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', letterSpacing: '0.12em' }}>SCROLL</span>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '18px' }}>↓</span>
+            <div style={{ display: 'flex', gap: '28px', justifyContent: 'center' }}>
+              {[
+                { value: '9', label: 'AI Agents' },
+                { value: '7', label: 'Stages' },
+                { value: '3', label: 'ตลาด' },
+              ].map(({ value, label }) => (
+                <div key={label} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '22px', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</div>
+                </div>
+              ))}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)',
+                  borderRadius: '99px', padding: '3px 10px',
+                  fontSize: '11px', fontWeight: 700, color: '#34D399',
+                }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
+                  Real-time
+                </div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'bounceDown 2s ease-in-out infinite' }}>
+              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', letterSpacing: '0.12em' }}>SCROLL</span>
+              <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px' }}>↓</span>
+            </div>
           </div>
         </div>
 
