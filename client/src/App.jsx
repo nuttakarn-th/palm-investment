@@ -199,7 +199,7 @@ function AppPage() {
             <button onClick={() => setSidebarOpen(false)} className="text-neutral-500 hover:text-white text-lg">×</button>
           </div>
           <PortfolioPanel portfolio={portfolio} marketData={marketData} />
-          <CommandBox onRun={onRun} running={running} />
+          <CommandBox onRun={onRun} running={running} onCancel={pipe.cancel} />
           <ReportHistory reports={history.reports} onOpen={setOpenReport} />
         </aside>
 

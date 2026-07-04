@@ -76,6 +76,23 @@ export const store = {
     return val;
   },
 
+  async getCurrentRun() {
+    const run = useKV() ? await kvGet('currentRun', null) : fileRead('currentRun', null);
+    if (!run) return null;
+    // Treat stale running runs as error (no update in 12 minutes)
+    if (run.status === 'running') {
+      const age = Date.now() - new Date(run.updatedAt || run.startedAt).getTime();
+      if (age > 12 * 60 * 1000) return { ...run, status: 'error', error: 'Pipeline stale' };
+    }
+    return run;
+  },
+  async saveCurrentRun(run) {
+    const updated = { ...run, updatedAt: new Date().toISOString() };
+    if (useKV()) await kvSet('currentRun', updated);
+    else fileWrite('currentRun', updated);
+    return updated;
+  },
+
   async getReports() {
     return useKV() ? await kvGet('reports', []) : fileRead('reports', []);
   },

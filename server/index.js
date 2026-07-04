@@ -17,6 +17,10 @@ app.use(express.json({ limit: '1mb' }));
 
 const PORT = process.env.PORT || 3001;
 
+// ── In-memory active run (shared within process instance) ─────────────────────
+let memRun = null;          // latest run snapshot — served by GET /api/pipeline/state
+const runAbort = new Map(); // runId -> AbortController
+
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
 const SITE_PASSWORD = process.env.SITE_PASSWORD || '';
@@ -124,7 +128,27 @@ app.get('/api/roles', (_req, res) => {
   );
 });
 
-// ---- pipeline (SSE over POST) ---------------------------------------------
+// ---- pipeline state (polling endpoint for cross-device / post-refresh) ------
+
+app.get('/api/pipeline/state', requireAuth, async (_req, res) => {
+  if (memRun) return res.json(memRun);
+  const stored = await store.getCurrentRun();
+  res.json(stored || { status: 'idle' });
+});
+
+// ---- pipeline cancel --------------------------------------------------------
+
+app.post('/api/pipeline/cancel', requireAuth, async (_req, res) => {
+  if (!memRun || memRun.status !== 'running') return res.json({ ok: false });
+  const ctrl = runAbort.get(memRun.id);
+  if (ctrl) ctrl.abort();
+  runAbort.delete(memRun.id);
+  memRun = { ...memRun, status: 'cancelled', updatedAt: new Date().toISOString() };
+  store.saveCurrentRun(memRun).catch(() => {});
+  res.json({ ok: true });
+});
+
+// ---- pipeline (SSE over POST) -----------------------------------------------
 
 app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   const { command, portfolio = [], pipeline = 'full', mode = 'manual', notify = true } = req.body || {};
@@ -134,6 +158,36 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   }
   if (!PIPELINES[pipeline]) return res.status(400).json({ error: `unknown pipeline: ${pipeline}` });
 
+  // Cancel any existing run before starting a new one
+  if (memRun?.status === 'running') {
+    const old = runAbort.get(memRun.id);
+    if (old) old.abort();
+    runAbort.delete(memRun.id);
+    memRun = { ...memRun, status: 'cancelled', updatedAt: new Date().toISOString() };
+    store.saveCurrentRun(memRun).catch(() => {});
+  }
+
+  const runId = `run_${Date.now().toString(36)}`;
+  const stages = PIPELINES[pipeline] || PIPELINES.full;
+  const initialAgents = Object.fromEntries(
+    stages.flat().map((k) => [k, { status: 'pending' }])
+  );
+
+  memRun = {
+    id: runId,
+    status: 'running',
+    command: command.trim(),
+    pipeline,
+    mode,
+    startedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    agents: initialAgents,
+    totals: { input: 0, output: 0, cost: 0 },
+    report: null,
+    error: null,
+  };
+  store.saveCurrentRun(memRun).catch(() => {});
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
@@ -141,9 +195,40 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
     'X-Accel-Buffering': 'no',
   });
 
-  const emit = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+  // SSE write — silently ignores closed connections (pipeline continues server-side)
+  const emit = (event) => {
+    try { res.write(`data: ${JSON.stringify(event)}\n\n`); } catch {}
+    // Update in-memory run on milestone events (not agent_delta which fires per token)
+    if (memRun?.id === runId) {
+      switch (event.type) {
+        case 'agent_start':
+          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'active' } }, updatedAt: new Date().toISOString() };
+          store.saveCurrentRun(memRun).catch(() => {});
+          break;
+        case 'agent_done':
+          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'done', usage: event.usage } }, updatedAt: new Date().toISOString() };
+          store.saveCurrentRun(memRun).catch(() => {});
+          break;
+        case 'stage_done':
+          memRun = { ...memRun, totals: event.totals };
+          break;
+        case 'pipeline_done':
+          memRun = { ...memRun, status: 'done', report: event.report, updatedAt: new Date().toISOString() };
+          store.saveCurrentRun(memRun).catch(() => {});
+          break;
+        case 'error':
+          memRun = { ...memRun, status: 'error', error: event.message, updatedAt: new Date().toISOString() };
+          store.saveCurrentRun(memRun).catch(() => {});
+          break;
+      }
+    }
+  };
+
   const abort = new AbortController();
-  req.on('close', () => abort.abort());
+  runAbort.set(runId, abort);
+  // No abort on SSE disconnect — pipeline continues server-side after refresh
+
+  emit({ type: 'run_id', id: runId });
 
   try {
     const report = await runPipeline({
@@ -161,9 +246,14 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
       emit({ type: 'notified', ...notified });
     }
   } catch (e) {
-    if (!abort.signal.aborted) emit({ type: 'error', message: e.message });
+    if (abort.signal.aborted) {
+      emit({ type: 'pipeline_cancelled' }); // tell initiating client it was cancelled
+    } else {
+      emit({ type: 'error', message: e.message });
+    }
   } finally {
-    res.end();
+    runAbort.delete(runId);
+    try { res.end(); } catch {}
   }
 });
 

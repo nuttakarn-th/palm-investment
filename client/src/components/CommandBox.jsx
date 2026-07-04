@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { PRESETS } from '../agents.js';
 
-export default function CommandBox({ onRun, running }) {
+export default function CommandBox({ onRun, running, onCancel }) {
   const [text, setText] = useState('');
 
   const submit = () => {
-    if (!text.trim() || running) return;
+    if (!text.trim()) return;
     onRun({ command: text.trim(), pipeline: 'full' });
     setText('');
   };
 
   const runPreset = (preset) => {
-    if (running) return;
     let ticker = '';
     if (preset.needsTicker) {
       ticker = window.prompt(preset.tickerPrompt || 'Ticker? เช่น NVDA, PTT, BTC') || '';
@@ -37,17 +36,32 @@ export default function CommandBox({ onRun, running }) {
               submit();
             }
           }}
-          placeholder="พิมพ์คำสั่งให้ป้อม (CIO)… เช่น วิเคราะห์ NVDA"
+          placeholder={
+            running
+              ? 'พิมพ์คำสั่งใหม่เพื่อเริ่มต้นใหม่ทันที…'
+              : 'พิมพ์คำสั่งให้ป้อม (CIO)… เช่น วิเคราะห์ NVDA'
+          }
           rows={3}
           className="w-full resize-none rounded-lg bg-[#111] border border-[#242424] px-3 py-2 text-sm placeholder:text-neutral-600 focus:outline-none focus:border-[#4F8EF7]"
         />
-        <button
-          onClick={submit}
-          disabled={running || !text.trim()}
-          className="mt-1 w-full rounded-lg bg-[#4F8EF7] text-black font-semibold text-sm py-2 disabled:opacity-30 hover:brightness-110 transition"
-        >
-          {running ? '⏳ ทีมกำลังทำงาน…' : '▶ RUN PIPELINE'}
-        </button>
+
+        <div className="flex gap-1.5 mt-1">
+          {running && (
+            <button
+              onClick={onCancel}
+              className="flex-shrink-0 rounded-lg border border-red-900/60 bg-red-950/30 text-red-400 font-semibold text-sm py-2 px-3 hover:bg-red-900/40 hover:text-red-300 transition-all active:scale-95"
+            >
+              ✕ ยกเลิก
+            </button>
+          )}
+          <button
+            onClick={submit}
+            disabled={!text.trim()}
+            className="flex-1 rounded-lg bg-[#4F8EF7] text-black font-semibold text-sm py-2 disabled:opacity-30 hover:brightness-110 transition active:scale-95"
+          >
+            {running ? '↺ เริ่มใหม่' : '▶ RUN PIPELINE'}
+          </button>
+        </div>
       </div>
 
       <div>
@@ -57,8 +71,9 @@ export default function CommandBox({ onRun, running }) {
             <button
               key={p.label}
               onClick={() => runPreset(p)}
-              disabled={running}
-              className="rounded-lg border border-[#242424] bg-[#101010] px-2 py-2 text-left text-[11px] hover:border-neutral-500 disabled:opacity-30 transition"
+              className="rounded-lg border border-[#242424] bg-[#101010] px-2 py-2 text-left text-[11px] hover:border-neutral-500 transition"
+              style={{ opacity: running ? 0.45 : 1 }}
+              title={running ? 'กดเพื่อยกเลิกงานปัจจุบันและเริ่มใหม่' : undefined}
             >
               <span className="mr-1">{p.icon}</span>
               {p.label}
