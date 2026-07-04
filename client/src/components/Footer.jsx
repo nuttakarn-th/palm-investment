@@ -1,12 +1,19 @@
 import { Link } from 'react-router-dom';
 import '@fontsource/kanit/700.css';
 
+const NAV = [
+  { to: '/', label: 'หน้าแรก' },
+  { to: '/team', label: 'ทีม AI' },
+  { to: '/privacy', label: 'Privacy' },
+  { to: '/terms', label: 'Terms' },
+];
+
 export default function Footer() {
   return (
     <footer
       style={{
         background: '#080808',
-        borderTop: '1px solid #1a1a1a',
+        borderTop: '1px solid #161616',
         fontFamily: "'Kanit', sans-serif",
       }}
     >
@@ -14,136 +21,63 @@ export default function Footer() {
         style={{
           maxWidth: '1100px',
           margin: '0 auto',
-          padding: '48px 32px 32px',
+          padding: '18px 24px 16px',
         }}
       >
-        {/* Top row */}
+        {/* Top row: brand + nav */}
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: '40px',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '40px',
+            flexWrap: 'wrap',
+            gap: '10px',
+            marginBottom: '12px',
           }}
         >
-          {/* Left: brand */}
-          <div style={{ flex: '1 1 240px' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
-              }}
-            >
-              <span style={{ fontSize: '22px' }}>🎯</span>
-              <span
-                style={{ color: '#fff', fontWeight: 700, fontSize: '15px' }}
-              >
-                PALM INVESTMENT{' '}
-                <span style={{ color: '#4F8EF7' }}>OS</span>
-              </span>
-            </div>
-            <p style={{ color: '#555', fontSize: '13px', lineHeight: 1.6 }}>
-              ทีม AI 9 คน วิเคราะห์พอร์ตของคุณ
-            </p>
+          {/* Brand */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '16px', lineHeight: 1 }}>🎯</span>
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
+              PALM INVESTMENT <span style={{ color: '#4F8EF7' }}>OS</span>
+            </span>
+            <span style={{ color: '#222', fontSize: '12px', margin: '0 2px' }}>·</span>
+            <span style={{ color: '#3a3a3a', fontSize: '12px' }}>ทีม AI 9 คน วิเคราะห์พอร์ตของคุณ</span>
           </div>
 
-          {/* Middle: nav */}
-          <nav
-            style={{
-              flex: '1 1 200px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
-            <span
-              style={{
-                color: '#444',
-                fontSize: '11px',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: '4px',
-              }}
-            >
-              Navigation
-            </span>
-            {[
-              { to: '/', label: 'หน้าแรก' },
-              { to: '/team', label: 'ทีม AI' },
-
-              { to: '/privacy', label: 'Privacy' },
-              { to: '/terms', label: 'Terms' },
-            ].map(({ to, label }) => (
+          {/* Nav */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            {NAV.map(({ to, label }) => (
               <Link
                 key={to}
                 to={to}
-                style={{
-                  color: '#666',
-                  fontSize: '14px',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#666')}
+                style={{ color: '#484848', fontSize: '12px', textDecoration: 'none' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#bbb')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#484848')}
               >
                 {label}
               </Link>
             ))}
           </nav>
-
-          {/* Right: disclaimer */}
-          <div style={{ flex: '1 1 220px' }}>
-            <p
-              style={{
-                color: '#F97316',
-                fontSize: '12px',
-                lineHeight: 1.7,
-                borderLeft: '2px solid #F97316',
-                paddingLeft: '12px',
-              }}
-            >
-              ⚠ Disclaimer: เนื้อหานี้ไม่ใช่คำแนะนำการลงทุน
-              การตัดสินใจลงทุนเป็นความรับผิดชอบของผู้ใช้เอง
-            </p>
-          </div>
         </div>
 
-        {/* Bottom row */}
+        {/* Bottom row: disclaimer + copyright */}
         <div
           style={{
-            borderTop: '1px solid #1a1a1a',
-            paddingTop: '20px',
+            borderTop: '1px solid #111',
+            paddingTop: '10px',
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '8px',
+            gap: '6px',
           }}
         >
-          <span style={{ color: '#444', fontSize: '12px' }}>
-            © 2026 Palm Investment OS
+          <span style={{ color: '#333', fontSize: '11px', lineHeight: 1.5 }}>
+            <span style={{ color: '#7a3a12', marginRight: '4px' }}>⚠</span>
+            เนื้อหานี้ไม่ใช่คำแนะนำการลงทุน — การตัดสินใจลงทุนเป็นความรับผิดชอบของผู้ใช้เอง
           </span>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <Link
-              to="/privacy"
-              style={{ color: '#444', fontSize: '12px', textDecoration: 'none' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#888')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#444')}
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              to="/terms"
-              style={{ color: '#444', fontSize: '12px', textDecoration: 'none' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#888')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#444')}
-            >
-              Terms of Service
-            </Link>
-          </div>
+          <span style={{ color: '#2a2a2a', fontSize: '11px' }}>© 2026 Palm Investment OS</span>
         </div>
       </div>
     </footer>
