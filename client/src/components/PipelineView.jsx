@@ -212,14 +212,8 @@ export default function PipelineView({ pipeline, agents, status }) {
       <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', border: '1px solid #141414', background: '#080808', padding: '14px 16px' }}>
         <style>{`
           @keyframes agent-breath { 0%,100%{opacity:.32} 50%{opacity:.75} }
-          @keyframes scan-idle { 0%{transform:translateY(-80px)} 100%{transform:translateY(500px)} }
           @keyframes hud-blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
         `}</style>
-
-        {/* scan line */}
-        <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
-          background:'linear-gradient(transparent,rgba(79,142,247,0.025),transparent)',
-          animation:'scan-idle 5s linear infinite' }} />
 
         <div style={{ position:'relative', zIndex:1 }}>
           {/* header */}

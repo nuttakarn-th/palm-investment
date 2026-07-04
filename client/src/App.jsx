@@ -113,11 +113,7 @@ function AppPage() {
           0%,100% { opacity:1; transform:scale(1); }
           50%      { opacity:.75; transform:scale(0.96); }
         }
-        @keyframes scanbar-app {
-          0%   { transform:translateY(-60px); }
-          100% { transform:translateY(1200px); }
-        }
-        @keyframes dot-blink {
+@keyframes dot-blink {
           0%,100% { opacity:1; } 49%{ opacity:1; } 50%{ opacity:0; } 99%{ opacity:0; }
         }
         @keyframes tick-in {
@@ -239,11 +235,6 @@ function AppPage() {
               {portfolio.items.length === 0 ? (
                 /* ── No portfolio: Mission Briefing card ── */
                 <div style={{ position:'relative', overflow:'hidden', borderRadius:'18px', border:'1px solid #1a2233', background:'#090909', padding:'20px', animation:'mission-glow 4s ease-in-out infinite' }}>
-                  {/* scan bar */}
-                  <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
-                    background:'linear-gradient(transparent,rgba(79,142,247,0.03),transparent)',
-                    animation:'scanbar-app 6s linear infinite' }} />
-
                   <div style={{ position:'relative', zIndex:1 }}>
                     {/* header badge */}
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'18px' }}>
@@ -298,9 +289,6 @@ function AppPage() {
               ) : (
                 /* ── Has portfolio: Active Positions card ── */
                 <div style={{ position:'relative', overflow:'hidden', borderRadius:'18px', border:'1px solid #1a2233', background:'#090909', padding:'18px', animation:'mission-glow 5s ease-in-out infinite' }}>
-                  <div style={{ position:'absolute', left:0, right:0, height:'50px', pointerEvents:'none', zIndex:0,
-                    background:'linear-gradient(transparent,rgba(79,142,247,0.025),transparent)',
-                    animation:'scanbar-app 7s linear infinite' }} />
                   <div style={{ position:'relative', zIndex:1 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px' }}>
                       <div style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'3px 11px', borderRadius:'99px',
