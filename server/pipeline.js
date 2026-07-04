@@ -20,26 +20,27 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
-async function braveSearch(query, signal) {
+async function tavilySearch(query, signal) {
   try {
-    const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&search_lang=en`;
-    const res = await fetch(url, {
-      headers: {
-        'X-Subscription-Token': process.env.BRAVE_API_KEY,
-        Accept: 'application/json',
-        'Accept-Encoding': 'gzip',
-      },
+    const res = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: process.env.TAVILY_API_KEY,
+        query,
+        search_depth: 'basic',
+        max_results: 5,
+      }),
       signal,
     });
     if (!res.ok) return `[Search unavailable: HTTP ${res.status}]`;
     const data = await res.json();
-    const results = data.web?.results || [];
+    const results = data.results || [];
     if (results.length === 0) return '[No results found]';
     return results
-      .slice(0, 5)
       .map((r, i) => {
-        const date = r.page_age ? `${r.page_age.slice(0, 10)} | ` : '';
-        return `[${i + 1}] ${r.title}\n${r.url}\n${date}${r.description || ''}`;
+        const date = r.published_date ? `${r.published_date.slice(0, 10)} | ` : '';
+        return `[${i + 1}] ${r.title}\n${r.url}\n${date}${r.content || ''}`;
       })
       .join('\n\n');
   } catch (e) {
@@ -112,7 +113,7 @@ function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
 async function runAgent({ role, command, portfolio, outputs, mode, emit, signal }) {
   emit({ type: 'agent_start', agent: role.key });
 
-  const tools = role.usesSearch && process.env.BRAVE_API_KEY ? [WEB_SEARCH_TOOL] : [];
+  const tools = role.usesSearch && process.env.TAVILY_API_KEY ? [WEB_SEARCH_TOOL] : [];
   let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode }) }];
 
   let fullText = '';
@@ -144,7 +145,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
     for (const block of final.content) {
       if (block.type === 'tool_use' && block.name === 'web_search') {
         emit({ type: 'agent_search', agent: role.key, query: block.input.query });
-        const result = await braveSearch(block.input.query, signal);
+        const result = await tavilySearch(block.input.query, signal);
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
       }
     }
