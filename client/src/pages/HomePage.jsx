@@ -252,34 +252,6 @@ export default function HomePage() {
         `}</style>
       </div>
 
-      {/* ── SECTION 2: STATS BAR ── */}
-      <div style={{ background: '#0c0c0c', borderTop: '1px solid #1a1a1a', borderBottom: '1px solid #1a1a1a', padding: '20px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-          {[
-            { value: '9', label: 'AI Agents' },
-            { value: '7', label: 'Stages' },
-            { value: '3', label: 'ตลาด' },
-          ].map(({ value, label }) => (
-            <div key={label} style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, color: '#4F8EF7', lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: '10px', color: '#555', marginTop: '5px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</div>
-            </div>
-          ))}
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '5px',
-              background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
-              borderRadius: '99px', padding: '4px 10px',
-              fontSize: '11px', fontWeight: 700, color: '#34D399',
-            }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
-              Real-time
-            </div>
-            <div style={{ fontSize: '10px', color: '#555', marginTop: '5px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
-          </div>
-        </div>
-      </div>
-
       {/* ── SECTION 3: HOW IT WORKS (horizontal scroll) ── */}
       <div style={{ padding: '40px 0 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 20px' }}>
