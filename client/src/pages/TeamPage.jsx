@@ -290,6 +290,7 @@ function CharacterModal({ agent, onClose }) {
 
 function AgentCard({ agent, onOpenModal }) {
   const [flipped, setFlipped] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const isSonnet = agent.model === 'Sonnet';
   const cardStyle = {
     background: 'linear-gradient(160deg, #111 0%, #0a0a0a 100%)',
@@ -297,7 +298,19 @@ function AgentCard({ agent, onOpenModal }) {
   };
 
   return (
-    <div style={{ perspective: '900px' }} onClick={() => setFlipped((f) => !f)}>
+    <div
+      style={{
+        perspective: '900px',
+        borderRadius: '16px',
+        transform: hovered ? 'translateY(-10px)' : 'translateY(0)',
+        boxShadow: hovered ? `0 24px 48px ${agent.color}45, 0 0 0 1px ${agent.color}55` : 'none',
+        transition: 'transform 0.28s ease, box-shadow 0.28s ease',
+        cursor: 'pointer',
+      }}
+      onClick={() => setFlipped((f) => !f)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div
         style={{
           transformStyle: 'preserve-3d',
