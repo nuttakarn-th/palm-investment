@@ -289,9 +289,9 @@ export default function HomePage() {
           50%      { box-shadow: 0 0 14px 3px rgba(79,142,247,0.2); }
         }
         @keyframes btnRing {
-          0%   { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 0 rgba(79,142,247,0.4); }
-          60%  { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 8px rgba(79,142,247,0); }
-          100% { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 0 rgba(79,142,247,0); }
+          0%   { box-shadow: 0 0 0 0 rgba(79,142,247,0.5); }
+          60%  { box-shadow: 0 0 0 10px rgba(79,142,247,0); }
+          100% { box-shadow: 0 0 0 0 rgba(79,142,247,0); }
         }
         @keyframes slideFromRight {
           from { opacity: 0; transform: translateX(28px); }
@@ -385,16 +385,16 @@ export default function HomePage() {
 
             {/* CTAs */}
             <div style={{
-              display: 'flex', gap: '10px', justifyContent: 'center', width: '100%', maxWidth: '400px',
+              display: 'flex', gap: '10px', justifyContent: 'center',
               ...fadeIn(4),
             }}>
               <button
                 onClick={() => navigate('/app')}
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   background: '#4F8EF7', color: '#fff',
-                  border: 'none', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', fontWeight: 700,
-                  cursor: 'pointer', ...font,
+                  border: 'none', borderRadius: '12px', padding: '12px 24px', fontSize: '14px', fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap', ...font,
                   animation: elem >= 4 ? 'btnRing 2.8s ease 0.6s infinite' : 'none',
                 }}
               >
@@ -403,10 +403,10 @@ export default function HomePage() {
               <button
                 onClick={() => navigate('/team')}
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   background: 'transparent', border: '1px solid rgba(79,142,247,0.35)',
-                  borderRadius: '12px', padding: '12px 16px', fontSize: '14px', fontWeight: 600, color: '#4F8EF7',
-                  cursor: 'pointer', ...font,
+                  borderRadius: '12px', padding: '12px 20px', fontSize: '14px', fontWeight: 600, color: '#4F8EF7',
+                  cursor: 'pointer', whiteSpace: 'nowrap', ...font,
                 }}
               >
                 👥 พบทีม AI
