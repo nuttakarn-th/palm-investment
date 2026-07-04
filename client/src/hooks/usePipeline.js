@@ -44,6 +44,7 @@ export function usePipeline() {
       const res = await fetch('/api/pipeline/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ command, portfolio, pipeline: p, mode }),
         signal: controller.signal,
       });

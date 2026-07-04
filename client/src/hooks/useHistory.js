@@ -15,7 +15,10 @@ export function useHistory() {
 
   const refresh = useCallback(async () => {
     try {
-      const server = await fetch('/api/reports').then((r) => r.json());
+      const res = await fetch('/api/reports', { credentials: 'include' });
+      if (!res.ok) return;
+      const server = await res.json();
+      if (!Array.isArray(server)) return;
       setReports((local) => {
         const seen = new Set(server.map((r) => r.id));
         const merged = [...server, ...local.filter((r) => !seen.has(r.id))].sort(

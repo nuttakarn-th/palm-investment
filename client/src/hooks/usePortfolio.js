@@ -18,6 +18,7 @@ export function usePortfolio() {
     fetch('/api/portfolio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(items),
     }).catch(() => {});
   }, [items]);

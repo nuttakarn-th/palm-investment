@@ -21,9 +21,9 @@ export function useSettings() {
 
   // pull the server copy once (in case it was edited elsewhere)
   useEffect(() => {
-    fetch('/api/settings')
-      .then((r) => r.json())
-      .then((s) => setSettings((cur) => ({ ...s, ...cur })))
+    fetch('/api/settings', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => s && setSettings((cur) => ({ ...s, ...cur })))
       .catch(() => {});
   }, []);
 
@@ -33,6 +33,7 @@ export function useSettings() {
     return fetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(next),
     }).catch(() => {});
   }, []);

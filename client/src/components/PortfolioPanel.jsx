@@ -2,21 +2,30 @@ import { useState } from 'react';
 import { pnl } from '../hooks/usePortfolio.js';
 
 const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', currentPrice: '', buyDate: '', note: '' };
-
 const MARKET_LABEL = { us: 'US', set: 'SET', crypto: 'CRYPTO' };
 
-export default function PortfolioPanel({ portfolio }) {
+function LiveBadge({ loading, lastUpdate }) {
+  if (loading) return <span className="text-[9px] text-neutral-600 animate-pulse">LIVE…</span>;
+  if (lastUpdate) {
+    const mins = Math.floor((Date.now() - lastUpdate) / 60000);
+    return (
+      <span className="text-[9px] text-emerald-700">
+        ● {mins < 1 ? 'LIVE' : `${mins}m ago`}
+      </span>
+    );
+  }
+  return null;
+}
+
+export default function PortfolioPanel({ portfolio, marketData }) {
   const { items, add, update, remove } = portfolio;
-  const [draft, setDraft] = useState(null); // null = closed, object = form open
+  const [draft, setDraft] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
   const submit = () => {
     if (!draft?.ticker.trim()) return;
-    if (editingId) {
-      update(editingId, draft);
-    } else {
-      add(draft);
-    }
+    if (editingId) update(editingId, draft);
+    else add(draft);
     setDraft(null);
     setEditingId(null);
   };
@@ -29,68 +38,93 @@ export default function PortfolioPanel({ portfolio }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[11px] uppercase tracking-wider text-neutral-500">Portfolio</div>
-        <button
-          onClick={() => {
-            setDraft({ ...EMPTY });
-            setEditingId(null);
-          }}
-          className="text-[11px] text-[#4F8EF7] hover:underline"
-        >
-          + เพิ่ม
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="text-[11px] uppercase tracking-wider text-neutral-500">Portfolio</div>
+          {marketData && (
+            <LiveBadge loading={marketData.loading} lastUpdate={marketData.lastUpdate} />
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {marketData && !marketData.loading && (
+            <button
+              onClick={marketData.refresh}
+              className="text-[10px] text-neutral-600 hover:text-neutral-400 transition"
+              title="รีเฟรชราคา"
+            >
+              ↻
+            </button>
+          )}
+          <button
+            onClick={() => { setDraft({ ...EMPTY }); setEditingId(null); }}
+            className="text-[11px] text-[#4F8EF7] hover:underline"
+          >
+            + เพิ่ม
+          </button>
+        </div>
       </div>
 
       {items.length === 0 && !draft && (
         <div className="text-[11px] text-neutral-700 py-2">ยังไม่มีข้อมูลพอร์ต — กด "+ เพิ่ม"</div>
       )}
 
-      {groups.map(
-        (g) =>
-          g.rows.length > 0 && (
-            <div key={g.market} className="mb-2">
-              <div className="text-[10px] text-neutral-600 mb-1">— {MARKET_LABEL[g.market]}</div>
-              {g.rows.map((item) => {
-                const p = pnl(item);
-                return (
-                  <div
-                    key={item.id}
-                    className="group flex items-center justify-between rounded px-2 py-1 hover:bg-[#141414] text-xs"
-                  >
-                    <div className="min-w-0">
+      {groups.map((g) =>
+        g.rows.length > 0 ? (
+          <div key={g.market} className="mb-2">
+            <div className="text-[10px] text-neutral-600 mb-1">— {MARKET_LABEL[g.market]}</div>
+            {g.rows.map((item) => {
+              const live = marketData?.getPrice(item.ticker, item.market);
+              const livePrice = live?.price ?? null;
+              const p = livePrice
+                ? ((livePrice - parseFloat(item.buyPrice)) / parseFloat(item.buyPrice)) * 100
+                : pnl(item);
+
+              return (
+                <div
+                  key={item.id}
+                  className="group flex items-center justify-between rounded px-2 py-1.5 hover:bg-[#141414] text-xs"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
                       <span className="font-medium">{item.ticker}</span>
-                      {item.amount && <span className="text-neutral-600 ml-1.5">{Number(item.amount).toLocaleString()}฿</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {p !== null && (
-                        <span className={p >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                          {p >= 0 ? '+' : ''}
-                          {p.toFixed(1)}%
-                        </span>
+                      {item.market === 'set' && (
+                        <span className="text-[9px] text-neutral-700">.BK</span>
                       )}
-                      <button
-                        onClick={() => {
-                          setDraft({ ...EMPTY, ...item });
-                          setEditingId(item.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-white"
-                        title="แก้ไข"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        onClick={() => remove(item.id)}
-                        className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400"
-                        title="ลบ"
-                      >
-                        ×
-                      </button>
                     </div>
+                    {livePrice != null && (
+                      <div className="text-[10px] text-neutral-500 flex items-center gap-1 mt-0.5">
+                        <span>{live.currency === 'THB' ? '฿' : '$'}{livePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                        <span className={live.changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                          {live.changePct >= 0 ? '▲' : '▼'}{Math.abs(live.changePct).toFixed(2)}%
+                        </span>
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          )
+                  <div className="flex items-center gap-2 ml-2">
+                    {p !== null && (
+                      <span className={`font-medium ${p >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {p >= 0 ? '+' : ''}{p.toFixed(1)}%
+                      </span>
+                    )}
+                    <button
+                      onClick={() => { setDraft({ ...EMPTY, ...item }); setEditingId(item.id); }}
+                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-white"
+                      title="แก้ไข"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => remove(item.id)}
+                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400"
+                      title="ลบ"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null
       )}
 
       {draft && (
@@ -120,21 +154,15 @@ export default function PortfolioPanel({ portfolio }) {
             onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
-          <div className="flex gap-1.5">
-            <input
-              placeholder="ราคาซื้อ"
-              type="number"
-              value={draft.buyPrice}
-              onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
-              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
-            />
-            <input
-              placeholder="ราคาปัจจุบัน"
-              type="number"
-              value={draft.currentPrice}
-              onChange={(e) => setDraft({ ...draft, currentPrice: e.target.value })}
-              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
-            />
+          <input
+            placeholder="ราคาซื้อ"
+            type="number"
+            value={draft.buyPrice}
+            onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
+            className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
+          />
+          <div className="text-[10px] text-neutral-600 px-1">
+            💡 ราคาปัจจุบันดึงอัตโนมัติจาก Yahoo Finance
           </div>
           <input
             type="date"
@@ -153,10 +181,7 @@ export default function PortfolioPanel({ portfolio }) {
               {editingId ? 'บันทึก' : 'เพิ่ม'}
             </button>
             <button
-              onClick={() => {
-                setDraft(null);
-                setEditingId(null);
-              }}
+              onClick={() => { setDraft(null); setEditingId(null); }}
               className="flex-1 rounded border border-[#2a2a2a] py-1 text-neutral-400"
             >
               ยกเลิก

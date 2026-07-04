@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -11,10 +12,99 @@ import { notifyAll, sendEmail, sendTelegram } from './notify.js';
 import { startScheduler, runWeeklyReport } from './scheduler.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 const PORT = process.env.PORT || 3001;
+
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+
+const SITE_PASSWORD = process.env.SITE_PASSWORD || '';
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+function sessionToken() {
+  return crypto.createHmac('sha256', SESSION_SECRET).update(SITE_PASSWORD).digest('hex');
+}
+
+function parseCookies(header = '') {
+  return Object.fromEntries(
+    header.split(';').map((c) => c.trim().split('=')).filter(([k]) => k).map(([k, ...v]) => [k.trim(), v.join('=').trim()])
+  );
+}
+
+function isAuthed(req) {
+  if (!SITE_PASSWORD) return true;
+  const cookies = parseCookies(req.headers.cookie);
+  return cookies.palm_sid === sessionToken();
+}
+
+function requireAuth(req, res, next) {
+  if (isAuthed(req)) return next();
+  res.status(401).json({ error: 'Unauthorized' });
+}
+
+// ── Auth endpoints (public) ───────────────────────────────────────────────────
+
+app.post('/api/auth/login', (req, res) => {
+  if (!SITE_PASSWORD) return res.json({ ok: true });
+  const { password } = req.body || {};
+  if (password !== SITE_PASSWORD) {
+    return res.status(401).json({ error: 'รหัสผ่านไม่ถูกต้อง' });
+  }
+  const maxAge = 30 * 24 * 60 * 60;
+  res.setHeader('Set-Cookie', `palm_sid=${sessionToken()}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax`);
+  res.json({ ok: true });
+});
+
+app.post('/api/auth/logout', (_req, res) => {
+  res.setHeader('Set-Cookie', 'palm_sid=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax');
+  res.json({ ok: true });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  res.json({ authenticated: isAuthed(req), protected: Boolean(SITE_PASSWORD) });
+});
+
+// ── Market data proxy (Yahoo Finance) ────────────────────────────────────────
+
+const mktCache = new Map();
+const MKT_TTL = 5 * 60 * 1000;
+
+app.get('/api/market', requireAuth, async (req, res) => {
+  const symbols = String(req.query.symbols || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 30);
+  if (!symbols.length) return res.json({});
+
+  const result = {};
+  const now = Date.now();
+
+  await Promise.allSettled(
+    symbols.map(async (sym) => {
+      const cached = mktCache.get(sym);
+      if (cached && now - cached.ts < MKT_TTL) { result[sym] = cached; return; }
+      try {
+        const r = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+        );
+        const data = await r.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (meta?.regularMarketPrice) {
+          const entry = {
+            price: meta.regularMarketPrice,
+            change: meta.regularMarketChange ?? 0,
+            changePct: meta.regularMarketChangePercent ?? 0,
+            currency: meta.currency ?? 'USD',
+            ts: now,
+          };
+          mktCache.set(sym, entry);
+          result[sym] = entry;
+        }
+      } catch { /* network error — skip symbol */ }
+    })
+  );
+
+  res.json(result);
+});
 
 // ---- meta ----------------------------------------------------------------
 
@@ -36,7 +126,7 @@ app.get('/api/roles', (_req, res) => {
 
 // ---- pipeline (SSE over POST) ---------------------------------------------
 
-app.post('/api/pipeline/run', async (req, res) => {
+app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   const { command, portfolio = [], pipeline = 'full', mode = 'manual', notify = true } = req.body || {};
   if (!command?.trim()) return res.status(400).json({ error: 'command is required' });
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -79,13 +169,13 @@ app.post('/api/pipeline/run', async (req, res) => {
 
 // ---- settings / portfolio / reports ----------------------------------------
 
-app.get('/api/settings', async (_req, res) => res.json(await store.getSettings()));
-app.post('/api/settings', async (req, res) => res.json(await store.saveSettings(req.body || {})));
+app.get('/api/settings', requireAuth, async (_req, res) => res.json(await store.getSettings()));
+app.post('/api/settings', requireAuth, async (req, res) => res.json(await store.saveSettings(req.body || {})));
 
-app.get('/api/portfolio', async (_req, res) => res.json(await store.getPortfolio()));
-app.post('/api/portfolio', async (req, res) => res.json(await store.savePortfolio(req.body || [])));
+app.get('/api/portfolio', requireAuth, async (_req, res) => res.json(await store.getPortfolio()));
+app.post('/api/portfolio', requireAuth, async (req, res) => res.json(await store.savePortfolio(req.body || [])));
 
-app.get('/api/reports', async (_req, res) => res.json(await store.getReports()));
+app.get('/api/reports', requireAuth, async (_req, res) => res.json(await store.getReports()));
 
 // ---- notifications test + weekly manual trigger ----------------------------
 
@@ -98,10 +188,10 @@ const testReport = () => ({
   totals: { input: 0, output: 0, cost: 0 },
 });
 
-app.post('/api/test/email', async (_req, res) => res.json(await sendEmail(testReport())));
-app.post('/api/test/telegram', async (_req, res) => res.json(await sendTelegram(testReport())));
+app.post('/api/test/email', requireAuth, async (_req, res) => res.json(await sendEmail(testReport())));
+app.post('/api/test/telegram', requireAuth, async (_req, res) => res.json(await sendTelegram(testReport())));
 
-app.post('/api/weekly/run', async (_req, res) => {
+app.post('/api/weekly/run', requireAuth, async (_req, res) => {
   try {
     const { report, notified } = await runWeeklyReport();
     res.json({ ok: true, reportId: report.id, notified });

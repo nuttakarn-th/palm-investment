@@ -15,6 +15,7 @@ import CEOSummary from './components/CEOSummary.jsx';
 import ReportHistory from './components/ReportHistory.jsx';
 import ReportModal from './components/ReportModal.jsx';
 import Settings from './components/Settings.jsx';
+import LoginGate from './components/LoginGate.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import PageTransition from './components/PageTransition.jsx';
 
@@ -28,6 +29,7 @@ import { usePipeline } from './hooks/usePipeline.js';
 import { usePortfolio } from './hooks/usePortfolio.js';
 import { useSettings } from './hooks/useSettings.js';
 import { useHistory } from './hooks/useHistory.js';
+import { useMarketData } from './hooks/useMarketData.js';
 
 // ── AppPage (Mission Control) ─────────────────────────────────────────────────
 
@@ -35,15 +37,24 @@ function AppPage() {
   const navigate = useNavigate();
 
   // All hooks unconditionally at top
+  const [authState, setAuthState] = useState('checking'); // 'checking' | 'ok' | 'login'
   const pipe = usePipeline();
   const portfolio = usePortfolio();
   const { settings, save } = useSettings();
   const history = useHistory();
+  const marketData = useMarketData(portfolio.items);
 
   const [showSettings, setShowSettings] = useState(false);
   const [openReport, setOpenReport] = useState(null);
   const [health, setHealth] = useState(null);
   const summaryRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setAuthState(d.authenticated ? 'ok' : 'login'))
+      .catch(() => setAuthState('ok'));
+  }, []);
 
   useEffect(() => {
     fetch('/api/health')
@@ -74,6 +85,17 @@ function AppPage() {
 
   const running = pipe.status === 'running';
   const tokens = pipe.totals.input + pipe.totals.output;
+
+  if (authState === 'checking') {
+    return (
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+        <div className="text-neutral-600 text-sm animate-pulse">กำลังโหลด...</div>
+      </div>
+    );
+  }
+  if (authState === 'login') {
+    return <LoginGate onLogin={() => setAuthState('ok')} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -140,13 +162,23 @@ function AppPage() {
           >
             ⚙️ Settings
           </button>
+          <button
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+              setAuthState('login');
+            }}
+            className="rounded border border-[#242424] px-2 py-1 text-neutral-600 hover:text-red-400 hover:border-red-800 transition"
+            title="ออกจากระบบ"
+          >
+            ⏏
+          </button>
         </div>
       </header>
 
       <div className="flex">
         {/* LEFT SIDEBAR */}
         <aside className="w-72 shrink-0 border-r border-[#1a1a1a] p-4 space-y-6 min-h-[calc(100vh-53px)]">
-          <PortfolioPanel portfolio={portfolio} />
+          <PortfolioPanel portfolio={portfolio} marketData={marketData} />
           <CommandBox onRun={onRun} running={running} />
           <ReportHistory reports={history.reports} onOpen={setOpenReport} />
         </aside>
