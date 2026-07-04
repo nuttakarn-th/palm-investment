@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '@fontsource/kanit/700.css';
 import '@fontsource/kanit/800.css';
@@ -45,6 +45,23 @@ const MARKETS = [
     bullets: ['BTC / ETH / Altcoins', 'On-chain metrics', 'Market sentiment & fear/greed'],
   },
 ];
+
+// ── Scroll-triggered visibility ───────────────────────────────────────────
+function useInView(threshold = 0.15) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, inView];
+}
 
 // ── Floating particles canvas ──────────────────────────────────────────────
 function Particles() {
@@ -219,6 +236,10 @@ export default function HomePage() {
   const s7 = useScramble(7, elem >= 5, 180);
   const s3 = useScramble(3, elem >= 5, 360);
 
+  const [pipeRef, pipeInView] = useInView();
+  const [mktRef,  mktInView]  = useInView();
+  const [hoveredMarket, setHoveredMarket] = useState(null);
+
   const font = { fontFamily: "'Kanit', sans-serif" };
 
   // Simple fade-slide-up: hidden before phase, animated once phase reached
@@ -267,9 +288,22 @@ export default function HomePage() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(79,142,247,0); }
           50%      { box-shadow: 0 0 14px 3px rgba(79,142,247,0.2); }
         }
-        @keyframes btnGlow {
-          0%, 100% { box-shadow: 0 8px 24px rgba(79,142,247,0.35); }
-          50%      { box-shadow: 0 8px 32px rgba(79,142,247,0.6); }
+        @keyframes btnRing {
+          0%   { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 0 rgba(79,142,247,0.4); }
+          60%  { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 8px rgba(79,142,247,0); }
+          100% { box-shadow: 0 8px 24px rgba(79,142,247,0.35), 0 0 0 0 rgba(79,142,247,0); }
+        }
+        @keyframes slideFromRight {
+          from { opacity: 0; transform: translateX(28px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.9) translateY(14px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes borderShimmer {
+          from { background-position: -200% center; }
+          to   { background-position: 200% center; }
         }
       `}</style>
 
@@ -361,7 +395,7 @@ export default function HomePage() {
                   background: '#4F8EF7', color: '#fff',
                   border: 'none', borderRadius: '12px', padding: '12px 16px', fontSize: '14px', fontWeight: 700,
                   cursor: 'pointer', ...font,
-                  animation: elem >= 4 ? 'btnGlow 2.5s ease 0.5s infinite' : 'none',
+                  animation: elem >= 4 ? 'btnRing 2.8s ease 0.6s infinite' : 'none',
                 }}
               >
                 ▶ เข้าสู่ระบบ
@@ -454,8 +488,11 @@ export default function HomePage() {
       </div>
 
       {/* ── SECTION: HOW IT WORKS (horizontal scroll) ── */}
-      <div style={{ padding: '40px 0 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 20px' }}>
+      <div ref={pipeRef} style={{ padding: '40px 0 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px', padding: '0 20px',
+          opacity: pipeInView ? undefined : 0,
+          animation: pipeInView ? 'fadeSlideUp 0.5s ease forwards' : 'none',
+        }}>
           <div style={{
             display: 'inline-block',
             background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.2)',
@@ -484,6 +521,8 @@ export default function HomePage() {
                 borderRadius: '14px', padding: '14px 10px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
                 boxShadow: `0 0 0 1px ${step.color}10`,
+                opacity: pipeInView ? undefined : 0,
+                animation: pipeInView ? `slideFromRight 0.45s ease ${i * 70 + 150}ms forwards` : 'none',
               }}>
                 <div style={{ display: 'flex', position: 'relative', height: '44px', justifyContent: 'center' }}>
                   {step.avatars.map((av, j) => (
@@ -521,9 +560,12 @@ export default function HomePage() {
       </div>
 
       {/* ── SECTION: MARKETS ── */}
-      <div style={{ background: '#0c0c0c', padding: '36px 16px', borderTop: '1px solid #1a1a1a' }}>
+      <div ref={mktRef} style={{ background: '#0c0c0c', padding: '36px 16px', borderTop: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px',
+            opacity: mktInView ? undefined : 0,
+            animation: mktInView ? 'fadeSlideUp 0.5s ease forwards' : 'none',
+          }}>
             <h2 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
               ครอบคลุมทุกตลาด
             </h2>
@@ -531,10 +573,21 @@ export default function HomePage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {MARKETS.map(m => (
-              <div key={m.name} style={{
-                background: '#111', border: `1px solid ${m.color}20`,
-                borderTop: `3px solid ${m.color}`, borderRadius: '12px', padding: '14px 10px',
+            {MARKETS.map((m, i) => (
+              <div
+                key={m.name}
+                onMouseEnter={() => setHoveredMarket(m.name)}
+                onMouseLeave={() => setHoveredMarket(null)}
+                style={{
+                  background: '#111', borderRadius: '12px', padding: '14px 10px',
+                  border: `1px solid ${hoveredMarket === m.name ? m.color + '50' : m.color + '20'}`,
+                  borderTop: `3px solid ${m.color}`,
+                  boxShadow: hoveredMarket === m.name ? `0 0 22px ${m.color}22` : 'none',
+                  transform: hoveredMarket === m.name ? 'translateY(-3px)' : 'none',
+                  transition: 'box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease',
+                  opacity: mktInView ? undefined : 0,
+                  animation: mktInView ? `scaleIn 0.5s ease ${i * 100 + 150}ms forwards` : 'none',
+                  cursor: 'default',
               }}>
                 <div style={{ fontSize: '20px', marginBottom: '6px' }}>{m.flag}</div>
                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff', marginBottom: '10px', lineHeight: 1.3 }}>{m.name}</div>
