@@ -135,14 +135,14 @@ export default function HomePage() {
             </div>
 
             {/* Headline */}
-            <h1 style={{ margin: '0 0 10px', lineHeight: 1.2, color: '#fff', fontSize: 'clamp(1.8rem, 5vw, 2.6rem)', fontWeight: 800 }}>
+            <h1 style={{ margin: '0 0 10px', lineHeight: 1.15, color: '#fff', fontSize: 'clamp(2.4rem, 9vw, 3.6rem)', fontWeight: 800 }}>
               {content.headline.split('\n').map((line, i) => (
                 <span key={i} style={{ display: 'block' }}>{line}</span>
               ))}
             </h1>
 
             {/* Sub */}
-            <p style={{ margin: '0 0 22px', maxWidth: '480px', color: '#666', lineHeight: 1.6, fontSize: '13px' }}>
+            <p style={{ margin: '0 0 22px', maxWidth: '480px', color: '#666', lineHeight: 1.6, fontSize: '13px', whiteSpace: 'pre-line' }}>
               {content.subheadline}
             </p>
 
