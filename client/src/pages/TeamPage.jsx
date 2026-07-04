@@ -180,6 +180,13 @@ function RadarChart({ stat, color, size = 160 }) {
 
 function CharacterModal({ agent, onClose }) {
   const [tab, setTab] = useState('stats');
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   if (!agent) return null;
   const isSonnet = agent.model === 'Sonnet';
   const TABS = [
