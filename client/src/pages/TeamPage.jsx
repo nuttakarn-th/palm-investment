@@ -133,6 +133,21 @@ const AGENTS = [
   },
 ];
 
+const PAGE_STYLE = `
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes rosterDot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.65); }
+}
+@keyframes glowTitle {
+  0%,100% { text-shadow: 0 0 20px rgba(79,142,247,0.35); }
+  50%     { text-shadow: 0 0 40px rgba(79,142,247,0.7), 0 0 80px rgba(79,142,247,0.25); }
+}
+`;
+
 // ── Radar Chart ───────────────────────────────────────────────────────────────
 
 function RadarChart({ stat, color, size = 160, fill = false }) {
@@ -181,7 +196,7 @@ function RadarChart({ stat, color, size = 160, fill = false }) {
   );
 }
 
-// ── Stats Tab (measures container, sizes radar to fill) ───────────────────────
+// ── Stats Tab ─────────────────────────────────────────────────────────────────
 
 function StatsTabContent({ agent }) {
   const areaRef = useRef(null);
@@ -234,7 +249,6 @@ function ModalContent({ agent, onClose }) {
     { key: 'ask',       label: 'ถามได้' },
   ];
 
-  // Delay backdrop close to prevent ghost-click on Android closing modal instantly
   useEffect(() => {
     const t = setTimeout(() => { canClose.current = true; }, 350);
     return () => clearTimeout(t);
@@ -257,13 +271,11 @@ function ModalContent({ agent, onClose }) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Accent bar */}
         <div style={{ height: '3px', flexShrink: 0, background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
 
-        {/* Header */}
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ width: '58px', height: '58px', borderRadius: '12px', overflow: 'hidden', border: `1.5px solid ${agent.color}44`, flexShrink: 0 }}>
-            <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', flexWrap: 'wrap' }}>
@@ -285,7 +297,6 @@ function ModalContent({ agent, onClose }) {
           <button onClick={onClose} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', fontSize: '18px', lineHeight: 1, cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }}>✕</button>
         </div>
 
-        {/* Tab bar */}
         <div style={{ flexShrink: 0, display: 'flex', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           {TABS.map(t => (
             <button
@@ -305,9 +316,7 @@ function ModalContent({ agent, onClose }) {
           ))}
         </div>
 
-        {/* Tab content — auto height per tab */}
         <div style={{ padding: '14px', display: 'flex', flexDirection: 'column' }}>
-
           {tab === 'stats' && <StatsTabContent agent={agent} />}
 
           {tab === 'abilities' && (
@@ -348,7 +357,6 @@ function ModalContent({ agent, onClose }) {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>,
@@ -363,16 +371,26 @@ function CharacterModal({ agent, onClose }) {
 
 // ── Agent Card (Flip) ─────────────────────────────────────────────────────────
 
-function AgentCard({ agent, onOpenModal }) {
+function AgentCard({ agent, onOpenModal, index = 0 }) {
   const [flipped, setFlipped] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const touchTimer = useRef(null);
   const isSonnet = agent.model === 'Sonnet';
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
+    const t = setTimeout(() => setMounted(true), 80 + index * 60);
     return () => clearTimeout(t);
-  }, []);
+  }, [index]);
+
+  const handleTouchStart = () => {
+    clearTimeout(touchTimer.current);
+    setHovered(true);
+  };
+  const handleTouchEnd = () => {
+    touchTimer.current = setTimeout(() => setHovered(false), 700);
+  };
+
   const cardStyle = {
     background: 'linear-gradient(160deg, #111 0%, #0a0a0a 100%)',
     border: `1px solid ${agent.color}33`,
@@ -384,13 +402,15 @@ function AgentCard({ agent, onOpenModal }) {
         perspective: '900px',
         borderRadius: '16px',
         transform: hovered ? 'translateY(-10px)' : 'translateY(0)',
-        boxShadow: hovered ? `0 24px 48px ${agent.color}45, 0 0 0 1px ${agent.color}55` : 'none',
+        boxShadow: hovered ? `0 24px 48px ${agent.color}45, 0 0 0 1.5px ${agent.color}60` : 'none',
         transition: 'transform 0.28s ease, box-shadow 0.28s ease',
         cursor: 'pointer',
       }}
       onClick={() => setFlipped((f) => !f)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <div
         style={{
@@ -398,7 +418,7 @@ function AgentCard({ agent, onOpenModal }) {
           transition: 'transform 0.55s cubic-bezier(0.4,0,0.2,1)',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           position: 'relative',
-          minHeight: '380px',
+          minHeight: '460px',
         }}
       >
         {/* ── FRONT ── */}
@@ -413,15 +433,15 @@ function AgentCard({ agent, onOpenModal }) {
               {isSonnet ? '⚡ SONNET' : '◆ HAIKU'}
             </span>
           </div>
-          <div className="flex-1 px-3 pb-1">
-            <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: '1/1', background: '#161616' }}>
-              <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.opacity = '0.3'; }} />
+          <div className="flex-1 px-3 pb-1" style={{ minHeight: '160px' }}>
+            <div className="w-full h-full rounded-xl overflow-hidden" style={{ background: '#161616' }}>
+              <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} className="w-full h-full object-cover object-top" onError={(e) => { e.currentTarget.style.opacity = '0.3'; }} />
             </div>
           </div>
           <div className="px-3 pb-3 text-center">
-            <div className="text-xl font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</div>
-            <div className="text-[10px] text-neutral-500 mb-2">{agent.title}</div>
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest mb-2.5" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
+            <div className="text-xl font-bold text-white mb-0.5" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</div>
+            <div className="text-[11px] text-neutral-500 mb-2">{agent.title}</div>
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest mb-3" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
               {agent.teamIcon} {agent.teamLabel}
             </div>
             <div className="space-y-1.5">
@@ -434,8 +454,8 @@ function AgentCard({ agent, onOpenModal }) {
                       style={{
                         width: mounted ? `${v}%` : '0%',
                         background: agent.color,
-                        transition: 'width 0.6s ease-out',
-                        transitionDelay: `${idx * 0.1}s`,
+                        transition: 'width 0.7s ease-out',
+                        transitionDelay: `${idx * 0.12}s`,
                       }}
                     />
                   </div>
@@ -455,8 +475,8 @@ function AgentCard({ agent, onOpenModal }) {
         >
           <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
           <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-            <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: `${agent.color}44` }}>
-              <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border" style={{ borderColor: `${agent.color}44` }}>
+              <img src={`/avatars/${agent.key}.jpg`} alt={agent.nickname} className="w-full h-full object-cover object-top" />
             </div>
             <div>
               <div className="text-sm font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</div>
@@ -465,26 +485,28 @@ function AgentCard({ agent, onOpenModal }) {
           </div>
 
           <div className="px-3 pb-2">
-            <p className="text-[10px] text-neutral-400 leading-relaxed line-clamp-3">{agent.bio}</p>
+            <p className="text-[11px] text-neutral-400 leading-relaxed line-clamp-3">{agent.bio}</p>
           </div>
 
-          <div className="px-3 pb-2 space-y-1.5 flex-1">
+          <div className="px-3 pb-2 space-y-2">
             <div className="text-[9px] font-bold tracking-widest text-neutral-600 uppercase mb-1">Abilities</div>
             {agent.abilities.map((ab, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: `${agent.color}08`, border: `1px solid ${agent.color}18` }}>
-                <span className="text-sm leading-none">{ab.icon}</span>
+              <div key={i} className="flex items-start gap-2.5 rounded-xl px-3 py-2.5" style={{ background: `${agent.color}08`, border: `1px solid ${agent.color}18` }}>
+                <span className="text-base leading-none mt-0.5">{ab.icon}</span>
                 <div>
-                  <div className="text-[10px] font-bold text-white">{ab.name}</div>
-                  <div className="text-[9px] text-neutral-600 leading-tight">{ab.desc}</div>
+                  <div className="text-[11px] font-bold text-white">{ab.name}</div>
+                  <div className="text-[10px] text-neutral-600 leading-snug mt-0.5">{ab.desc}</div>
                 </div>
               </div>
             ))}
           </div>
 
+          <div className="flex-1" />
+
           <div className="px-3 pb-3 pt-2">
             <button
               onClick={(e) => { e.stopPropagation(); onOpenModal(agent); }}
-              className="w-full rounded-xl py-2 text-xs font-bold transition-all active:scale-95"
+              className="w-full rounded-xl py-2.5 text-xs font-bold transition-all active:scale-95"
               style={{ background: agent.color, color: '#000' }}
             >
               📋 ดู Character Sheet
@@ -525,7 +547,7 @@ function PipelineFlow() {
     return <><div /><div /><div style={base}><span style={{ color: '#363636', fontSize: '15px' }}>↓</span></div></>;
   };
   return (
-    <div className="mt-12 rounded-2xl border border-white/5 bg-white/2 p-5">
+    <div className="mt-12 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
       <div className="text-xs font-semibold text-neutral-500 mb-5 tracking-widest uppercase">Pipeline Flow</div>
       <div style={{ maxWidth: '460px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 32px 1fr', alignItems: 'center' }}>
         {pill(S[0])}{hArr('→')}{pill(S[1])}
@@ -554,7 +576,12 @@ export default function TeamPage() {
   }, [modalAgent]);
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+    <div className="min-h-screen bg-[#080808] text-white" style={{
+      backgroundImage: 'radial-gradient(circle, #141414 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    }}>
+      <style>{PAGE_STYLE}</style>
+
       <nav className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#080808]/90 backdrop-blur">
         <button onClick={() => navigate('/')} className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors">
           ← กลับ
@@ -568,14 +595,35 @@ export default function TeamPage() {
         </button>
       </nav>
 
-      <div className="text-center pt-12 pb-8 px-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#4F8EF7]/30 bg-[#4F8EF7]/8 px-4 py-1.5 mb-4">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#4F8EF7] animate-pulse" />
-          <span className="text-[11px] font-semibold text-[#4F8EF7] tracking-widest uppercase">AI AGENT ROSTER</span>
+      {/* Header */}
+      <div className="text-center pt-12 pb-8 px-4 relative">
+        {/* Glow behind title */}
+        <div style={{
+          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+          width: '500px', height: '260px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(79,142,247,0.07) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#4F8EF7]/30 bg-[#4F8EF7]/[0.07] px-4 py-1.5 mb-5">
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4F8EF7', display: 'inline-block', animation: 'rosterDot 1.6s ease-in-out infinite' }} />
+          <span className="text-[11px] font-semibold text-[#4F8EF7] tracking-widest uppercase">AI Agent Roster</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-3" style={{ fontFamily: "'Kanit', sans-serif" }}>
-          พบกับทีม<span className="text-[#4F8EF7]"> AI 9 คน</span>
+
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-3 relative" style={{ fontFamily: "'Kanit', sans-serif" }}>
+          พบกับทีม<span style={{ color: '#4F8EF7', animation: 'glowTitle 3s ease-in-out infinite' }}> AI 9 คน</span>
         </h1>
+
+        {/* HUD stats */}
+        <div className="flex gap-8 justify-center mb-4">
+          {[{ v: '9', l: 'AGENTS' }, { v: '4', l: 'TEAMS' }, { v: '7', l: 'STAGES' }].map(({ v, l }) => (
+            <div key={l} className="text-center">
+              <div className="text-2xl font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{v}</div>
+              <div className="text-[9px] text-neutral-600 tracking-widest uppercase">{l}</div>
+            </div>
+          ))}
+        </div>
+
         <p className="text-neutral-500 text-sm max-w-md mx-auto">กดที่การ์ดเพื่อพลิกดูข้อมูล · กด "Character Sheet" เพื่อดูรายละเอียดเต็ม</p>
       </div>
 
@@ -592,9 +640,15 @@ export default function TeamPage() {
 
       <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="agent-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {AGENTS.map((agent) => (
-            <div key={agent.key} className="agent-card">
-              <AgentCard agent={agent} onOpenModal={setModalAgent} />
+          {AGENTS.map((agent, index) => (
+            <div
+              key={agent.key}
+              className="agent-card"
+              style={{
+                animation: `cardIn 0.45s ease-out ${index * 0.07}s both`,
+              }}
+            >
+              <AgentCard agent={agent} onOpenModal={setModalAgent} index={index} />
             </div>
           ))}
         </div>
