@@ -11,7 +11,7 @@ const DEFAULT_CONTENT = {
   ctaSub: 'ดูพอร์ตและวิเคราะห์ตลาด',
 };
 
-export default function HomePage({ onEnter }) {
+export default function HomePage({ onEnter, onTeam }) {
   const [content, setContent] = useState(DEFAULT_CONTENT);
 
   useEffect(() => {
@@ -106,6 +106,14 @@ export default function HomePage({ onEnter }) {
             style={{ fontFamily: "'Kanit', sans-serif" }}
           >
             🔍 {content.ctaSub}
+          </button>
+
+          <button
+            onClick={onTeam}
+            className="flex items-center gap-2 rounded-xl border border-[#4F8EF7]/30 px-5 py-3 text-sm font-semibold transition-all hover:border-[#4F8EF7]/60"
+            style={{ fontFamily: "'Kanit', sans-serif", color: '#4F8EF7', background: 'rgba(79,142,247,0.08)' }}
+          >
+            👥 พบกับทีม AI
           </button>
         </div>
       </div>

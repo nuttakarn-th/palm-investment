@@ -7,6 +7,7 @@ import ReportHistory from './components/ReportHistory.jsx';
 import ReportModal from './components/ReportModal.jsx';
 import Settings from './components/Settings.jsx';
 import HomePage from './pages/HomePage.jsx';
+import TeamPage from './pages/TeamPage.jsx';
 import { usePipeline } from './hooks/usePipeline.js';
 import { usePortfolio } from './hooks/usePortfolio.js';
 import { useSettings } from './hooks/useSettings.js';
@@ -14,20 +15,27 @@ import { useHistory } from './hooks/useHistory.js';
 
 export default function App() {
   const [page, setPage] = useState(() => {
-    // show home unless user already clicked "enter"
     return sessionStorage.getItem('palm_entered') ? 'app' : 'home';
   });
 
+  const goHome = () => {
+    sessionStorage.removeItem('palm_entered');
+    setPage('home');
+  };
+  const goApp = () => {
+    sessionStorage.setItem('palm_entered', '1');
+    setPage('app');
+  };
+  const goTeam = () => setPage('team');
+
   if (page === 'home') {
-    return (
-      <HomePage
-        onEnter={() => {
-          sessionStorage.setItem('palm_entered', '1');
-          setPage('app');
-        }}
-      />
-    );
+    return <HomePage onEnter={goApp} onTeam={goTeam} />;
   }
+
+  if (page === 'team') {
+    return <TeamPage onBack={goHome} onEnter={goApp} />;
+  }
+
   const pipe = usePipeline();
   const portfolio = usePortfolio();
   const { settings, save } = useSettings();
@@ -42,7 +50,6 @@ export default function App() {
     fetch('/api/health').then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false }));
   }, []);
 
-  // when a run finishes: save to history + scroll to summary
   useEffect(() => {
     if (pipe.status === 'done' && pipe.report) {
       history.addLocal(pipe.report);
@@ -66,12 +73,13 @@ export default function App() {
             src="/avatars/CEO.jpg"
             alt="ปาล์ม (CEO)"
             title="ปาล์ม — CEO"
-            className="h-8 w-8 rounded-full object-cover border border-[#333]"
+            className="h-8 w-8 rounded-full object-cover border border-[#333] cursor-pointer"
+            onClick={goHome}
             onError={(e) => (e.currentTarget.style.display = 'none')}
           />
-          <h1 className="font-bold tracking-wide text-sm">
+          <button onClick={goHome} className="font-bold tracking-wide text-sm hover:opacity-80 transition-opacity text-left">
             🎯 PALM INVESTMENT <span className="text-[#4F8EF7]">OS</span>
-          </h1>
+          </button>
           <span className="text-[10px] text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase">
             Mission Control
           </span>
@@ -88,6 +96,12 @@ export default function App() {
               ⚠ NO API KEY
             </span>
           )}
+          <button
+            onClick={goTeam}
+            className="rounded border border-[#242424] px-2 py-1 text-neutral-400 hover:text-white hover:border-neutral-500 transition"
+          >
+            👥 ทีม
+          </button>
           <button
             onClick={() => setShowSettings(true)}
             className="rounded border border-[#242424] px-2 py-1 text-neutral-400 hover:text-white hover:border-neutral-500 transition"
