@@ -228,8 +228,17 @@ export default function PipelineView({ pipeline, agents, status }) {
     );
   }
 
+  const parallelStages = stages.filter((s) => s.length > 1);
+  const seqStages     = stages.filter((s) => s.length === 1);
+  const parallelCount = parallelStages.length;
+
   return (
     <div className="space-y-4">
+      <style>{`
+        .seq-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (orientation: landscape) { .seq-grid { grid-template-columns: 1fr 1fr; } }
+      `}</style>
+
       {/* Overall progress bar */}
       <div className="flex items-center gap-3">
         <div className="text-[13px] font-bold text-neutral-500 shrink-0 tabular-nums">
@@ -249,8 +258,8 @@ export default function PipelineView({ pipeline, agents, status }) {
         </div>
       </div>
 
-      {/* Each stage as its own labeled section */}
-      {stages.map((stage, i) => {
+      {/* Parallel stages — each on its own labeled row */}
+      {parallelStages.map((stage, i) => {
         const teamLabel = TEAM_LABEL[AGENTS[stage[0]]?.team] || '';
         return (
           <div key={i}>
@@ -263,6 +272,22 @@ export default function PipelineView({ pipeline, agents, status }) {
           </div>
         );
       })}
+
+      {/* Sequential stages — 1 col portrait, 2 col landscape */}
+      {seqStages.length > 0 && (
+        <div className="seq-grid">
+          {seqStages.map((stage, i) => {
+            const k = stage[0];
+            const teamLabel = TEAM_LABEL[AGENTS[k]?.team] || '';
+            return (
+              <div key={k}>
+                <SectionLabel>Stage {parallelCount + i + 1} · {teamLabel}</SectionLabel>
+                <MainCard agentKey={k} state={agents[k]} />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
