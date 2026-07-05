@@ -65,14 +65,14 @@ function AgentAvatar({ agent, size, status }) {
   );
 }
 
-function StatusChip({ status, color }) {
+function StatusChip({ status }) {
   if (status === 'active')
-    return <span className="badge-live text-[10px] font-bold shrink-0" style={{ color }}>● LIVE</span>;
+    return <span className="badge-live text-[11px] font-bold shrink-0" style={{ color: '#4F8EF7' }}>● LIVE</span>;
   if (status === 'done')
-    return <span className="text-emerald-400 text-[10px] font-bold shrink-0">✓ DONE</span>;
+    return <span className="text-emerald-400 text-[11px] font-bold shrink-0">✓ DONE</span>;
   if (status === 'error')
-    return <span className="text-red-500 text-[10px] font-bold shrink-0">⚠ ERROR</span>;
-  return <span className="text-neutral-700 text-[10px] shrink-0">○</span>;
+    return <span className="text-red-500 text-[11px] font-bold shrink-0">⚠ ERROR</span>;
+  return <span className="text-neutral-700 text-[11px] shrink-0">○</span>;
 }
 
 // Card for all stages — bigger and more readable
@@ -97,28 +97,36 @@ function MainCard({ agentKey, state }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-1 mb-0.5">
             <span className="font-bold text-base text-white truncate">{agent.nickname}</span>
-            <StatusChip status={status} color={color} />
+            <StatusChip status={status} />
           </div>
           <div className="text-xs text-neutral-500 truncate">{agent.title}</div>
-          <div className="text-[10px] uppercase tracking-wider text-neutral-700 mt-0.5">{agent.model}</div>
+          <div className="text-[11px] uppercase tracking-wider text-neutral-700 mt-0.5">{agent.model}</div>
         </div>
       </div>
+
+      {/* Team color indicator — only place team accent appears on pipeline cards */}
+      <div className="h-[2px] w-8 rounded-full mb-2" style={{ background: color }} />
 
       {/* Progress bar */}
       <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mb-2.5">
         {status === 'active' && (
-          <div className="h-full rounded-full agent-bar-active" style={{ background: color }} />
+          <div className="h-full rounded-full agent-bar-active" style={{ background: '#4F8EF7' }} />
         )}
         {status === 'done' && (
           <div className="h-full rounded-full bg-emerald-500 w-full transition-all duration-700" />
         )}
       </div>
 
-      <div className={`text-xs leading-relaxed line-clamp-2 ${
-        status === 'done'    ? 'text-emerald-700' :
-        status === 'active'  ? 'text-neutral-400' :
-        'text-neutral-700'
-      }`}>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className={`text-xs leading-relaxed line-clamp-2 ${
+          status === 'done'    ? 'text-emerald-700' :
+          status === 'active'  ? 'text-neutral-400' :
+          'text-neutral-700'
+        }`}
+      >
         {statusText}
       </div>
     </div>
@@ -127,7 +135,7 @@ function MainCard({ agentKey, state }) {
 
 function SectionLabel({ children }) {
   return (
-    <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
+    <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-2" aria-hidden="true">
       {children}
     </div>
   );
@@ -167,17 +175,17 @@ export default function PipelineView({ pipeline, agents, status }) {
         {/* header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'7px' }}>
-            <span style={{ fontSize:'9px', color:'#4F8EF7', animation:'hud-blink 1.2s step-start infinite' }}>■</span>
-            <span style={{ fontSize:'10px', letterSpacing:'.14em', color:'#2e2e2e', fontWeight:700, textTransform:'uppercase' }}>Pipeline Status</span>
+            <span style={{ fontSize:'11px', color:'#4F8EF7', animation:'hud-blink 1.2s step-start infinite' }}>■</span>
+            <span style={{ fontSize:'11px', letterSpacing:'.14em', color:'#2e2e2e', fontWeight:700, textTransform:'uppercase' }}>Pipeline Status</span>
           </div>
-          <span style={{ fontSize:'10px', letterSpacing:'.12em', fontWeight:700, color:'#1e3050' }}>SYSTEM STANDBY</span>
+          <span style={{ fontSize:'11px', letterSpacing:'.12em', fontWeight:700, color:'#1e3050' }}>SYSTEM STANDBY</span>
         </div>
 
         {/* agent groups */}
         <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
           {groups.map(({ label, keys, color }, gi) => (
             <div key={label}>
-              <div style={{ fontSize:'9px', letterSpacing:'.12em', fontWeight:700, color:`${color}60`, textTransform:'uppercase', marginBottom:'6px' }}>{label}</div>
+              <div style={{ fontSize:'11px', letterSpacing:'.12em', fontWeight:700, color:`${color}60`, textTransform:'uppercase', marginBottom:'6px' }}>{label}</div>
               <div style={{ display:'flex', gap:'8px' }}>
                 {keys.map((k, i) => {
                   const agent = AGENTS[k];
@@ -192,7 +200,7 @@ export default function PipelineView({ pipeline, agents, status }) {
                         <div style={{ fontSize:'13px', fontWeight:700, color:'#3a3a3a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{agent.nickname}</div>
                         <div style={{ fontSize:'10px', color:'#252525', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{agent.title}</div>
                       </div>
-                      <span style={{ fontSize:'9px', color:`${color}38`, flexShrink:0, fontWeight:700 }}>○</span>
+                      <span style={{ fontSize:'11px', color:`${color}38`, flexShrink:0, fontWeight:700 }}>○</span>
                     </div>
                   );
                 })}
@@ -206,7 +214,7 @@ export default function PipelineView({ pipeline, agents, status }) {
           {PIPELINE_STAGES.full.flatMap((_, i) => [
             i > 0 ? <div key={`l${i}`} style={{ flex:1, height:'1px', background:'#181818' }} /> : null,
             <div key={`s${i}`} style={{
-              fontSize:'9px', fontWeight:700, padding:'3px 9px', borderRadius:'99px', flexShrink:0,
+              fontSize:'11px', fontWeight:700, padding:'3px 9px', borderRadius:'99px', flexShrink:0,
               background:'#0d0d0d', border:'1px solid #1c1c1c', color:'#272727',
             }}>S{i+1}</div>,
           ]).filter(Boolean)}
