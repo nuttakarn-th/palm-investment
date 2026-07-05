@@ -256,6 +256,8 @@ export default function HomePage() {
       <style>{`
         .hero-wrap { height: 100vh; height: 100svh; }
         .pipeline-scroll::-webkit-scrollbar { display: none; }
+        .pipeline-scroll { justify-content: center; }
+        @media (max-width: 767px) { .pipeline-scroll { justify-content: flex-start; } }
 
         /* Tablet portrait only: shrink text area, push image higher to fill the tall viewport */
         @media (min-width: 768px) and (orientation: portrait) {
