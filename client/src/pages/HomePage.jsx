@@ -259,6 +259,12 @@ export default function HomePage() {
         .pipeline-scroll { justify-content: center; }
         @media (max-width: 767px) { .pipeline-scroll { justify-content: flex-start; } }
 
+        /* Tablet landscape: give image more vertical room so full team is visible */
+        @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+          .hero-bg-layer { height: 65% !important; }
+          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 30%, rgba(8,8,8,0.45) 43%, rgba(8,8,8,0.0) 54%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 96%) !important; }
+        }
+
         /* Tablet portrait only: shrink text area, push image higher to fill the tall viewport */
         @media (min-width: 768px) and (orientation: portrait) {
           .hero-text-block { height: 30% !important; justify-content: flex-start !important; padding-top: 16px !important; }
@@ -320,7 +326,7 @@ export default function HomePage() {
           {content.bgImage ? (
             <img
               src={content.bgImage} alt="ทีม"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
               draggable={false}
             />
           ) : (
@@ -329,7 +335,7 @@ export default function HomePage() {
               <source media="(orientation: landscape)" srcSet="/team.png" />
               <img
                 src="/team.png" alt="ทีม Palm Investment OS"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom', display: 'block' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
                 draggable={false}
               />
             </picture>
