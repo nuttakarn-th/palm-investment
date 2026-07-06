@@ -178,7 +178,7 @@ function RadarChart({ stat, color, size = 160, fill = false }) {
         const p = pt(i, maxR);
         return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />;
       })}
-      <polygon points={valuePts} fill={`${color}25`} stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      <polygon points={valuePts} fill="rgba(79,142,247,0.15)" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
       {vals.map((v, i) => {
         const p = pt(i, (v / 100) * maxR);
         return <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />;

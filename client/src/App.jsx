@@ -145,7 +145,7 @@ function AppPage() {
           >
             🎯 PALM <span className="text-[#4F8EF7]">OS</span>
           </button>
-          <span className="hidden sm:inline text-[10px] font-bold text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase tracking-widest">
+          <span className="hidden sm:inline text-[11px] font-bold text-neutral-600 border border-[#242424] rounded px-1.5 py-0.5 uppercase tracking-widest">
             Mission Control
           </span>
         </div>
@@ -209,7 +209,7 @@ function AppPage() {
       <div className="flex">
         {/* LEFT SIDEBAR */}
         <aside className={`
-          fixed top-0 left-0 h-full z-50 w-72 bg-[#080808] border-r border-[#1a1a1a] p-4 space-y-5 overflow-y-auto
+          fixed top-0 left-0 h-full z-50 w-72 bg-[#080808] border-r border-[#2a2a2a] p-4 space-y-5 overflow-y-auto
           transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:relative lg:translate-x-0 lg:top-auto lg:h-auto lg:z-auto lg:min-h-[calc(100vh-53px)] lg:shrink-0

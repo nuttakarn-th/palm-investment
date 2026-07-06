@@ -90,18 +90,18 @@ export default function Settings({ settings, onSave, onClose }) {
 
         <div className="space-y-5">
           <section>
-            <div className="text-xs font-semibold text-[#4F8EF7] mb-2">📧 Email Notification (Resend)</div>
+            <div className="text-[11px] font-semibold text-neutral-400 mb-2">📧 Email Notification (Resend)</div>
             <label className={label}>อีเมลรับ notification</label>
             <input className={input} type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="palm@example.com" />
             <div className="mt-1.5 flex items-center gap-2">
               <button onClick={() => test('email')} className="text-[11px] rounded border border-[#333] px-2 py-1 text-neutral-400 hover:text-white">ทดสอบส่ง</button>
               <span className="text-[11px] text-neutral-500">{testing.email}</span>
             </div>
-            <p className="text-[10px] text-neutral-600 mt-1">* RESEND_API_KEY ตั้งใน .env ฝั่ง server</p>
+            <p className="text-[11px] text-neutral-600 mt-1">* RESEND_API_KEY ตั้งใน .env ฝั่ง server</p>
           </section>
 
           <section>
-            <div className="text-xs font-semibold text-[#34D399] mb-2">✈️ Telegram Notification</div>
+            <div className="text-[11px] font-semibold text-neutral-400 mb-2">✈️ Telegram Notification</div>
             <label className={label}>Bot Token (จาก @BotFather)</label>
             <input className={input} value={form.telegramBotToken} onChange={(e) => set('telegramBotToken', e.target.value)} placeholder="123456:ABC-DEF…" />
             <label className={`${label} mt-2`}>Chat ID (จาก @userinfobot)</label>
@@ -110,7 +110,7 @@ export default function Settings({ settings, onSave, onClose }) {
               <button onClick={() => test('telegram')} className="text-[11px] rounded border border-[#333] px-2 py-1 text-neutral-400 hover:text-white">ทดสอบส่ง</button>
               <span className="text-[11px] text-neutral-500">{testing.telegram}</span>
             </div>
-            <details className="mt-2 text-[10px] text-neutral-600">
+            <details className="mt-2 text-[11px] text-neutral-600">
               <summary className="cursor-pointer">วิธีสร้าง Telegram Bot</summary>
               <ol className="list-decimal ml-4 mt-1 space-y-0.5">
                 <li>เปิด Telegram คุยกับ <b>@BotFather</b> → /newbot → ตั้งชื่อ → ได้ Bot Token</li>
@@ -122,7 +122,7 @@ export default function Settings({ settings, onSave, onClose }) {
           </section>
 
           <section>
-            <div className="text-xs font-semibold text-[#FCD34D] mb-2">📅 Weekly Auto-Report</div>
+            <div className="text-[11px] font-semibold text-neutral-400 mb-2">📅 Weekly Auto-Report</div>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -141,7 +141,7 @@ export default function Settings({ settings, onSave, onClose }) {
           </section>
 
           <section>
-            <div className="text-xs font-semibold text-[#FB923C] mb-2">🏠 Homepage Content</div>
+            <div className="text-[11px] font-semibold text-neutral-400 mb-2">🏠 Homepage Content</div>
             <label className={label}>Badge text (บรรทัดเล็กด้านบน)</label>
             <input className={input} value={form.homepage?.badge ?? ''} onChange={(e) => setHome('badge', e.target.value)} placeholder="AI-Powered Investment Team" />
             <label className={`${label} mt-2`}>Headline (คำพาดหัว — ขึ้นบรรทัดใหม่ด้วย \n)</label>
@@ -164,7 +164,7 @@ export default function Settings({ settings, onSave, onClose }) {
 
             {/* ── Background Image ── */}
             <div className="mt-4 pt-4 border-t border-[#1e1e1e]">
-              <div className="text-[11px] font-semibold text-[#22D3EE] mb-2">🖼 Background Image</div>
+              <div className="text-[11px] font-semibold text-neutral-400 mb-2">🖼 Background Image</div>
 
               {form.homepage?.bgImage ? (
                 <div className="relative mb-2 rounded-xl overflow-hidden" style={{ height: '90px' }}>
@@ -200,18 +200,18 @@ export default function Settings({ settings, onSave, onClose }) {
                 {bgStatus && <span className="text-[11px] text-neutral-500">{bgStatus}</span>}
               </div>
 
-              <div className="mt-2 rounded-lg bg-[#111] border border-[#1e1e1e] px-3 py-2 text-[10px] text-neutral-600 space-y-0.5">
+              <div className="mt-2 rounded-lg bg-[#111] border border-[#1e1e1e] px-3 py-2 text-[11px] text-neutral-600 space-y-0.5">
                 <div>📐 แนะนำ: <span className="text-neutral-400">2560 × 1440 px</span> (16:9 · Full HD Retina)</div>
                 <div>🗜 Format: <span className="text-neutral-400">JPG / WebP</span> (PNG ได้แต่ไฟล์ใหญ่กว่า)</div>
                 <div>📦 ขนาดสูงสุด: <span className="text-neutral-400">10 MB</span> (ระบบบีบอัดอัตโนมัติ)</div>
               </div>
             </div>
 
-            <p className="text-[10px] text-neutral-600 mt-2">* บันทึกแล้วรีเฟรชหน้า Homepage เพื่อดูการเปลี่ยนแปลง</p>
+            <p className="text-[11px] text-neutral-600 mt-2">* บันทึกแล้วรีเฟรชหน้า Homepage เพื่อดูการเปลี่ยนแปลง</p>
           </section>
 
           <section>
-            <div className="text-xs font-semibold text-[#A78BFA] mb-2">🎛 อื่นๆ</div>
+            <div className="text-[11px] font-semibold text-neutral-400 mb-2">🎛 อื่นๆ</div>
             <label className={label}>Default Market</label>
             <select className={input} value={form.defaultMarket} onChange={(e) => set('defaultMarket', e.target.value)}>
               <option value="all">All (US + SET + Crypto)</option>
@@ -219,7 +219,7 @@ export default function Settings({ settings, onSave, onClose }) {
               <option value="set">SET (หุ้นไทย)</option>
               <option value="crypto">Crypto</option>
             </select>
-            <p className="text-[10px] text-neutral-600 mt-2">
+            <p className="text-[11px] text-neutral-600 mt-2">
               Risk Profile: <b>Moderate-Low</b> (ค่าตายตัวในโค้ด) · API Key: ตั้งใน <code>.env</code> — ไม่ถูกส่งมา browser
             </p>
           </section>

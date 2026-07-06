@@ -55,6 +55,16 @@ body {
   animation: pulse-bar 1.4s ease-in-out infinite;
 }
 
+/* avatar pulse ring when agent is active */
+@keyframes avatar-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(79,142,247,0.5), 0 0 10px 0 rgba(79,142,247,0.2); }
+  50%       { box-shadow: 0 0 0 4px rgba(79,142,247,0.0), 0 0 16px 0 rgba(79,142,247,0.35); }
+}
+.avatar-active {
+  box-shadow: 0 0 0 2px rgba(79,142,247,0.45);
+  animation: avatar-pulse-ring 2s ease-in-out infinite;
+}
+
 /* thin scrollbars */
 * {
   scrollbar-width: thin;

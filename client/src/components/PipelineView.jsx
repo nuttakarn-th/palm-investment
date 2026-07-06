@@ -58,7 +58,8 @@ function AgentAvatar({ agent, size, status }) {
       width={size}
       height={size}
       className={`rounded-xl object-cover shrink-0 bg-black transition-all duration-300 ${
-        status === 'pending' ? 'grayscale opacity-40' : ''
+        status === 'pending' ? 'grayscale opacity-40' :
+        status === 'active'  ? 'avatar-active' : ''
       }`}
       onError={() => setFailed(true)}
     />
