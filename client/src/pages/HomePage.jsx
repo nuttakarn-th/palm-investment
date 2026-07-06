@@ -259,16 +259,10 @@ export default function HomePage() {
         .pipeline-scroll { justify-content: center; }
         @media (max-width: 767px) { .pipeline-scroll { justify-content: flex-start; } }
 
-        /* Tablet landscape: image already full-height; shift gradient window slightly lower
-           because viewport is shorter so text needs less room */
-        @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
-          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 22%, rgba(8,8,8,0.5) 34%, rgba(8,8,8,0.0) 46%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 97%) !important; }
-        }
-
-        /* Tablet portrait: compact text block, gradient window shifts higher for tall viewport */
-        @media (min-width: 768px) and (orientation: portrait) {
-          .hero-text-block { height: 30% !important; justify-content: flex-start !important; padding-top: 16px !important; }
-          .hero-gradient   { background: linear-gradient(to bottom, #080808 0%, #080808 22%, rgba(8,8,8,0.5) 34%, rgba(8,8,8,0.0) 46%, rgba(8,8,8,0.0) 70%, rgba(8,8,8,0.65) 84%, #080808 96%) !important; }
+        /* Landscape phone: reduce bottom padding so text fits */
+        @media (max-height: 500px) and (orientation: landscape) {
+          .hero-text-block { padding-bottom: 6px !important; }
+          .hero-text-block .hero-stats { display: none !important; }
         }
 
         @keyframes fadeSlideUp {
@@ -341,10 +335,10 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Layer 2 — Gradient: solid dark for text area, clear window for image, dark footer */}
+        {/* Layer 2 — Gradient: thin dark cap for nav, fully transparent for faces, dark at bottom for text */}
         <div className="hero-gradient" style={{
           position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, #080808 0%, #080808 24%, rgba(8,8,8,0.5) 36%, rgba(8,8,8,0.0) 48%, rgba(8,8,8,0.0) 74%, rgba(8,8,8,0.65) 86%, #080808 97%)',
+          background: 'linear-gradient(to bottom, rgba(8,8,8,0.82) 0%, rgba(8,8,8,0.0) 18%, rgba(8,8,8,0.0) 48%, rgba(8,8,8,0.88) 64%, #080808 80%)',
         }} />
 
         {/* Layer 3 — Effects: particles */}
@@ -373,15 +367,20 @@ export default function HomePage() {
             </button>
           </nav>
 
-          {/* Text — fills the top 45%, centered */}
+          {/* Spacer — team photo is fully visible here */}
+          <div style={{ flex: 1 }} />
+
+          {/* Text + stats — lower-third, pinned to bottom above dark gradient */}
           <div className="hero-text-block" style={{
-            height: '45%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+            flexShrink: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', textAlign: 'center',
+            paddingBottom: '16px',
           }}>
 
             {/* Badge */}
             <div style={{
-              marginBottom: '14px',
+              marginBottom: '12px',
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               borderRadius: '99px', border: '1px solid rgba(79,142,247,0.4)',
               background: 'rgba(79,142,247,0.1)', padding: '5px 14px',
@@ -396,8 +395,9 @@ export default function HomePage() {
 
             {/* Headline */}
             <h1 style={{
-              margin: '0 0 10px', lineHeight: 1.15, color: '#fff',
-              fontSize: 'clamp(2.4rem, 9vw, 3.6rem)', fontWeight: 800,
+              margin: '0 0 8px', lineHeight: 1.15, color: '#fff',
+              fontSize: 'clamp(2.2rem, 8vw, 3.4rem)', fontWeight: 800,
+              textShadow: '0 2px 24px rgba(0,0,0,0.9)',
               opacity: elem >= 2 ? undefined : 0,
               animation: elem >= 2 ? 'glitchIn 0.8s ease forwards' : 'none',
             }}>
@@ -408,15 +408,16 @@ export default function HomePage() {
 
             {/* Subheadline */}
             <p style={{
-              margin: '0 0 22px', maxWidth: '480px', color: '#888', lineHeight: 1.6, fontSize: '13px',
+              margin: '0 0 18px', maxWidth: '480px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, fontSize: '13px',
               whiteSpace: 'pre-line',
+              textShadow: '0 1px 8px rgba(0,0,0,0.8)',
               ...fadeIn(3),
             }}>
               {content.subheadline}
             </p>
 
             {/* CTAs */}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', ...fadeIn(4) }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px', ...fadeIn(4) }}>
               <button
                 onClick={() => navigate('/app')}
                 style={{
@@ -441,17 +442,13 @@ export default function HomePage() {
                 👥 พบทีม AI
               </button>
             </div>
-          </div>
 
-          {/* Stats + scroll — pinned to bottom */}
-          <div style={{
-            marginTop: 'auto', flexShrink: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-            paddingBottom: '16px',
-            opacity: elem >= 5 ? 1 : 0,
-            transition: 'opacity 0.4s ease',
-          }}>
-            <div style={{ display: 'flex', gap: '28px', justifyContent: 'center' }}>
+            {/* Stats */}
+            <div className="hero-stats" style={{
+              display: 'flex', gap: '28px', justifyContent: 'center', marginBottom: '14px',
+              opacity: elem >= 5 ? 1 : 0,
+              transition: 'opacity 0.4s ease',
+            }}>
               {[
                 { val: s9, label: 'AI Agents' },
                 { val: s7, label: 'Stages' },
@@ -459,12 +456,12 @@ export default function HomePage() {
               ].map(({ val, label }) => (
                 <div key={label} style={{ textAlign: 'center' }}>
                   <div style={{
-                    fontSize: '32px', fontWeight: 900, color: '#4F8EF7', lineHeight: 1,
+                    fontSize: '28px', fontWeight: 900, color: '#4F8EF7', lineHeight: 1,
                     fontVariantNumeric: 'tabular-nums', minWidth: '2ch', display: 'inline-block',
                   }}>
                     {val}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</div>
                 </div>
               ))}
               <div style={{ textAlign: 'center' }}>
@@ -477,11 +474,17 @@ export default function HomePage() {
                   <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#34D399', display: 'inline-block', animation: 'pulse 1.8s ease-in-out infinite' }} />
                   Real-time
                 </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '3px', letterSpacing: '0.07em', textTransform: 'uppercase' }}>การวิเคราะห์</div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'bounceDown 2s ease-in-out infinite' }}>
+            {/* Scroll indicator */}
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+              animation: 'bounceDown 2s ease-in-out infinite',
+              opacity: elem >= 5 ? 1 : 0,
+              transition: 'opacity 0.4s ease 0.3s',
+            }}>
               <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', letterSpacing: '0.12em' }}>SCROLL</span>
               <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '14px' }}>↓</span>
             </div>
