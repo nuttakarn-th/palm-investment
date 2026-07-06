@@ -49,6 +49,7 @@ function AppPage() {
   const [health, setHealth] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const summaryRef = useRef(null);
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -198,22 +199,36 @@ function AppPage() {
         </div>
       </header>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile sidebar overlay — always in DOM so opacity can transition */}
+      <div
+        className={`fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-300 ${
+          sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          if (e.changedTouches[0].clientX - touchStartX.current < -48) setSidebarOpen(false);
+          touchStartX.current = null;
+        }}
+      />
 
       <div className="flex">
         {/* LEFT SIDEBAR */}
-        <aside className={`
-          fixed top-0 left-0 h-full z-50 w-72 bg-[#080808] border-r border-[#2a2a2a] p-4 space-y-5 overflow-y-auto
-          transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:relative lg:translate-x-0 lg:top-auto lg:h-auto lg:z-auto lg:min-h-[calc(100vh-53px)] lg:shrink-0
-        `}>
+        <aside
+          className={`
+            fixed top-0 left-0 h-full z-50 w-72 bg-[#080808] border-r border-[#2a2a2a] p-4 space-y-5 overflow-y-auto
+            transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:relative lg:translate-x-0 lg:top-auto lg:h-auto lg:z-auto lg:min-h-[calc(100vh-53px)] lg:shrink-0
+          `}
+          onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            if (touchStartX.current === null) return;
+            if (e.changedTouches[0].clientX - touchStartX.current < -48) setSidebarOpen(false);
+            touchStartX.current = null;
+          }}
+        >
           {/* Close button mobile */}
           <div className="flex items-center justify-between lg:hidden pb-2 border-b border-[#1a1a1a]">
             <span className="text-xs text-neutral-500 uppercase tracking-wider">เมนู</span>
