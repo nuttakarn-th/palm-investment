@@ -259,17 +259,16 @@ export default function HomePage() {
         .pipeline-scroll { justify-content: center; }
         @media (max-width: 767px) { .pipeline-scroll { justify-content: flex-start; } }
 
-        /* Tablet landscape: give image more vertical room so full team is visible */
+        /* Tablet landscape: image already full-height; shift gradient window slightly lower
+           because viewport is shorter so text needs less room */
         @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
-          .hero-bg-layer { height: 65% !important; }
-          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 30%, rgba(8,8,8,0.45) 43%, rgba(8,8,8,0.0) 54%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 96%) !important; }
+          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 28%, rgba(8,8,8,0.5) 40%, rgba(8,8,8,0.0) 52%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 97%) !important; }
         }
 
-        /* Tablet portrait only: shrink text area, push image higher to fill the tall viewport */
+        /* Tablet portrait: compact text block, gradient window shifts higher for tall viewport */
         @media (min-width: 768px) and (orientation: portrait) {
           .hero-text-block { height: 30% !important; justify-content: flex-start !important; padding-top: 16px !important; }
-          .hero-bg-layer   { height: 74% !important; }
-          .hero-gradient   { background: linear-gradient(to bottom, #080808 0%, #080808 20%, rgba(8,8,8,0.55) 32%, rgba(8,8,8,0.0) 44%, rgba(8,8,8,0.0) 70%, rgba(8,8,8,0.65) 84%, #080808 95%) !important; }
+          .hero-gradient   { background: linear-gradient(to bottom, #080808 0%, #080808 22%, rgba(8,8,8,0.5) 34%, rgba(8,8,8,0.0) 46%, rgba(8,8,8,0.0) 70%, rgba(8,8,8,0.65) 84%, #080808 96%) !important; }
         }
 
         @keyframes fadeSlideUp {
@@ -321,8 +320,8 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <div className="hero-wrap" style={{ position: 'relative', overflow: 'hidden', background: '#080808' }}>
 
-        {/* Layer 1 — BG Image: occupies bottom 55% only (same scale as before) */}
-        <div className="hero-bg-layer" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', zIndex: 1 }}>
+        {/* Layer 1 — BG Image: full viewport, gradient masks text area above */}
+        <div className="hero-bg-layer" style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
           {content.bgImage ? (
             <img
               src={content.bgImage} alt="ทีม"
@@ -342,10 +341,10 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Layer 2 — Gradient: solid dark at top, fades to transparent at image, darkens at bottom */}
+        {/* Layer 2 — Gradient: solid dark for text area, clear window for image, dark footer */}
         <div className="hero-gradient" style={{
           position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, #080808 0%, #080808 40%, rgba(8,8,8,0.5) 52%, rgba(8,8,8,0.0) 62%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 84%, #080808 95%)',
+          background: 'linear-gradient(to bottom, #080808 0%, #080808 32%, rgba(8,8,8,0.55) 44%, rgba(8,8,8,0.0) 56%, rgba(8,8,8,0.0) 74%, rgba(8,8,8,0.65) 86%, #080808 97%)',
         }} />
 
         {/* Layer 3 — Effects: particles */}
