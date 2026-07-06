@@ -262,7 +262,7 @@ export default function HomePage() {
         /* Tablet landscape: image already full-height; shift gradient window slightly lower
            because viewport is shorter so text needs less room */
         @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
-          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 28%, rgba(8,8,8,0.5) 40%, rgba(8,8,8,0.0) 52%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 97%) !important; }
+          .hero-gradient { background: linear-gradient(to bottom, #080808 0%, #080808 22%, rgba(8,8,8,0.5) 34%, rgba(8,8,8,0.0) 46%, rgba(8,8,8,0.0) 72%, rgba(8,8,8,0.65) 85%, #080808 97%) !important; }
         }
 
         /* Tablet portrait: compact text block, gradient window shifts higher for tall viewport */
@@ -344,7 +344,7 @@ export default function HomePage() {
         {/* Layer 2 — Gradient: solid dark for text area, clear window for image, dark footer */}
         <div className="hero-gradient" style={{
           position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, #080808 0%, #080808 32%, rgba(8,8,8,0.55) 44%, rgba(8,8,8,0.0) 56%, rgba(8,8,8,0.0) 74%, rgba(8,8,8,0.65) 86%, #080808 97%)',
+          background: 'linear-gradient(to bottom, #080808 0%, #080808 24%, rgba(8,8,8,0.5) 36%, rgba(8,8,8,0.0) 48%, rgba(8,8,8,0.0) 74%, rgba(8,8,8,0.65) 86%, #080808 97%)',
         }} />
 
         {/* Layer 3 — Effects: particles */}
