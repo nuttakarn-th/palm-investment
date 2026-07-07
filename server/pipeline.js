@@ -162,7 +162,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
   const price = PRICING[role.model] || PRICING['claude-haiku-4-5'];
   const cost = (totalUsage.input * price.input + totalUsage.output * price.output) / 1_000_000;
 
-  emit({ type: 'agent_done', agent: role.key, usage: totalUsage, cost });
+  emit({ type: 'agent_done', agent: role.key, text: fullText, usage: totalUsage, cost });
   return { text: fullText, usage: totalUsage, cost };
 }
 
