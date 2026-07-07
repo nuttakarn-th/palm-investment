@@ -335,10 +335,10 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Layer 2 — Gradient: thin dark cap for nav, fully transparent for faces, dark at bottom for text */}
+        {/* Layer 2 — Gradient: no top dark zone (nav elements self-contrast), dark at bottom for text */}
         <div className="hero-gradient" style={{
           position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, rgba(8,8,8,0.82) 0%, rgba(8,8,8,0.0) 18%, rgba(8,8,8,0.0) 48%, rgba(8,8,8,0.88) 64%, #080808 80%)',
+          background: 'linear-gradient(to bottom, rgba(8,8,8,0.0) 0%, rgba(8,8,8,0.0) 48%, rgba(8,8,8,0.92) 65%, #080808 82%)',
         }} />
 
         {/* Layer 3 — Effects: particles */}
@@ -351,14 +351,18 @@ export default function HomePage() {
           <nav style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '20px' }}>🎯</span>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>
+              <span style={{
+                color: '#fff', fontWeight: 700, fontSize: '14px',
+                textShadow: '0 1px 12px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)',
+              }}>
                 PALM INVESTMENT <span style={{ color: '#4F8EF7' }}>OS</span>
               </span>
             </div>
             <button
               onClick={() => navigate('/app')}
               style={{
-                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                 borderRadius: '8px', padding: '6px 16px', fontSize: '13px', fontWeight: 600, color: '#fff',
                 ...font, cursor: 'pointer',
               }}
