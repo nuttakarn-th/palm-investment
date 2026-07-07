@@ -53,7 +53,7 @@ export default function Settings({ settings, onSave, onClose }) {
 
   const test = async (kind) => {
     setTesting((t) => ({ ...t, [kind]: '…' }));
-    await onSave(form); // save first so the server has the latest creds
+    await onSave(form);
     try {
       const r = await fetch(`/api/test/${kind}`, { method: 'POST' }).then((x) => x.json());
       setTesting((t) => ({ ...t, [kind]: r.ok ? '✅ ส่งแล้ว' : `❌ ${r.reason || r.error || 'ล้มเหลว'}` }));
@@ -78,14 +78,19 @@ export default function Settings({ settings, onSave, onClose }) {
   const label = 'text-[11px] text-neutral-500 mb-1 block';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70"
+      onClick={onClose}
+    >
       <div
-        className="w-[520px] max-h-[85vh] overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#0d0d0d] p-6"
+        className="w-full sm:w-[520px] max-h-[92dvh] sm:max-h-[85vh] overflow-y-auto
+                   rounded-t-2xl sm:rounded-2xl border border-[#2a2a2a] bg-[#0d0d0d] p-6
+                   pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-semibold">⚙️ Settings</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-white">✕</button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-white text-xl leading-none">✕</button>
         </div>
 
         <div className="space-y-5">
@@ -162,7 +167,6 @@ export default function Settings({ settings, onSave, onClose }) {
             <label className={`${label} mt-2`}>CTA Button Text</label>
             <input className={input} value={form.homepage?.cta ?? ''} onChange={(e) => setHome('cta', e.target.value)} placeholder="เข้าสู่ Mission Control" />
 
-            {/* ── Background Image ── */}
             <div className="mt-4 pt-4 border-t border-[#1e1e1e]">
               <div className="text-[11px] font-semibold text-neutral-400 mb-2">🖼 Background Image</div>
 
