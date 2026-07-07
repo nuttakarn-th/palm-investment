@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { AGENTS, TEAM_COLORS } from '../agents.js';
 
 function Avatar({ agent, size = 64, color }) {
@@ -30,6 +32,42 @@ const STATUS_BADGE = {
   active: <span className="badge-live text-[10px] font-semibold" style={{ color: 'var(--team)' }}>● LIVE</span>,
   done: <span className="text-emerald-400 text-[10px] font-semibold">✓ DONE</span>,
   error: <span className="text-red-500 text-[10px] font-semibold">⚠ ERROR</span>,
+};
+
+const CARD_MD = {
+  p: ({ children }) => <p className="text-[11px] text-neutral-300 mb-1 leading-relaxed">{children}</p>,
+  h1: ({ children }) => <h1 className="text-[12px] font-bold text-white mt-1 mb-1">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-[11px] font-semibold text-neutral-200 mt-1 mb-0.5">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-[11px] font-semibold text-neutral-400 mt-1 mb-0.5">{children}</h3>,
+  ul: ({ children }) => <ul className="mb-1 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-1 list-decimal ml-3">{children}</ol>,
+  li: ({ children }) => <li className="text-[11px] text-neutral-300 ml-2 list-disc">{children}</li>,
+  strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="text-neutral-500 not-italic">{children}</em>,
+  table: ({ children }) => (
+    <div className="overflow-x-auto mb-1 -mx-1">
+      <table className="text-[10px] border-collapse">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead>{children}</thead>,
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr: ({ children }) => <tr>{children}</tr>,
+  th: ({ children }) => (
+    <th className="text-left text-neutral-400 border-b border-[#2a2a2a] pb-1 pr-3 font-semibold whitespace-nowrap">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="text-neutral-300 border-b border-[#1a1a1a] py-0.5 pr-3 whitespace-nowrap">{children}</td>
+  ),
+  code: ({ children }) => (
+    <code className="bg-[#1a1a1a] rounded px-0.5 text-[10px] font-mono text-neutral-300">{children}</code>
+  ),
+  pre: ({ children }) => (
+    <pre className="overflow-x-auto rounded bg-[#111] border border-[#1e1e1e] p-2 mb-1">{children}</pre>
+  ),
+  hr: () => <hr className="border-[#1e1e1e] my-1" />,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-[#444] pl-2 text-neutral-500 text-[10px] mb-1">{children}</blockquote>
+  ),
 };
 
 export default function AgentCard({ agentKey, state }) {
@@ -69,9 +107,11 @@ export default function AgentCard({ agentKey, state }) {
       {(text || status === 'active') && (
         <div
           ref={bodyRef}
-          className="border-t border-[#1c1c1c] px-3 py-2 text-[11px] leading-relaxed text-neutral-300 whitespace-pre-wrap max-h-40 overflow-y-auto"
+          className="border-t border-[#1c1c1c] px-3 py-2 max-h-48 overflow-y-auto"
         >
-          {text}
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={CARD_MD}>
+            {text}
+          </ReactMarkdown>
           {status === 'active' && <span className="stream-cursor" style={{ color }}>▋</span>}
         </div>
       )}
