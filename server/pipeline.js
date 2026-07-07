@@ -166,17 +166,17 @@ const PRICING = {
   'claude-sonnet-4-6': { input: 3, output: 15 },
 };
 
-// Stage layout per pipeline type (PRD §5.1, §5.4)
+// Stage layout per pipeline type
 export const PIPELINES = {
-  // Full: research → analysis → risk → strategy → committee → report (needs portfolio)
-  full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
-  // Ideas: research → analysis → strategy → committee → report (no portfolio required)
+  full:  [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
   ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
-  risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
-  // Quick: single agent for price checks and simple finance questions
+  risk:  [['rat'], ['lungchai'], ['pom'], ['nat']],
   quick: [['swift']],
 };
+
+// Only these pipelines receive the user's portfolio data
+const PORTFOLIO_PIPELINES = new Set(['full', 'risk']);
 
 // Classify a free-text query into the appropriate pipeline using Haiku
 async function classifyQuery(command) {
@@ -192,7 +192,7 @@ async function classifyQuery(command) {
     const t = (res.content[0]?.text || '').trim().toLowerCase().split(/\s/)[0];
     return ['quick', 'macro', 'ideas', 'full', 'risk'].includes(t) ? t : 'ideas';
   } catch {
-    return 'ideas'; // safe fallback
+    return 'ideas';
   }
 }
 
@@ -213,7 +213,6 @@ function formatPortfolio(portfolio) {
     .join('\n');
 }
 
-// Which prior outputs each agent needs (keep handoffs lean — PRD §5.3)
 const HANDOFF = {
   piya: [],
   min: [],
@@ -227,11 +226,15 @@ const HANDOFF = {
   swift: [],
 };
 
-function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
+function buildUserPrompt({ role, command, portfolio, outputs, mode, includePortfolio }) {
   const sections = [
     `## คำสั่งจาก CEO (ปาล์ม)\n${command}`,
-    `## พอร์ตปัจจุบัน\n${formatPortfolio(portfolio)}`,
   ];
+
+  if (includePortfolio) {
+    sections.push(`## พอร์ตปัจจุบัน\n${formatPortfolio(portfolio)}`);
+  }
+
   for (const dep of HANDOFF[role.key] || []) {
     if (outputs[dep]) {
       const r = ROLES[dep];
@@ -245,20 +248,20 @@ function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
   return sections.join('\n\n');
 }
 
-async function runAgent({ role, command, portfolio, outputs, mode, emit, signal }) {
+async function runAgent({ role, command, portfolio, outputs, mode, emit, signal, includePortfolio }) {
   emit({ type: 'agent_start', agent: role.key });
 
   const tools = [];
   if (role.usesSearch) {
-    tools.push(STOCK_PRICE_TOOL); // no API key needed — always available
+    tools.push(STOCK_PRICE_TOOL);
     if (process.env.TAVILY_API_KEY) tools.push(WEB_SEARCH_TOOL);
   }
-  let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode }) }];
+  let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode, includePortfolio }) }];
 
   let fullText = '';
   const totalUsage = { input: 0, output: 0 };
 
-  const TURN_TIMEOUT = 9 * 60 * 1000; // 9 min per API call — prevents infinite hang
+  const TURN_TIMEOUT = 9 * 60 * 1000;
 
   while (true) {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
@@ -271,7 +274,6 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
       messages,
     });
 
-    // Abort on main signal OR per-turn timeout
     let turnTimeoutId = setTimeout(() => stream.abort(), TURN_TIMEOUT);
     signal?.addEventListener('abort', () => { clearTimeout(turnTimeoutId); stream.abort(); }, { once: true });
 
@@ -322,12 +324,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
   return { text: fullText, usage: totalUsage, cost };
 }
 
-/**
- * Run a pipeline. `emit(event)` is called for every streaming event.
- * Returns the completed report object.
- */
 export async function runPipeline({ command, portfolio = [], pipeline = 'full', mode = 'manual', emit = () => {}, signal }) {
-  // Auto-routing: classify the query with a fast haiku call
   if (pipeline === 'auto') {
     pipeline = await classifyQuery(command);
     emit({ type: 'pipeline_classified', resolved: pipeline });
@@ -337,6 +334,7 @@ export async function runPipeline({ command, portfolio = [], pipeline = 'full', 
   const outputs = {};
   const totals = { input: 0, output: 0, cost: 0 };
   const startedAt = Date.now();
+  const includePortfolio = PORTFOLIO_PIPELINES.has(pipeline);
 
   emit({ type: 'pipeline_start', pipeline, stages, startedAt });
 
@@ -347,7 +345,7 @@ export async function runPipeline({ command, portfolio = [], pipeline = 'full', 
 
     const results = await Promise.all(
       stage.map((key) =>
-        runAgent({ role: ROLES[key], command, portfolio, outputs, mode, emit, signal })
+        runAgent({ role: ROLES[key], command, portfolio, outputs, mode, emit, signal, includePortfolio })
       )
     );
 
