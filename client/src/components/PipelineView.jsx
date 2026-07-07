@@ -12,6 +12,7 @@ const WORKING_MSG = {
   kaew: 'กำลังร่าง action plan ตาม risk-return trade-off...',
   pom: 'กำลังสรุปผล investment committee และตัดสินใจขั้นสุดท้าย...',
   nat: 'กำลังจัดทำรายงาน CEO summary ฉบับสมบูรณ์...',
+  swift: 'กำลังตอบคำถาม...',
 };
 
 const TEAM_LABEL = {
@@ -77,7 +78,7 @@ function StatusChip({ status }) {
   return <span className="text-neutral-700 text-[11px] shrink-0">○</span>;
 }
 
-// ── Agent detail modal ─────────────────────────────────────────────────────────
+// ── Agent detail modal ──────────────────────────────────────────────────────────────────────────────────
 function AgentModal({ agentKey, state, onClose }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
@@ -183,7 +184,7 @@ function AgentModal({ agentKey, state, onClose }) {
   );
 }
 
-// ── Live feed log ─────────────────────────────────────────────────────────────
+// ── Live feed log ────────────────────────────────────────────────────────────────────────────────────
 function useFeedLog(agents) {
   const [log, setLog] = useState([]);
   const prevRef = useRef({});
@@ -217,6 +218,7 @@ function useFeedLog(agents) {
     if (entries.length) {
       setLog((l) => {
         const next = [...l, ...entries];
+        // Keep only the last 200 entries to avoid unbounded growth
         return next.length > 200 ? next.slice(next.length - 200) : next;
       });
     }
@@ -268,7 +270,7 @@ function LiveFeed({ agents }) {
   );
 }
 
-// ── Pipeline card ──────────────────────────────────────────────────────────────
+// ── Pipeline card ──────────────────────────────────────────────────────────────────────────────────
 function MainCard({ agentKey, state, onCardClick }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
@@ -340,7 +342,7 @@ function SectionLabel({ children }) {
   );
 }
 
-// ── Main export ────────────────────────────────────────────────────────────────
+// ── Main export ────────────────────────────────────────────────────────────────────────────────────────
 export default function PipelineView({ pipeline, agents, status }) {
   const stages = PIPELINE_STAGES[pipeline] || PIPELINE_STAGES.full;
   const [modalAgent, setModalAgent] = useState(null);
@@ -432,7 +434,9 @@ export default function PipelineView({ pipeline, agents, status }) {
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="text-sm font-bold text-neutral-500 animate-pulse">กำลังเริ่ม pipeline…</div>
+        <div className="text-sm font-bold text-neutral-500 animate-pulse">
+          {pipeline === 'auto' ? '🤖 กำลังวิเคราะห์คำถาม…' : 'กำลังเริ่ม pipeline…'}
+        </div>
       </div>
     );
   }

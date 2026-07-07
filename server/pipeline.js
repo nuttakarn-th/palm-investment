@@ -174,7 +174,27 @@ export const PIPELINES = {
   ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
   risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
+  // Quick: single agent for price checks and simple finance questions
+  quick: [['swift']],
 };
+
+// Classify a free-text query into the appropriate pipeline using Haiku
+async function classifyQuery(command) {
+  try {
+    const res = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 5,
+      messages: [{
+        role: 'user',
+        content: `จัดประเภทคำถามนี้ ตอบเพียง 1 คำ:\nquick=ราคาหุ้น/crypto, ความรู้การเงิน, คำถามง่าย\nmacro=ภาพรวมตลาด, ทิศทาง macro\nideas=น่าลงทุนอะไร, วิเคราะห์หุ้น, เปรียบเทียบ\nfull=วิเคราะห์พอร์ตตัวเอง\nrisk=ประเมินความเสี่ยงพอร์ต\nคำถาม: "${command.slice(0, 300)}"\nตอบ:`,
+      }],
+    });
+    const t = (res.content[0]?.text || '').trim().toLowerCase().split(/\s/)[0];
+    return ['quick', 'macro', 'ideas', 'full', 'risk'].includes(t) ? t : 'ideas';
+  } catch {
+    return 'ideas'; // safe fallback
+  }
+}
 
 function formatPortfolio(portfolio) {
   if (!portfolio?.length) return '(ปาล์มยังไม่ได้กรอกพอร์ต)';
@@ -204,6 +224,7 @@ const HANDOFF = {
   kaew: ['piya', 'nem', 'ko', 'rat', 'lungchai'],
   pom: ['piya', 'rat', 'lungchai', 'kaew'],
   nat: ['pom', 'kaew', 'rat'],
+  swift: [],
 };
 
 function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
@@ -306,6 +327,12 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
  * Returns the completed report object.
  */
 export async function runPipeline({ command, portfolio = [], pipeline = 'full', mode = 'manual', emit = () => {}, signal }) {
+  // Auto-routing: classify the query with a fast haiku call
+  if (pipeline === 'auto') {
+    pipeline = await classifyQuery(command);
+    emit({ type: 'pipeline_classified', resolved: pipeline });
+  }
+
   const stages = PIPELINES[pipeline] || PIPELINES.full;
   const outputs = {};
   const totals = { input: 0, output: 0, cost: 0 };
@@ -340,7 +367,7 @@ export async function runPipeline({ command, portfolio = [], pipeline = 'full', 
     type: mode === 'weekly' ? 'weekly' : pipeline === 'full' ? 'analysis' : pipeline,
     command,
     pipeline,
-    summary: outputs.nat || outputs.pom || '',
+    summary: outputs.nat || outputs.pom || outputs.swift || '',
     finalCall: extractFinalCall(outputs.pom || ''),
     outputs,
     totals,
