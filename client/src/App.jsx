@@ -100,7 +100,7 @@ function AppPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808]">
+    <div className="min-h-screen bg-[#080808] overflow-x-hidden">
       <style>{`
         @keyframes mission-glow {
           0%,100% { box-shadow:0 0 20px rgba(79,142,247,0.05),inset 0 1px 0 rgba(79,142,247,0.04); border-color:#1a2233; }
@@ -213,7 +213,7 @@ function AppPage() {
         }}
       />
 
-      <div className="flex">
+      <div className="flex w-full min-w-0">
         {/* LEFT SIDEBAR */}
         <aside
           className={`
@@ -240,7 +240,7 @@ function AppPage() {
         </aside>
 
         {/* MAIN */}
-        <main className="flex-1 p-4 lg:p-6 space-y-6 overflow-x-auto min-w-0"
+        <main className="flex-1 p-4 lg:p-6 space-y-6 overflow-x-hidden min-w-0"
           style={{ backgroundImage:'radial-gradient(circle,#141414 1px,transparent 1px)', backgroundSize:'28px 28px' }}>
           <PipelineView pipeline={pipe.pipeline} agents={pipe.agents} status={pipe.status} />
 

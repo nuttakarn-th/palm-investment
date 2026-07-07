@@ -78,7 +78,7 @@ function StatusChip({ status }) {
   return <span className="text-neutral-700 text-[11px] shrink-0">○</span>;
 }
 
-// ── Agent detail modal ──────────────────────────────────────────────────────────────────────────────────
+// ── Agent detail modal ─────────────────────────────────────────────────────────
 function AgentModal({ agentKey, state, onClose }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
@@ -184,7 +184,7 @@ function AgentModal({ agentKey, state, onClose }) {
   );
 }
 
-// ── Live feed log ────────────────────────────────────────────────────────────────────────────────────
+// ── Live feed log ─────────────────────────────────────────────────────────────
 function useFeedLog(agents) {
   const [log, setLog] = useState([]);
   const prevRef = useRef({});
@@ -270,7 +270,7 @@ function LiveFeed({ agents }) {
   );
 }
 
-// ── Pipeline card ──────────────────────────────────────────────────────────────────────────────────
+// ── Pipeline card ──────────────────────────────────────────────────────────────
 function MainCard({ agentKey, state, onCardClick }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
@@ -342,7 +342,7 @@ function SectionLabel({ children }) {
   );
 }
 
-// ── Main export ────────────────────────────────────────────────────────────────────────────────────────
+// ── Main export ────────────────────────────────────────────────────────────────
 export default function PipelineView({ pipeline, agents, status }) {
   const stages = PIPELINE_STAGES[pipeline] || PIPELINE_STAGES.full;
   const [modalAgent, setModalAgent] = useState(null);
@@ -390,12 +390,12 @@ export default function PipelineView({ pipeline, agents, status }) {
           {groups.map(({ label, keys, color }, gi) => (
             <div key={label}>
               <div style={{ fontSize:'11px', letterSpacing:'.12em', fontWeight:700, color:`${color}60`, textTransform:'uppercase', marginBottom:'6px' }}>{label}</div>
-              <div style={{ display:'flex', gap:'8px' }}>
+              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                 {keys.map((k, i) => {
                   const agent = AGENTS[k];
                   return (
                     <div key={k} style={{
-                      flex:1, display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'12px',
+                      flex:'1 1 120px', minWidth:0, display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'12px',
                       background:`${color}08`, border:`1px solid ${color}20`,
                       animation:`agent-breath 3s ease-in-out ${(gi*2+i)*0.25}s infinite`,
                     }}>
@@ -482,7 +482,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         return (
           <div key={i}>
             <SectionLabel>Stage {i + 1} · {teamLabel}</SectionLabel>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {stage.map((k) => (
                 <MainCard key={k} agentKey={k} state={agents[k]} onCardClick={openModal} />
               ))}
