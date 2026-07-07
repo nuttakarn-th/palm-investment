@@ -177,7 +177,9 @@ const PRICING = {
 
 // Stage layout per pipeline type
 export const PIPELINES = {
-  full:  [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  // Full: research → analysis → risk → strategy → committee → report (needs portfolio)
+  full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  // Ideas: research → analysis → strategy → committee → report (no portfolio required)
   ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
   risk:  [['rat'], ['lungchai'], ['pom'], ['nat']],
