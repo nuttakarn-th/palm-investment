@@ -57,7 +57,10 @@ const PRICING = {
 
 // Stage layout per pipeline type (PRD §5.1, §5.4)
 export const PIPELINES = {
+  // Full: research → analysis → risk → strategy → committee → report (needs portfolio)
   full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  // Ideas: research → analysis → strategy → committee → report (no portfolio required)
+  ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
   risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
 };
