@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { PRESETS } from '../agents.js';
 
+const generalPresets   = PRESETS.filter((p) => p.group === 'general');
+const portfolioPresets = PRESETS.filter((p) => p.group === 'portfolio');
+
 export default function CommandBox({ onRun, running, onCancel }) {
   const [text, setText] = useState('');
 
   const submit = () => {
     if (!text.trim()) return;
-    onRun({ command: text.trim(), pipeline: 'full' });
+    onRun({ command: text.trim(), pipeline: 'ideas' });
     setText('');
   };
 
@@ -25,6 +28,7 @@ export default function CommandBox({ onRun, running, onCancel }) {
 
   return (
     <div className="space-y-3">
+      {/* Free-text input */}
       <div>
         <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-2">Command Box</div>
         <textarea
@@ -64,19 +68,43 @@ export default function CommandBox({ onRun, running, onCancel }) {
         </div>
       </div>
 
+      {/* General presets — no portfolio required */}
       <div>
-        <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-2">Presets</div>
+        <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-1.5">
+          ไม่ต้องการข้อมูลพอร์ต
+        </div>
         <div className="grid grid-cols-2 gap-1.5">
-          {PRESETS.map((p) => (
+          {generalPresets.map((p) => (
             <button
               key={p.label}
               onClick={() => runPreset(p)}
-              className="rounded-lg border border-[#242424] bg-[#101010] px-2 py-2 text-left text-[11px] hover:border-neutral-500 transition"
+              className="rounded-lg border border-[#1e2e40] bg-[#0a1520] px-2 py-2 text-left text-[11px] hover:border-[#4F8EF7]/50 hover:bg-[#0d1e30] transition"
               style={{ opacity: running ? 0.45 : 1 }}
               title={running ? 'กดเพื่อยกเลิกงานปัจจุบันและเริ่มใหม่' : undefined}
             >
               <span className="mr-1">{p.icon}</span>
-              {p.label}
+              <span className="text-neutral-300">{p.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Portfolio presets — requires portfolio data */}
+      <div>
+        <div className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 mb-1.5">
+          ต้องการข้อมูลพอร์ต
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          {portfolioPresets.map((p) => (
+            <button
+              key={p.label}
+              onClick={() => runPreset(p)}
+              className="rounded-lg border border-[#2a1e10] bg-[#150d00] px-2 py-2 text-left text-[11px] hover:border-[#FB923C]/50 hover:bg-[#1e1200] transition"
+              style={{ opacity: running ? 0.45 : 1 }}
+              title={running ? 'กดเพื่อยกเลิกงานปัจจุบันและเริ่มใหม่' : 'กรอกข้อมูลพอร์ตใน Portfolio Panel ก่อน'}
+            >
+              <span className="mr-1">{p.icon}</span>
+              <span className="text-neutral-300">{p.label}</span>
             </button>
           ))}
         </div>

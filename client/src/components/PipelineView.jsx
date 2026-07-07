@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AGENTS, TEAM_COLORS, PIPELINE_STAGES } from '../agents.js';
 
 const WORKING_MSG = {
@@ -76,45 +76,213 @@ function StatusChip({ status }) {
   return <span className="text-neutral-700 text-[11px] shrink-0">○</span>;
 }
 
-// ──────────────────────────────────────────────
-// Feature A — Expandable card with streaming text
-// ──────────────────────────────────────────────
-function MainCard({ agentKey, state }) {
+// ── Agent detail modal ─────────────────────────────────────────────────────────
+function AgentModal({ agentKey, state, onClose }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
-  const { status = 'pending', text = '' } = state || {};
-  const statusText = getStatusText(agentKey, state);
-  const [expanded, setExpanded] = useState(false);
+  const { status = 'pending', text = '', usage, lastSearch } = state || {};
   const textRef = useRef(null);
 
-  // Auto-scroll expanded panel while streaming
   useEffect(() => {
-    if (expanded && status === 'active' && textRef.current) {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    if (status === 'active' && textRef.current) {
       textRef.current.scrollTop = textRef.current.scrollHeight;
     }
-  }, [text, expanded, status]);
+  }, [text, status]);
 
-  // Auto-open when agent goes live; collapse when done
-  useEffect(() => {
-    if (status === 'active') setExpanded(true);
-    if (status === 'done')   setExpanded(false);
-  }, [status]);
-
-  const canExpand = status !== 'pending' && text.length > 0;
+  const tok = (usage?.input ?? 0) + (usage?.output ?? 0);
 
   return (
     <div
-      className={`flex-1 min-w-0 rounded-2xl border bg-[#0d0d0d] transition-all duration-300 ${
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          width: '100%', maxWidth: '640px', maxHeight: '85vh',
+          background: '#0d0d0d', border: `1px solid ${color}40`,
+          borderRadius: '20px', display: 'flex', flexDirection: 'column',
+          overflow: 'hidden', boxShadow: `0 0 40px ${color}18`,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
+          <AgentAvatar agent={agent} size={48} status={status} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: '#fff' }}>{agent.nickname}</span>
+              <StatusChip status={status} />
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{agent.title}</div>
+            {status === 'done' && tok > 0 && (
+              <div style={{ fontSize: '11px', color: '#444', marginTop: '2px' }}>{tok.toLocaleString()} tokens</div>
+            )}
+            {status === 'active' && lastSearch && (
+              <div style={{ fontSize: '11px', color: '#4F8EF7', marginTop: '2px' }}>🔍 {lastSearch}</div>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '20px', padding: '4px', lineHeight: 1, flexShrink: 0 }}
+            aria-label="Close"
+          >×</button>
+        </div>
+
+        <div style={{ height: '2px', background: color, flexShrink: 0 }} />
+
+        <div
+          ref={textRef}
+          style={{
+            flex: 1, overflowY: 'auto', padding: '20px',
+            fontSize: '13px', lineHeight: '1.75', color: status === 'done' ? '#c8c8c8' : '#aaa',
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          }}
+        >
+          {text
+            ? text
+            : status === 'active'
+              ? <span style={{ color: '#444' }}>{WORKING_MSG[agentKey] || 'กำลังทำงาน...'}</span>
+              : status === 'pending'
+                ? <span style={{ color: '#333' }}>รอรับข้อมูลจาก stage ก่อน</span>
+                : <span style={{ color: '#555' }}>ไม่มีข้อมูล</span>
+          }
+          {status === 'active' && (
+            <span style={{ display: 'inline-block', width: '2px', height: '14px', background: '#4F8EF7', marginLeft: '2px', animation: 'cursor-blink 1s step-start infinite', verticalAlign: 'text-bottom' }} />
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Live feed log ─────────────────────────────────────────────────────────────
+function useFeedLog(agents) {
+  const [log, setLog] = useState([]);
+  const prevRef = useRef({});
+
+  useEffect(() => {
+    const prev = prevRef.current;
+    const entries = [];
+    const ts = Date.now();
+
+    for (const [key, state] of Object.entries(agents)) {
+      const p = prev[key] || {};
+      if (p.status !== 'active' && state.status === 'active') {
+        entries.push({ id: `${key}-start-${ts}`, agent: key, type: 'start' });
+      }
+      if (p.lastSearch !== state.lastSearch && state.lastSearch) {
+        entries.push({ id: `${key}-search-${ts}`, agent: key, type: 'search', query: state.lastSearch });
+      }
+      if (state.status === 'active' && state.text && state.text !== p.text) {
+        const snippet = state.text.slice(-200).trimStart();
+        entries.push({ id: `${key}-text-${ts}`, agent: key, type: 'text', snippet });
+      }
+      if (p.status !== 'done' && state.status === 'done') {
+        const tok = (state.usage?.input ?? 0) + (state.usage?.output ?? 0);
+        entries.push({ id: `${key}-done-${ts}`, agent: key, type: 'done', tok });
+      }
+      if (p.status !== 'error' && state.status === 'error') {
+        entries.push({ id: `${key}-err-${ts}`, agent: key, type: 'error' });
+      }
+    }
+
+    if (entries.length) {
+      setLog((l) => {
+        const next = [...l, ...entries];
+        return next.length > 200 ? next.slice(next.length - 200) : next;
+      });
+    }
+    prevRef.current = agents;
+  }, [agents]);
+
+  return log;
+}
+
+function LiveFeed({ agents }) {
+  const log = useFeedLog(agents);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [log]);
+
+  if (!log.length) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        marginTop: '16px', background: '#070707', border: '1px solid #141414',
+        borderRadius: '12px', padding: '12px 16px', maxHeight: '180px',
+        overflowY: 'auto', fontFamily: 'monospace', fontSize: '11px',
+        lineHeight: '1.6',
+      }}
+    >
+      {log.map((entry) => {
+        const agent = AGENTS[entry.agent];
+        const color = TEAM_COLORS[agent?.team] || '#888';
+        const nick = agent?.nickname || entry.agent;
+        if (entry.type === 'start')
+          return <div key={entry.id} style={{ color: '#3a3a3a' }}><span style={{ color }}>{nick}</span> เริ่มทำงาน...</div>;
+        if (entry.type === 'search')
+          return <div key={entry.id} style={{ color: '#3a3a3a' }}><span style={{ color }}>{nick}</span> 🔍 {entry.query}</div>;
+        if (entry.type === 'text')
+          return <div key={entry.id} style={{ color: '#2e2e2e' }}><span style={{ color: `${color}99` }}>{nick}›</span> {entry.snippet.slice(-120)}</div>;
+        if (entry.type === 'done')
+          return <div key={entry.id} style={{ color: '#1c4a33' }}><span style={{ color: '#34D399' }}>✓</span> <span style={{ color }}>{nick}</span> เสร็จ — {entry.tok.toLocaleString()} tokens</div>;
+        if (entry.type === 'error')
+          return <div key={entry.id} style={{ color: '#7f1d1d' }}><span style={{ color: '#ef4444' }}>⚠</span> <span style={{ color }}>{nick}</span> เกิดข้อผิดพลาด</div>;
+        return null;
+      })}
+    </div>
+  );
+}
+
+// ── Pipeline card ──────────────────────────────────────────────────────────────
+function MainCard({ agentKey, state, onCardClick }) {
+  const agent = AGENTS[agentKey];
+  const color = TEAM_COLORS[agent.team];
+  const { status = 'pending' } = state || {};
+  const statusText = getStatusText(agentKey, state);
+  const isClickable = status === 'active' || status === 'done';
+
+  return (
+    <div
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onClick={isClickable ? () => onCardClick(agentKey) : undefined}
+      onKeyDown={isClickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onCardClick(agentKey); } : undefined}
+      className={`flex-1 min-w-0 rounded-2xl border bg-[#0d0d0d] p-4 transition-all duration-300 ${
         status === 'active'  ? 'card-active' :
         status === 'done'   ? 'border-[#2a2a2a]' :
         status === 'error'  ? 'border-red-700' :
         'border-[#181818]'
-      } ${canExpand ? 'cursor-pointer select-none' : ''}`}
+      } ${isClickable ? 'cursor-pointer hover:border-[#333]' : ''}`}
       style={{ '--team': color }}
-      onClick={canExpand ? () => setExpanded((v) => !v) : undefined}
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4">
+      <div className="flex items-center gap-3 mb-3">
         <AgentAvatar agent={agent} size={52} status={status} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -126,11 +294,9 @@ function MainCard({ agentKey, state }) {
         </div>
       </div>
 
-      {/* Team color accent */}
-      <div className="h-[2px] w-8 rounded-full mx-4 mb-2" style={{ background: color }} />
+      <div className="h-[2px] w-8 rounded-full mb-2" style={{ background: color }} />
 
-      {/* Progress bar */}
-      <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mx-4 mb-2.5">
+      <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mb-2.5">
         {status === 'active' && (
           <div className="h-full rounded-full agent-bar-active" style={{ background: '#4F8EF7' }} />
         )}
@@ -139,59 +305,21 @@ function MainCard({ agentKey, state }) {
         )}
       </div>
 
-      {/* Status summary text */}
       <div
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className={`text-xs leading-relaxed line-clamp-2 px-4 pb-3 ${
+        className={`text-xs leading-relaxed line-clamp-2 ${
           status === 'done'    ? 'text-emerald-700' :
           status === 'active'  ? 'text-neutral-400' :
           'text-neutral-700'
         }`}
       >
         {statusText}
+        {isClickable && (
+          <span className="ml-1 text-neutral-700 text-[10px]">↗</span>
+        )}
       </div>
-
-      {/* Expanded streaming text (Feature A) */}
-      {expanded && text && (
-        <div
-          ref={textRef}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            borderTop: '1px solid #161616',
-            padding: '10px 14px',
-            maxHeight: '260px',
-            overflowY: 'auto',
-            fontSize: '11px',
-            lineHeight: 1.75,
-            color: '#555',
-            whiteSpace: 'pre-wrap',
-            fontFamily: '"SF Mono", "Fira Code", "Consolas", monospace',
-            cursor: 'text',
-          }}
-        >
-          {text}
-          {status === 'active' && (
-            <span className="stream-cursor" style={{ color }}> ▋</span>
-          )}
-        </div>
-      )}
-
-      {/* Expand / collapse hint */}
-      {canExpand && (
-        <div style={{
-          textAlign: 'center',
-          fontSize: '9px',
-          color: '#2a2a2a',
-          padding: '5px 0 4px',
-          borderTop: expanded ? '1px solid #161616' : '1px solid #111',
-          letterSpacing: '.1em',
-          textTransform: 'uppercase',
-        }}>
-          {expanded ? '▲ ซ่อน' : '▼ ดูรายละเอียด'}
-        </div>
-      )}
     </div>
   );
 }
@@ -204,209 +332,13 @@ function SectionLabel({ children }) {
   );
 }
 
-// ──────────────────────────────────────────────
-// Feature B — Live feed log
-// ──────────────────────────────────────────────
-function useFeedLog(agents, pipelineStatus) {
-  const prevRef     = useRef({});
-  const snapshotRef = useRef({});
-  const idRef       = useRef(0);
-  const [log, setLog] = useState([]);
-
-  useEffect(() => {
-    if (!agents || Object.keys(agents).length === 0) {
-      prevRef.current     = {};
-      snapshotRef.current = {};
-      setLog([]);
-      return;
-    }
-
-    const prev    = prevRef.current;
-    const entries = [];
-    const nextId  = () => ++idRef.current;
-
-    for (const [k, state] of Object.entries(agents)) {
-      const ps = prev[k] || {};
-
-      // Agent went active
-      if (ps.status !== 'active' && state.status === 'active') {
-        entries.push({ id: nextId(), agent: k, type: 'start' });
-        snapshotRef.current[k] = 0;
-      }
-
-      // New search query
-      if (state.status === 'active' && state.lastSearch && state.lastSearch !== ps.lastSearch) {
-        entries.push({ id: nextId(), agent: k, type: 'search', text: state.lastSearch });
-      }
-
-      // Text snapshot every 300 chars to avoid flooding
-      if (state.status === 'active' && state.text) {
-        const snapLen = snapshotRef.current[k] || 0;
-        if (state.text.length - snapLen >= 300) {
-          const raw     = state.text.slice(snapLen, snapLen + 400)
-            .replace(/#+\s*/g, '').replace(/\*+/g, '').trim();
-          const snippet = raw.replace(/\s+/g, ' ').slice(0, 150);
-          if (snippet.length > 15) {
-            entries.push({ id: nextId(), agent: k, type: 'text', text: snippet });
-          }
-          snapshotRef.current[k] = snapLen + 300;
-        }
-      }
-
-      // Agent finished
-      if (ps.status !== 'done' && state.status === 'done') {
-        const tokens = (state.usage?.input || 0) + (state.usage?.output || 0);
-        entries.push({ id: nextId(), agent: k, type: 'done', tokens });
-      }
-
-      // Agent errored
-      if (ps.status !== 'error' && state.status === 'error') {
-        entries.push({ id: nextId(), agent: k, type: 'error' });
-      }
-    }
-
-    if (entries.length > 0) {
-      setLog((prev) => [...prev, ...entries].slice(-200));
-    }
-    prevRef.current = { ...agents };
-  }, [agents]);
-
-  // Reset on new run
-  useEffect(() => {
-    if (pipelineStatus === 'idle') {
-      setLog([]);
-      prevRef.current     = {};
-      snapshotRef.current = {};
-    }
-  }, [pipelineStatus]);
-
-  return log;
-}
-
-function LiveFeed({ log }) {
-  const bottomRef    = useRef(null);
-  const containerRef = useRef(null);
-  const [pinned, setPinned] = useState(true);
-
-  useEffect(() => {
-    if (pinned && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [log.length, pinned]);
-
-  const handleScroll = () => {
-    const el = containerRef.current;
-    if (!el) return;
-    setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 40);
-  };
-
-  if (log.length === 0) return null;
-
-  return (
-    <div style={{
-      borderRadius: '14px',
-      border: '1px solid #1a1a1a',
-      background: '#060606',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        padding: '9px 14px',
-        borderBottom: '1px solid #131313',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-      }}>
-        <style>{`
-          @keyframes feed-blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
-        `}</style>
-        <span style={{ fontSize: '10px', color: '#4F8EF7', animation: 'feed-blink 1.2s step-start infinite' }}>■</span>
-        <span style={{ fontSize: '10px', letterSpacing: '.14em', fontWeight: 700, color: '#303030', textTransform: 'uppercase' }}>
-          Live Feed
-        </span>
-        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#222', fontVariantNumeric: 'tabular-nums' }}>
-          {log.length} events
-        </span>
-        {!pinned && (
-          <button
-            onClick={() => { setPinned(true); bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-            style={{
-              fontSize: '9px', color: '#4F8EF7', background: 'none', border: '1px solid #1e3050',
-              borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', letterSpacing: '.1em',
-              textTransform: 'uppercase',
-            }}
-          >
-            ↓ ล่าสุด
-          </button>
-        )}
-      </div>
-
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        style={{ maxHeight: '200px', overflowY: 'auto' }}
-      >
-        {log.map((entry) => {
-          const agent = AGENTS[entry.agent];
-          const color = TEAM_COLORS[agent?.team] || '#555';
-          return (
-            <div key={entry.id} style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '8px',
-              padding: '4px 14px',
-              borderBottom: '1px solid #0b0b0b',
-              fontSize: '11px',
-              lineHeight: 1.55,
-              fontFamily: '"SF Mono", "Fira Code", "Consolas", monospace',
-            }}>
-              <span style={{ color, fontWeight: 700, flexShrink: 0, minWidth: '52px', fontSize: '10px' }}>
-                {agent?.nickname}
-              </span>
-              <span style={{ color: '#282828', flexShrink: 0 }}>·</span>
-
-              {entry.type === 'start' && (
-                <span style={{ color: '#2e4fa3' }}>เริ่มทำงาน</span>
-              )}
-              {entry.type === 'search' && (
-                <span style={{ color: '#464646' }}>
-                  <span style={{ color: '#363636' }}>🔍 </span>{entry.text}
-                </span>
-              )}
-              {entry.type === 'text' && (
-                <span style={{
-                  color: '#383838',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  maxWidth: 'calc(100% - 100px)',
-                  display: 'block',
-                }}>
-                  {entry.text}
-                </span>
-              )}
-              {entry.type === 'done' && (
-                <span style={{ color: '#1d5c3a' }}>
-                  ✓ {entry.tokens?.toLocaleString()} tokens
-                </span>
-              )}
-              {entry.type === 'error' && (
-                <span style={{ color: '#7a2020' }}>⚠ error</span>
-              )}
-            </div>
-          );
-        })}
-        <div ref={bottomRef} style={{ height: 1 }} />
-      </div>
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────
-// Main export
-// ──────────────────────────────────────────────
+// ── Main export ────────────────────────────────────────────────────────────────
 export default function PipelineView({ pipeline, agents, status }) {
   const stages = PIPELINE_STAGES[pipeline] || PIPELINE_STAGES.full;
-  const feedLog = useFeedLog(agents, status);
+  const [modalAgent, setModalAgent] = useState(null);
+
+  const openModal = useCallback((key) => setModalAgent(key), []);
+  const closeModal = useCallback(() => setModalAgent(null), []);
 
   const allKeys = stages.flat();
   const doneCount   = allKeys.filter((k) => agents[k]?.status === 'done').length;
@@ -508,7 +440,10 @@ export default function PipelineView({ pipeline, agents, status }) {
         @media (orientation: landscape) { .seq-grid { grid-template-columns: 1fr 1fr; } }
       `}</style>
 
-      {/* Overall progress bar */}
+      {modalAgent && agents[modalAgent] && (
+        <AgentModal agentKey={modalAgent} state={agents[modalAgent]} onClose={closeModal} />
+      )}
+
       <div className="flex items-center gap-3">
         <div className="text-[13px] font-bold text-neutral-500 shrink-0 tabular-nums">
           {status === 'done' ? '✓ เสร็จสิ้น' : `Stage ${currentStage} / ${stages.length}`}
@@ -527,7 +462,6 @@ export default function PipelineView({ pipeline, agents, status }) {
         </div>
       </div>
 
-      {/* Parallel stages */}
       {parallelStages.map((stage, i) => {
         const teamLabel = TEAM_LABEL[AGENTS[stage[0]]?.team] || '';
         return (
@@ -535,14 +469,13 @@ export default function PipelineView({ pipeline, agents, status }) {
             <SectionLabel>Stage {i + 1} · {teamLabel}</SectionLabel>
             <div className="flex gap-3">
               {stage.map((k) => (
-                <MainCard key={k} agentKey={k} state={agents[k]} />
+                <MainCard key={k} agentKey={k} state={agents[k]} onCardClick={openModal} />
               ))}
             </div>
           </div>
         );
       })}
 
-      {/* Sequential stages */}
       {seqStages.length > 0 && (
         <div className="seq-grid">
           {seqStages.map((stage, i) => {
@@ -551,15 +484,14 @@ export default function PipelineView({ pipeline, agents, status }) {
             return (
               <div key={k}>
                 <SectionLabel>Stage {parallelCount + i + 1} · {teamLabel}</SectionLabel>
-                <MainCard agentKey={k} state={agents[k]} />
+                <MainCard agentKey={k} state={agents[k]} onCardClick={openModal} />
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Feature B — Live Feed Panel */}
-      <LiveFeed log={feedLog} />
+      <LiveFeed agents={agents} />
     </div>
   );
 }

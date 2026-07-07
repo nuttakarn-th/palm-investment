@@ -57,7 +57,10 @@ const PRICING = {
 
 // Stage layout per pipeline type (PRD §5.1, §5.4)
 export const PIPELINES = {
+  // Full: research → analysis → risk → strategy → committee → report (needs portfolio)
   full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  // Ideas: research → analysis → strategy → committee → report (no portfolio required)
+  ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
   risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
 };
@@ -119,7 +122,11 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
   let fullText = '';
   const totalUsage = { input: 0, output: 0 };
 
+  const TURN_TIMEOUT = 9 * 60 * 1000; // 9 min per API call — prevents infinite hang
+
   while (true) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
     const stream = anthropic.messages.stream({
       model: role.model,
       max_tokens: role.maxTokens,
@@ -128,14 +135,22 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
       messages,
     });
 
-    signal?.addEventListener('abort', () => stream.abort(), { once: true });
+    // Abort on main signal OR per-turn timeout
+    let turnTimeoutId = setTimeout(() => stream.abort(), TURN_TIMEOUT);
+    signal?.addEventListener('abort', () => { clearTimeout(turnTimeoutId); stream.abort(); }, { once: true });
 
     stream.on('text', (delta) => {
       fullText += delta;
       emit({ type: 'agent_delta', agent: role.key, text: delta });
     });
 
-    const final = await stream.finalMessage();
+    let final;
+    try {
+      final = await stream.finalMessage();
+    } finally {
+      clearTimeout(turnTimeoutId);
+    }
+
     totalUsage.input += final.usage.input_tokens;
     totalUsage.output += final.usage.output_tokens;
 

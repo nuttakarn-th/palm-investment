@@ -21,16 +21,18 @@ export const AGENTS = {
 };
 
 export const PIPELINE_STAGES = {
-  full: [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  full:  [['piya', 'min'], ['nem', 'ko'], ['rat'], ['lungchai'], ['kaew'], ['pom'], ['nat']],
+  ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
-  risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
+  risk:  [['rat'], ['lungchai'], ['pom'], ['nat']],
 };
 
+// group: 'general' = ไม่ต้องการข้อมูลพอร์ต | group: 'portfolio' = ต้องการข้อมูลพอร์ต
 export const PRESETS = [
-  { icon: '📊', label: 'วิเคราะห์หุ้น', pipeline: 'full', needsTicker: true, command: (t) => `วิเคราะห์ ${t} แบบเต็มรูปแบบ ควรซื้อ ถือ หรือเลี่ยง?` },
-  { icon: '📰', label: 'ข่าวตลาดวันนี้', pipeline: 'macro', command: () => 'มีข่าวหรือแนวโน้มตลาดอะไรที่น่าห่วงหรือเป็นโอกาสบ้าง สรุปภาพ macro ให้หน่อย' },
-  { icon: '⚠️', label: 'ความเสี่ยงพอร์ต', pipeline: 'risk', command: () => 'พอร์ตตอนนี้เป็นยังไง มีความเสี่ยงตรงไหนที่ต้องจัดการบ้าง' },
-  { icon: '💡', label: 'น่าลงทุนอะไรบ้าง', pipeline: 'full', command: () => 'ช่วงนี้มีอะไรน่าลงทุนบ้างใน US / SET / Crypto ที่เหมาะกับโปรไฟล์ความเสี่ยงปานกลาง-ต่ำ' },
-  { icon: '📅', label: 'Weekly Summary', pipeline: 'full', mode: 'weekly', command: () => 'สรุปรีวิวพอร์ตประจำสัปดาห์ พร้อมแผนสัปดาห์หน้าและ watch list' },
-  { icon: '🔍', label: 'เปรียบเทียบหุ้น', pipeline: 'full', needsTicker: true, tickerPrompt: 'ใส่ 2 tickers เช่น NVDA vs AMD', command: (t) => `เปรียบเทียบ ${t} ตัวไหนน่าลงทุนกว่าสำหรับระยะกลาง` },
+  { group: 'general',   icon: '💡', label: 'น่าลงทุนอะไรบ้าง',  pipeline: 'ideas', command: () => 'ช่วงนี้มีอะไรน่าลงทุนบ้างใน US / SET / Crypto ที่เหมาะกับโปรไฟล์ความเสี่ยงปานกลาง-ต่ำ' },
+  { group: 'general',   icon: '📰', label: 'ข่าวตลาดวันนี้',     pipeline: 'macro', command: () => 'มีข่าวหรือแนวโน้มตลาดอะไรที่น่าห่วงหรือเป็นโอกาสบ้าง สรุปภาพ macro ให้หน่อย' },
+  { group: 'general',   icon: '📊', label: 'วิเคราะห์หุ้น',      pipeline: 'ideas', needsTicker: true, command: (t) => `วิเคราะห์ ${t} แบบเต็มรูปแบบ ควรซื้อ ถือ หรือเลี่ยง?` },
+  { group: 'general',   icon: '🔍', label: 'เปรียบเทียบหุ้น',    pipeline: 'ideas', needsTicker: true, tickerPrompt: 'ใส่ 2 tickers เช่น NVDA vs AMD', command: (t) => `เปรียบเทียบ ${t} ตัวไหนน่าลงทุนกว่าสำหรับระยะกลาง` },
+  { group: 'portfolio', icon: '⚠️', label: 'ความเสี่ยงพอร์ต',   pipeline: 'risk',  command: () => 'พอร์ตตอนนี้เป็นยังไง มีความเสี่ยงตรงไหนที่ต้องจัดการบ้าง' },
+  { group: 'portfolio', icon: '📅', label: 'Weekly Summary',      pipeline: 'full',  mode: 'weekly', command: () => 'สรุปรีวิวพอร์ตประจำสัปดาห์ พร้อมแผนสัปดาห์หน้าและ watch list' },
 ];
