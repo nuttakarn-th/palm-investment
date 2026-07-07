@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AGENTS, TEAM_COLORS, PIPELINE_STAGES } from '../agents.js';
 
 const WORKING_MSG = {
@@ -76,24 +76,45 @@ function StatusChip({ status }) {
   return <span className="text-neutral-700 text-[11px] shrink-0">○</span>;
 }
 
-// Card for all stages — bigger and more readable
+// ──────────────────────────────────────────────
+// Feature A — Expandable card with streaming text
+// ──────────────────────────────────────────────
 function MainCard({ agentKey, state }) {
   const agent = AGENTS[agentKey];
   const color = TEAM_COLORS[agent.team];
-  const { status = 'pending' } = state || {};
+  const { status = 'pending', text = '' } = state || {};
   const statusText = getStatusText(agentKey, state);
+  const [expanded, setExpanded] = useState(false);
+  const textRef = useRef(null);
+
+  // Auto-scroll expanded panel while streaming
+  useEffect(() => {
+    if (expanded && status === 'active' && textRef.current) {
+      textRef.current.scrollTop = textRef.current.scrollHeight;
+    }
+  }, [text, expanded, status]);
+
+  // Auto-open when agent goes live; collapse when done
+  useEffect(() => {
+    if (status === 'active') setExpanded(true);
+    if (status === 'done')   setExpanded(false);
+  }, [status]);
+
+  const canExpand = status !== 'pending' && text.length > 0;
 
   return (
     <div
-      className={`flex-1 min-w-0 rounded-2xl border bg-[#0d0d0d] p-4 transition-all duration-300 ${
+      className={`flex-1 min-w-0 rounded-2xl border bg-[#0d0d0d] transition-all duration-300 ${
         status === 'active'  ? 'card-active' :
         status === 'done'   ? 'border-[#2a2a2a]' :
         status === 'error'  ? 'border-red-700' :
         'border-[#181818]'
-      }`}
+      } ${canExpand ? 'cursor-pointer select-none' : ''}`}
       style={{ '--team': color }}
+      onClick={canExpand ? () => setExpanded((v) => !v) : undefined}
     >
-      <div className="flex items-center gap-3 mb-3">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4">
         <AgentAvatar agent={agent} size={52} status={status} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -105,11 +126,11 @@ function MainCard({ agentKey, state }) {
         </div>
       </div>
 
-      {/* Team color indicator — only place team accent appears on pipeline cards */}
-      <div className="h-[2px] w-8 rounded-full mb-2" style={{ background: color }} />
+      {/* Team color accent */}
+      <div className="h-[2px] w-8 rounded-full mx-4 mb-2" style={{ background: color }} />
 
       {/* Progress bar */}
-      <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mb-2.5">
+      <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mx-4 mb-2.5">
         {status === 'active' && (
           <div className="h-full rounded-full agent-bar-active" style={{ background: '#4F8EF7' }} />
         )}
@@ -118,11 +139,12 @@ function MainCard({ agentKey, state }) {
         )}
       </div>
 
+      {/* Status summary text */}
       <div
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        className={`text-xs leading-relaxed line-clamp-2 ${
+        className={`text-xs leading-relaxed line-clamp-2 px-4 pb-3 ${
           status === 'done'    ? 'text-emerald-700' :
           status === 'active'  ? 'text-neutral-400' :
           'text-neutral-700'
@@ -130,6 +152,46 @@ function MainCard({ agentKey, state }) {
       >
         {statusText}
       </div>
+
+      {/* Expanded streaming text (Feature A) */}
+      {expanded && text && (
+        <div
+          ref={textRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            borderTop: '1px solid #161616',
+            padding: '10px 14px',
+            maxHeight: '260px',
+            overflowY: 'auto',
+            fontSize: '11px',
+            lineHeight: 1.75,
+            color: '#555',
+            whiteSpace: 'pre-wrap',
+            fontFamily: '"SF Mono", "Fira Code", "Consolas", monospace',
+            cursor: 'text',
+          }}
+        >
+          {text}
+          {status === 'active' && (
+            <span className="stream-cursor" style={{ color }}> ▋</span>
+          )}
+        </div>
+      )}
+
+      {/* Expand / collapse hint */}
+      {canExpand && (
+        <div style={{
+          textAlign: 'center',
+          fontSize: '9px',
+          color: '#2a2a2a',
+          padding: '5px 0 4px',
+          borderTop: expanded ? '1px solid #161616' : '1px solid #111',
+          letterSpacing: '.1em',
+          textTransform: 'uppercase',
+        }}>
+          {expanded ? '▲ ซ่อน' : '▼ ดูรายละเอียด'}
+        </div>
+      )}
     </div>
   );
 }
@@ -142,8 +204,209 @@ function SectionLabel({ children }) {
   );
 }
 
+// ──────────────────────────────────────────────
+// Feature B — Live feed log
+// ──────────────────────────────────────────────
+function useFeedLog(agents, pipelineStatus) {
+  const prevRef     = useRef({});
+  const snapshotRef = useRef({});
+  const idRef       = useRef(0);
+  const [log, setLog] = useState([]);
+
+  useEffect(() => {
+    if (!agents || Object.keys(agents).length === 0) {
+      prevRef.current     = {};
+      snapshotRef.current = {};
+      setLog([]);
+      return;
+    }
+
+    const prev    = prevRef.current;
+    const entries = [];
+    const nextId  = () => ++idRef.current;
+
+    for (const [k, state] of Object.entries(agents)) {
+      const ps = prev[k] || {};
+
+      // Agent went active
+      if (ps.status !== 'active' && state.status === 'active') {
+        entries.push({ id: nextId(), agent: k, type: 'start' });
+        snapshotRef.current[k] = 0;
+      }
+
+      // New search query
+      if (state.status === 'active' && state.lastSearch && state.lastSearch !== ps.lastSearch) {
+        entries.push({ id: nextId(), agent: k, type: 'search', text: state.lastSearch });
+      }
+
+      // Text snapshot every 300 chars to avoid flooding
+      if (state.status === 'active' && state.text) {
+        const snapLen = snapshotRef.current[k] || 0;
+        if (state.text.length - snapLen >= 300) {
+          const raw     = state.text.slice(snapLen, snapLen + 400)
+            .replace(/#+\s*/g, '').replace(/\*+/g, '').trim();
+          const snippet = raw.replace(/\s+/g, ' ').slice(0, 150);
+          if (snippet.length > 15) {
+            entries.push({ id: nextId(), agent: k, type: 'text', text: snippet });
+          }
+          snapshotRef.current[k] = snapLen + 300;
+        }
+      }
+
+      // Agent finished
+      if (ps.status !== 'done' && state.status === 'done') {
+        const tokens = (state.usage?.input || 0) + (state.usage?.output || 0);
+        entries.push({ id: nextId(), agent: k, type: 'done', tokens });
+      }
+
+      // Agent errored
+      if (ps.status !== 'error' && state.status === 'error') {
+        entries.push({ id: nextId(), agent: k, type: 'error' });
+      }
+    }
+
+    if (entries.length > 0) {
+      setLog((prev) => [...prev, ...entries].slice(-200));
+    }
+    prevRef.current = { ...agents };
+  }, [agents]);
+
+  // Reset on new run
+  useEffect(() => {
+    if (pipelineStatus === 'idle') {
+      setLog([]);
+      prevRef.current     = {};
+      snapshotRef.current = {};
+    }
+  }, [pipelineStatus]);
+
+  return log;
+}
+
+function LiveFeed({ log }) {
+  const bottomRef    = useRef(null);
+  const containerRef = useRef(null);
+  const [pinned, setPinned] = useState(true);
+
+  useEffect(() => {
+    if (pinned && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [log.length, pinned]);
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 40);
+  };
+
+  if (log.length === 0) return null;
+
+  return (
+    <div style={{
+      borderRadius: '14px',
+      border: '1px solid #1a1a1a',
+      background: '#060606',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '9px 14px',
+        borderBottom: '1px solid #131313',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      }}>
+        <style>{`
+          @keyframes feed-blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
+        `}</style>
+        <span style={{ fontSize: '10px', color: '#4F8EF7', animation: 'feed-blink 1.2s step-start infinite' }}>■</span>
+        <span style={{ fontSize: '10px', letterSpacing: '.14em', fontWeight: 700, color: '#303030', textTransform: 'uppercase' }}>
+          Live Feed
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#222', fontVariantNumeric: 'tabular-nums' }}>
+          {log.length} events
+        </span>
+        {!pinned && (
+          <button
+            onClick={() => { setPinned(true); bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+            style={{
+              fontSize: '9px', color: '#4F8EF7', background: 'none', border: '1px solid #1e3050',
+              borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', letterSpacing: '.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            ↓ ล่าสุด
+          </button>
+        )}
+      </div>
+
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        style={{ maxHeight: '200px', overflowY: 'auto' }}
+      >
+        {log.map((entry) => {
+          const agent = AGENTS[entry.agent];
+          const color = TEAM_COLORS[agent?.team] || '#555';
+          return (
+            <div key={entry.id} style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '8px',
+              padding: '4px 14px',
+              borderBottom: '1px solid #0b0b0b',
+              fontSize: '11px',
+              lineHeight: 1.55,
+              fontFamily: '"SF Mono", "Fira Code", "Consolas", monospace',
+            }}>
+              <span style={{ color, fontWeight: 700, flexShrink: 0, minWidth: '52px', fontSize: '10px' }}>
+                {agent?.nickname}
+              </span>
+              <span style={{ color: '#282828', flexShrink: 0 }}>·</span>
+
+              {entry.type === 'start' && (
+                <span style={{ color: '#2e4fa3' }}>เริ่มทำงาน</span>
+              )}
+              {entry.type === 'search' && (
+                <span style={{ color: '#464646' }}>
+                  <span style={{ color: '#363636' }}>🔍 </span>{entry.text}
+                </span>
+              )}
+              {entry.type === 'text' && (
+                <span style={{
+                  color: '#383838',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 'calc(100% - 100px)',
+                  display: 'block',
+                }}>
+                  {entry.text}
+                </span>
+              )}
+              {entry.type === 'done' && (
+                <span style={{ color: '#1d5c3a' }}>
+                  ✓ {entry.tokens?.toLocaleString()} tokens
+                </span>
+              )}
+              {entry.type === 'error' && (
+                <span style={{ color: '#7a2020' }}>⚠ error</span>
+              )}
+            </div>
+          );
+        })}
+        <div ref={bottomRef} style={{ height: 1 }} />
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Main export
+// ──────────────────────────────────────────────
 export default function PipelineView({ pipeline, agents, status }) {
   const stages = PIPELINE_STAGES[pipeline] || PIPELINE_STAGES.full;
+  const feedLog = useFeedLog(agents, status);
 
   const allKeys = stages.flat();
   const doneCount   = allKeys.filter((k) => agents[k]?.status === 'done').length;
@@ -173,7 +436,6 @@ export default function PipelineView({ pipeline, agents, status }) {
           @keyframes hud-blink { 0%,100%{opacity:1} 49%{opacity:1} 50%{opacity:0} 99%{opacity:0} }
         `}</style>
 
-        {/* header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'7px' }}>
             <span style={{ fontSize:'11px', color:'#4F8EF7', animation:'hud-blink 1.2s step-start infinite' }}>■</span>
@@ -182,7 +444,6 @@ export default function PipelineView({ pipeline, agents, status }) {
           <span style={{ fontSize:'11px', letterSpacing:'.12em', fontWeight:700, color:'#1e3050' }}>SYSTEM STANDBY</span>
         </div>
 
-        {/* agent groups */}
         <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
           {groups.map(({ label, keys, color }, gi) => (
             <div key={label}>
@@ -210,7 +471,6 @@ export default function PipelineView({ pipeline, agents, status }) {
           ))}
         </div>
 
-        {/* stage pipeline bar */}
         <div style={{ display:'flex', alignItems:'center', marginTop:'16px' }}>
           {PIPELINE_STAGES.full.flatMap((_, i) => [
             i > 0 ? <div key={`l${i}`} style={{ flex:1, height:'1px', background:'#181818' }} /> : null,
@@ -267,7 +527,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         </div>
       </div>
 
-      {/* Parallel stages — each on its own labeled row */}
+      {/* Parallel stages */}
       {parallelStages.map((stage, i) => {
         const teamLabel = TEAM_LABEL[AGENTS[stage[0]]?.team] || '';
         return (
@@ -282,7 +542,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         );
       })}
 
-      {/* Sequential stages — 1 col portrait, 2 col landscape */}
+      {/* Sequential stages */}
       {seqStages.length > 0 && (
         <div className="seq-grid">
           {seqStages.map((stage, i) => {
@@ -297,6 +557,9 @@ export default function PipelineView({ pipeline, agents, status }) {
           })}
         </div>
       )}
+
+      {/* Feature B — Live Feed Panel */}
+      <LiveFeed log={feedLog} />
     </div>
   );
 }
