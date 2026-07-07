@@ -5,11 +5,11 @@ const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', currentPrice
 const MARKET_LABEL = { us: 'US', set: 'SET', crypto: 'CRYPTO' };
 
 function LiveBadge({ loading, lastUpdate }) {
-  if (loading) return <span className="text-[9px] text-neutral-600 animate-pulse">LIVE…</span>;
+  if (loading) return <span className="text-[11px] text-neutral-600 animate-pulse">LIVE…</span>;
   if (lastUpdate) {
     const mins = Math.floor((Date.now() - lastUpdate) / 60000);
     return (
-      <span className="text-[9px] text-emerald-700">
+      <span className="text-[11px] text-emerald-700">
         ● {mins < 1 ? 'LIVE' : `${mins}m ago`}
       </span>
     );
@@ -69,7 +69,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
           {marketData && !marketData.loading && (
             <button
               onClick={marketData.refresh}
-              className="text-[10px] text-neutral-600 hover:text-neutral-400 transition"
+              className="text-[11px] text-neutral-600 hover:text-neutral-400 transition"
               title="รีเฟรชราคา"
             >
               ↻
@@ -93,7 +93,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
         <div className="mb-3 rounded-lg border border-[#1e1e1e] bg-[#0d0d0d] px-3 py-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[9px] uppercase tracking-widest text-neutral-700 mb-0.5">มูลค่ารวม</div>
+              <div className="text-[11px] uppercase tracking-widest text-neutral-700 mb-0.5">มูลค่ารวม</div>
               <div
                 className="font-mono text-sm font-bold text-neutral-200 tabular-nums"
                 title="ประมาณการณ์ — ลงทุน × (ราคาปัจจุบัน / ราคาซื้อ)"
@@ -103,7 +103,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             </div>
             {totalPnlPct !== null && (
               <div className="text-right">
-                <div className="text-[9px] uppercase tracking-widest text-neutral-700 mb-0.5">P&L รวม</div>
+                <div className="text-[11px] uppercase tracking-widest text-neutral-700 mb-0.5">P&L รวม</div>
                 <div
                   className={`font-mono text-sm font-bold tabular-nums ${totalPnlPct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
                 >
@@ -112,7 +112,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
               </div>
             )}
           </div>
-          <div className="mt-1.5 text-[10px] text-neutral-700">
+          <div className="mt-1.5 text-[11px] text-neutral-700">
             ลงทุน ฿{Math.round(totals.invested).toLocaleString()}
             {totals.unpriced > 0 && (
               <span className="ml-1 text-neutral-800">(บางตัวยังไม่มีราคา)</span>
@@ -124,7 +124,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
       {groups.map((g) =>
         g.rows.length > 0 ? (
           <div key={g.market} className="mb-2">
-            <div className="text-[10px] text-neutral-600 mb-1">— {MARKET_LABEL[g.market]}</div>
+            <div className="text-[11px] text-neutral-600 mb-1">— {MARKET_LABEL[g.market]}</div>
             {g.rows.map((item) => {
               const live = marketData?.getPrice(item.ticker, item.market);
               const livePrice = live?.price ?? null;
@@ -141,11 +141,11 @@ export default function PortfolioPanel({ portfolio, marketData }) {
                     <div className="flex items-center gap-1.5">
                       <span className="font-medium">{item.ticker}</span>
                       {item.market === 'set' && (
-                        <span className="text-[9px] text-neutral-700">.BK</span>
+                        <span className="text-[11px] text-neutral-700">.BK</span>
                       )}
                     </div>
                     {livePrice != null && (
-                      <div className="text-[10px] text-neutral-500 flex items-center gap-1 mt-0.5">
+                      <div className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5">
                         <span>{live.currency === 'THB' ? '฿' : '$'}{livePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                         <span className={live.changePct >= 0 ? 'text-emerald-600' : 'text-red-600'}>
                           {live.changePct >= 0 ? '▲' : '▼'}{Math.abs(live.changePct).toFixed(2)}%
@@ -215,7 +215,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
-          <div className="text-[10px] text-neutral-600 px-1">
+          <div className="text-[11px] text-neutral-600 px-1">
             💡 ราคาปัจจุบันดึงอัตโนมัติจาก Yahoo Finance
           </div>
           <input

@@ -178,7 +178,7 @@ function RadarChart({ stat, color, size = 160, fill = false }) {
         const p = pt(i, maxR);
         return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />;
       })}
-      <polygon points={valuePts} fill={`${color}25`} stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      <polygon points={valuePts} fill="rgba(79,142,247,0.15)" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
       {vals.map((v, i) => {
         const p = pt(i, (v / 100) * maxR);
         return <circle key={i} cx={p.x} cy={p.y} r="3" fill={color} />;
@@ -224,11 +224,11 @@ function StatsTabContent({ agent }) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '10px' }}>
           {Object.entries(agent.stat).map(([k, v]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '9px', color: '#555', width: '28px', fontFamily: 'monospace' }}>{k}</span>
+              <span style={{ fontSize: '11px', color: '#555', width: '28px', fontFamily: 'monospace' }}>{k}</span>
               <div style={{ flex: 1, height: '5px', borderRadius: '99px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: '99px', width: `${v}%`, background: agent.color }} />
+                <div style={{ height: '100%', borderRadius: '99px', width: `${v}%`, background: '#4F8EF7' }} />
               </div>
-              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', width: '20px', textAlign: 'right', fontFamily: 'monospace' }}>{v}</span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', width: '20px', textAlign: 'right', fontFamily: 'monospace' }}>{v}</span>
             </div>
           ))}
         </div>
@@ -280,21 +280,21 @@ function ModalContent({ agent, onClose }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', gap: '5px', marginBottom: '4px', flexWrap: 'wrap' }}>
               {[agent.lv, agent.pipeline].map(lbl => (
-                <span key={lbl} style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '5px', color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{lbl}</span>
+                <span key={lbl} style={{ fontSize: '11px', fontWeight: 700, padding: '2px 7px', borderRadius: '5px', color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{lbl}</span>
               ))}
-              <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '5px', color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 7px', borderRadius: '5px', color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
                 {isSonnet ? '⚡ SONNET' : '◆ HAIKU'}
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '20px', fontWeight: 800, color: '#fff', fontFamily: "'Kanit', sans-serif", lineHeight: 1.2 }}>{agent.nickname}</span>
-              <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em', padding: '2px 8px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', padding: '2px 8px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
                 {agent.teamIcon} {agent.teamLabel}
               </span>
             </div>
             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{agent.title}</div>
           </div>
-          <button onClick={onClose} style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', fontSize: '18px', lineHeight: 1, cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }}>✕</button>
+          <button onClick={onClose} aria-label="ปิด" style={{ flexShrink: 0, background: 'none', border: 'none', color: '#555', fontSize: '18px', lineHeight: 1, cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }}>✕</button>
         </div>
 
         <div style={{ flexShrink: 0, display: 'flex', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -336,7 +336,7 @@ function ModalContent({ agent, onClose }) {
           {tab === 'ask' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>ตัวอย่างคำถาม</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>ตัวอย่างคำถาม</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {agent.samples.map((s, i) => (
                     <div key={i} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', padding: '13px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', lineHeight: 1.5 }}>
@@ -346,7 +346,7 @@ function ModalContent({ agent, onClose }) {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>Synergy กับ</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', color: '#444', textTransform: 'uppercase', marginBottom: '8px' }}>Synergy กับ</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {agent.synergies.map((s) => (
                     <span key={s} style={{ fontSize: '12px', padding: '7px 16px', borderRadius: '99px', color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30`, fontWeight: 600 }}>
@@ -402,11 +402,15 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
         perspective: '900px',
         borderRadius: '16px',
         transform: hovered ? 'translateY(-10px)' : 'translateY(0)',
-        boxShadow: hovered ? `0 24px 48px ${agent.color}45, 0 0 0 1.5px ${agent.color}60` : 'none',
+        boxShadow: hovered ? '0 24px 48px rgba(79,142,247,0.30), 0 0 0 1.5px rgba(79,142,247,0.50)' : 'none',
         transition: 'transform 0.28s ease, box-shadow 0.28s ease',
         cursor: 'pointer',
       }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${agent.nickname} — ${flipped ? 'กดเพื่อกลับด้านหน้า' : 'กดเพื่อดูด้านหลัง'}`}
       onClick={() => setFlipped((f) => !f)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlipped(f => !f); } }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onTouchStart={handleTouchStart}
@@ -428,8 +432,8 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
         >
           <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, transparent, ${agent.color}, transparent)` }} />
           <div className="flex items-center justify-between px-3 pt-2 pb-1">
-            <span className="text-[10px] font-bold tracking-widest px-2 py-0.5 rounded" style={{ color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{agent.lv}</span>
-            <span className="text-[9px] font-semibold tracking-widest px-2 py-0.5 rounded" style={{ color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
+            <span className="text-[11px] font-bold tracking-widest px-2 py-0.5 rounded" style={{ color: agent.color, background: `${agent.color}18`, border: `1px solid ${agent.color}33` }}>{agent.lv}</span>
+            <span className="text-[11px] font-semibold tracking-widest px-2 py-0.5 rounded" style={{ color: isSonnet ? '#FCD34D' : '#94a3b8', background: isSonnet ? '#FCD34D18' : '#ffffff0d', border: `1px solid ${isSonnet ? '#FCD34D33' : '#ffffff15'}` }}>
               {isSonnet ? '⚡ SONNET' : '◆ HAIKU'}
             </span>
           </div>
@@ -441,31 +445,31 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
           <div className="px-3 pb-3 text-center">
             <div className="text-xl font-bold text-white mb-0.5" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</div>
             <div className="text-[11px] text-neutral-500 mb-2">{agent.title}</div>
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest mb-3" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-widest mb-3" style={{ color: agent.color, background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}>
               {agent.teamIcon} {agent.teamLabel}
             </div>
             <div className="space-y-1.5">
               {Object.entries(agent.stat).slice(0, 3).map(([k, v], idx) => (
                 <div key={k} className="flex items-center gap-2">
-                  <span className="text-[9px] text-neutral-500 w-7 shrink-0">{k}</span>
+                  <span className="text-[11px] text-neutral-500 w-7 shrink-0">{k}</span>
                   <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{
                         width: mounted ? `${v}%` : '0%',
-                        background: agent.color,
+                        background: '#4F8EF7',
                         transition: 'width 0.7s ease-out',
                         transitionDelay: `${idx * 0.12}s`,
                       }}
                     />
                   </div>
-                  <span className="text-[9px] text-neutral-400 w-5 text-right">{v}</span>
+                  <span className="text-[11px] text-neutral-400 w-5 text-right">{v}</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${agent.color}33, transparent)` }} />
-          <div className="text-center py-1.5 text-[9px] text-neutral-500">กดเพื่อดูด้านหลัง ↩</div>
+          <div className="text-center py-1.5 text-[11px] text-neutral-500" aria-hidden="true">กดเพื่อดูด้านหลัง ↩</div>
         </div>
 
         {/* ── BACK ── */}
@@ -480,7 +484,7 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
             </div>
             <div>
               <div className="text-sm font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{agent.nickname}</div>
-              <div className="text-[9px] text-neutral-500">{agent.pipeline}</div>
+              <div className="text-[11px] text-neutral-500">{agent.pipeline}</div>
             </div>
           </div>
 
@@ -489,13 +493,13 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
           </div>
 
           <div className="px-3 pb-2 space-y-2">
-            <div className="text-[9px] font-bold tracking-widest text-neutral-600 uppercase mb-1">Abilities</div>
+            <div className="text-[11px] font-bold tracking-widest text-neutral-600 uppercase mb-1">Abilities</div>
             {agent.abilities.map((ab, i) => (
               <div key={i} className="flex items-start gap-2.5 rounded-xl px-3 py-2.5" style={{ background: `${agent.color}08`, border: `1px solid ${agent.color}18` }}>
                 <span className="text-base leading-none mt-0.5">{ab.icon}</span>
                 <div>
                   <div className="text-[11px] font-bold text-white">{ab.name}</div>
-                  <div className="text-[10px] text-neutral-600 leading-snug mt-0.5">{ab.desc}</div>
+                  <div className="text-[11px] text-neutral-600 leading-snug mt-0.5">{ab.desc}</div>
                 </div>
               </div>
             ))}
@@ -512,7 +516,7 @@ function AgentCard({ agent, onOpenModal, index = 0 }) {
               📋 ดู Character Sheet
             </button>
           </div>
-          <div className="text-center pb-1.5 text-[9px] text-neutral-500">กดเพื่อกลับ ↩</div>
+          <div className="text-center pb-1.5 text-[11px] text-neutral-500" aria-hidden="true">กดเพื่อกลับ ↩</div>
         </div>
       </div>
     </div>
@@ -619,7 +623,7 @@ export default function TeamPage() {
           {[{ v: '9', l: 'AGENTS' }, { v: '4', l: 'TEAMS' }, { v: '7', l: 'STAGES' }].map(({ v, l }) => (
             <div key={l} className="text-center">
               <div className="text-2xl font-bold text-white" style={{ fontFamily: "'Kanit', sans-serif" }}>{v}</div>
-              <div className="text-[9px] text-neutral-600 tracking-widest uppercase">{l}</div>
+              <div className="text-[11px] text-neutral-600 tracking-widest uppercase">{l}</div>
             </div>
           ))}
         </div>

@@ -18,7 +18,7 @@ const MD_COMPONENTS = {
   ol: ({ children }) => <ol className="mb-2 space-y-0.5 list-decimal ml-4">{children}</ol>,
   li: ({ children }) => <li className="text-sm text-neutral-300 ml-3 list-disc">{children}</li>,
   strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
-  em: ({ children }) => <em className="text-neutral-500 text-xs not-italic">{children}</em>,
+  em: ({ children }) => <em className="text-neutral-500 text-[13px] not-italic">{children}</em>,
   blockquote: ({ children }) => (
     <blockquote className="border-l-2 border-[#F59E0B] pl-3 text-neutral-500 text-sm mb-2">{children}</blockquote>
   ),
@@ -28,14 +28,14 @@ const MD_COMPONENTS = {
   code: ({ className, children }) => {
     const isBlock = /language-/.test(className || '');
     return isBlock ? (
-      <code className="text-xs font-mono text-neutral-300">{children}</code>
+      <code className="text-[13px] font-mono text-neutral-300">{children}</code>
     ) : (
-      <code className="bg-[#1a1a1a] rounded px-1 py-0.5 text-xs font-mono text-neutral-300">{children}</code>
+      <code className="bg-[#1a1a1a] rounded px-1 py-0.5 text-[13px] font-mono text-neutral-300">{children}</code>
     );
   },
   table: ({ children }) => (
     <div className="overflow-x-auto mb-3">
-      <table className="w-full text-xs border-collapse">{children}</table>
+      <table className="w-full text-[13px] border-collapse">{children}</table>
     </div>
   ),
   thead: ({ children }) => <thead>{children}</thead>,
