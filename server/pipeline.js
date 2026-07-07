@@ -270,7 +270,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal,
   let fullText = '';
   const totalUsage = { input: 0, output: 0 };
 
-  const TURN_TIMEOUT = 9 * 60 * 1000;
+  const TURN_TIMEOUT = 9 * 60 * 1000; // 9 min per API call — prevents infinite hang
 
   while (true) {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
@@ -283,6 +283,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal,
       messages,
     });
 
+    // Abort on main signal OR per-turn timeout
     let turnTimeoutId = setTimeout(() => stream.abort(), TURN_TIMEOUT);
     signal?.addEventListener('abort', () => { clearTimeout(turnTimeoutId); stream.abort(); }, { once: true });
 
