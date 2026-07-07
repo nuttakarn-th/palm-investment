@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { AGENTS, TEAM_COLORS, PIPELINE_STAGES } from '../agents.js';
 
 const WORKING_MSG = {
@@ -83,17 +84,20 @@ function AgentModal({ agentKey, state, onClose }) {
   const { status = 'pending', text = '', usage, lastSearch } = state || {};
   const textRef = useRef(null);
 
+  // Lock body scroll while open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
+  // Close on Escape
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // Auto-scroll text area when streaming
   useEffect(() => {
     if (status === 'active' && textRef.current) {
       textRef.current.scrollTop = textRef.current.scrollHeight;
@@ -102,7 +106,7 @@ function AgentModal({ agentKey, state, onClose }) {
 
   const tok = (usage?.input ?? 0) + (usage?.output ?? 0);
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
@@ -122,6 +126,7 @@ function AgentModal({ agentKey, state, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Modal header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
           <AgentAvatar agent={agent} size={48} status={status} />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -144,8 +149,10 @@ function AgentModal({ agentKey, state, onClose }) {
           >×</button>
         </div>
 
+        {/* Team color stripe */}
         <div style={{ height: '2px', background: color, flexShrink: 0 }} />
 
+        {/* Scrollable text content */}
         <div
           ref={textRef}
           style={{
@@ -171,7 +178,8 @@ function AgentModal({ agentKey, state, onClose }) {
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -440,10 +448,12 @@ export default function PipelineView({ pipeline, agents, status }) {
         @media (orientation: landscape) { .seq-grid { grid-template-columns: 1fr 1fr; } }
       `}</style>
 
+      {/* Modal */}
       {modalAgent && agents[modalAgent] && (
         <AgentModal agentKey={modalAgent} state={agents[modalAgent]} onClose={closeModal} />
       )}
 
+      {/* Overall progress bar */}
       <div className="flex items-center gap-3">
         <div className="text-[13px] font-bold text-neutral-500 shrink-0 tabular-nums">
           {status === 'done' ? '✓ เสร็จสิ้น' : `Stage ${currentStage} / ${stages.length}`}
@@ -462,6 +472,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         </div>
       </div>
 
+      {/* Parallel stages */}
       {parallelStages.map((stage, i) => {
         const teamLabel = TEAM_LABEL[AGENTS[stage[0]]?.team] || '';
         return (
@@ -476,6 +487,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         );
       })}
 
+      {/* Sequential stages */}
       {seqStages.length > 0 && (
         <div className="seq-grid">
           {seqStages.map((stage, i) => {
@@ -491,6 +503,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         </div>
       )}
 
+      {/* Live feed */}
       <LiveFeed agents={agents} />
     </div>
   );
