@@ -20,6 +20,117 @@ const WEB_SEARCH_TOOL = {
   },
 };
 
+const STOCK_PRICE_TOOL = {
+  name: 'get_stock_price',
+  description:
+    'Get real-time/delayed stock price via Polygon.io (fallback: Yahoo Finance). Returns price, change%, volume, and exact data timestamp. Always use this instead of web_search for price queries. US stocks: "NVDA", "AAPL", "SPY". Crypto: "BTC-USD", "ETH-USD". Indices: "^SPX", "^IXIC", "^VIX". SET stocks: "PTT.BK" (Yahoo fallback).',
+  input_schema: {
+    type: 'object',
+    properties: {
+      ticker: {
+        type: 'string',
+        description: 'Ticker symbol. US stock: "NVDA". Crypto: "BTC-USD". Index: "^SPX". SET: "PTT.BK".',
+      },
+    },
+    required: ['ticker'],
+  },
+};
+
+// Yahoo Finance fallback (for SET stocks and when Polygon key is absent)
+async function yahooPrice(ticker, signal) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d&includePrePost=true`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; palm-investment/1.0)', Accept: 'application/json' },
+      signal,
+    });
+    if (!res.ok) return `[Price unavailable: HTTP ${res.status} for ${ticker}]`;
+    const data = await res.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta) return `[No data for ${ticker}]`;
+    const price = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose;
+    const changePct = prev ? ((price - prev) / prev * 100) : null;
+    const ts = meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+      : 'unknown';
+    const lines = [`${meta.symbol || ticker}: ${price} ${meta.currency || ''}`, `[source: Yahoo Finance]`];
+    if (prev) lines.push(`Prev close: ${prev}`);
+    if (changePct !== null) lines.push(`Change: ${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`);
+    if (meta.regularMarketVolume) lines.push(`Volume: ${meta.regularMarketVolume.toLocaleString()}`);
+    lines.push(`Market state: ${meta.marketState || 'unknown'}`);
+    lines.push(`Data as of: ${ts}`);
+    return lines.join('\n');
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    return `[Price error for ${ticker}: ${e.message}]`;
+  }
+}
+
+function _parsePolygonSnap(data, label) {
+  const snap = data?.ticker;
+  if (!snap) return null;
+  const price = snap.lastTrade?.p ?? snap.day?.c;
+  if (price === undefined) return null;
+  const ts = snap.updated
+    ? new Date(snap.updated / 1e6).toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+    : 'unknown';
+  const lines = [`${snap.ticker || label}: ${price}`, `[source: Polygon.io]`];
+  if (snap.prevDay?.c) lines.push(`Prev close: ${snap.prevDay.c}`);
+  if (snap.todaysChangePerc !== undefined)
+    lines.push(`Change: ${snap.todaysChangePerc > 0 ? '+' : ''}${snap.todaysChangePerc.toFixed(2)}%`);
+  if (snap.day?.v) lines.push(`Volume: ${snap.day.v.toLocaleString()}`);
+  lines.push(`Data as of: ${ts}`);
+  return lines.join('\n');
+}
+
+async function getStockPrice(ticker, signal) {
+  const key = process.env.POLYGON_API_KEY;
+  // SET stocks (.BK) — Polygon doesn't cover Thai market; always use Yahoo
+  if (!key || ticker.toUpperCase().endsWith('.BK')) return yahooPrice(ticker, signal);
+
+  try {
+    const t = ticker.toUpperCase();
+    let url, parse;
+
+    if (t.startsWith('^')) {
+      // Index: ^SPX → I:SPX
+      const idx = `I:${t.slice(1)}`;
+      url = `https://api.polygon.io/v3/snapshot/indices?ticker.any_of=${encodeURIComponent(idx)}&apiKey=${key}`;
+      parse = (data) => {
+        const r = data?.results?.[0];
+        if (!r) return null;
+        const ts = r.last_updated
+          ? new Date(r.last_updated / 1e6).toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+          : 'unknown';
+        const lines = [`${r.ticker || idx}: ${r.value}`, `[source: Polygon.io]`];
+        if (r.session?.change_percent !== undefined)
+          lines.push(`Change: ${r.session.change_percent > 0 ? '+' : ''}${r.session.change_percent.toFixed(2)}%`);
+        lines.push(`Data as of: ${ts}`);
+        return lines.join('\n');
+      };
+    } else if (t.includes('-USD') || t.includes('-USDT') || t.startsWith('X:')) {
+      // Crypto: BTC-USD → X:BTC-USD
+      const ct = t.startsWith('X:') ? t : `X:${t}`;
+      url = `https://api.polygon.io/v2/snapshot/locale/global/markets/crypto/tickers/${encodeURIComponent(ct)}?apiKey=${key}`;
+      parse = (data) => _parsePolygonSnap(data, ct);
+    } else {
+      // US stock
+      url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/${encodeURIComponent(t)}?apiKey=${key}`;
+      parse = (data) => _parsePolygonSnap(data, t);
+    }
+
+    const res = await fetch(url, { signal });
+    if (!res.ok) return yahooPrice(ticker, signal); // fallback on HTTP error
+    const data = await res.json();
+    const result = parse(data);
+    return result || yahooPrice(ticker, signal); // fallback if parse returns null
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    return yahooPrice(ticker, signal); // fallback on network error
+  }
+}
+
 async function tavilySearch(query, signal) {
   try {
     const res = await fetch('https://api.tavily.com/search', {
@@ -116,7 +227,11 @@ function buildUserPrompt({ role, command, portfolio, outputs, mode }) {
 async function runAgent({ role, command, portfolio, outputs, mode, emit, signal }) {
   emit({ type: 'agent_start', agent: role.key });
 
-  const tools = role.usesSearch && process.env.TAVILY_API_KEY ? [WEB_SEARCH_TOOL] : [];
+  const tools = [];
+  if (role.usesSearch) {
+    tools.push(STOCK_PRICE_TOOL); // no API key needed — always available
+    if (process.env.TAVILY_API_KEY) tools.push(WEB_SEARCH_TOOL);
+  }
   let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode }) }];
 
   let fullText = '';
@@ -158,9 +273,14 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal 
 
     const toolResults = [];
     for (const block of final.content) {
-      if (block.type === 'tool_use' && block.name === 'web_search') {
+      if (block.type !== 'tool_use') continue;
+      if (block.name === 'web_search') {
         emit({ type: 'agent_search', agent: role.key, query: block.input.query });
         const result = await tavilySearch(block.input.query, signal);
+        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
+      } else if (block.name === 'get_stock_price') {
+        emit({ type: 'agent_search', agent: role.key, query: `💹 ${block.input.ticker}` });
+        const result = await getStockPrice(block.input.ticker, signal);
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
       }
     }
