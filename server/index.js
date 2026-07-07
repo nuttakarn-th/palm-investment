@@ -156,7 +156,8 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY ยังไม่ได้ตั้งค่าใน .env' });
   }
-  if (!PIPELINES[pipeline]) return res.status(400).json({ error: `unknown pipeline: ${pipeline}` });
+  // 'auto' is a special routing mode resolved inside runPipeline — allow it through
+  if (pipeline !== 'auto' && !PIPELINES[pipeline]) return res.status(400).json({ error: `unknown pipeline: ${pipeline}` });
 
   // Cancel any existing run before starting a new one
   if (memRun?.status === 'running') {
@@ -168,7 +169,8 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   }
 
   const runId = `run_${Date.now().toString(36)}`;
-  const stages = PIPELINES[pipeline] || PIPELINES.full;
+  // For 'auto', use full pipeline stages as placeholder until classifyQuery resolves
+  const stages = PIPELINES[pipeline] ?? PIPELINES.full;
   const initialAgents = Object.fromEntries(
     stages.flat().map((k) => [k, { status: 'pending' }])
   );
