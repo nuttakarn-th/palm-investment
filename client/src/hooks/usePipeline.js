@@ -9,7 +9,7 @@ function buildAgentsFromRun(run) {
   stages.flat().forEach((k) => (agents[k] = { ...IDLE_AGENT }));
   if (run.agents) {
     for (const [k, v] of Object.entries(run.agents)) {
-      if (agents[k]) agents[k] = { ...agents[k], status: v.status || 'pending', usage: v.usage || null };
+      if (agents[k]) agents[k] = { ...agents[k], status: v.status || 'pending', usage: v.usage || null, text: v.text || '' };
     }
   }
   return agents;

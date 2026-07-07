@@ -202,11 +202,17 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
     if (memRun?.id === runId) {
       switch (event.type) {
         case 'agent_start':
-          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'active' } }, updatedAt: new Date().toISOString() };
+          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'active', text: '' } }, updatedAt: new Date().toISOString() };
           store.saveCurrentRun(memRun).catch(() => {});
           break;
+        case 'agent_delta':
+          // Keep updatedAt fresh so stale-run detection doesn't fire during long streams
+          if (memRun?.id === runId) {
+            memRun = { ...memRun, updatedAt: new Date().toISOString() };
+          }
+          break;
         case 'agent_done':
-          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'done', usage: event.usage } }, updatedAt: new Date().toISOString() };
+          memRun = { ...memRun, agents: { ...memRun.agents, [event.agent]: { status: 'done', usage: event.usage, text: event.text || '' } }, updatedAt: new Date().toISOString() };
           store.saveCurrentRun(memRun).catch(() => {});
           break;
         case 'stage_done':
