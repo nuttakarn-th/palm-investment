@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 function compressBg(file) {
   return new Promise((resolve, reject) => {
@@ -30,6 +31,16 @@ export default function Settings({ settings, onSave, onClose }) {
   const [weeklyRunning, setWeeklyRunning] = useState(false);
   const [bgStatus, setBgStatus] = useState('');
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handler);
+    };
+  }, [onClose]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const setHome = (k, v) =>
@@ -77,7 +88,7 @@ export default function Settings({ settings, onSave, onClose }) {
   const inp = 'w-full rounded bg-[#181818] border border-[#2a2a2a] px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#4F8EF7]';
   const lbl = 'text-[11px] text-neutral-500 mb-1 block';
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -227,6 +238,7 @@ export default function Settings({ settings, onSave, onClose }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

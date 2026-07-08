@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AGENTS } from '../agents.js';
@@ -44,8 +46,20 @@ const MD = {
 };
 
 export default function ReportModal({ report, onClose }) {
+  useEffect(() => {
+    if (!report) return;
+    document.body.style.overflow = 'hidden';
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handler);
+    };
+  }, [report, onClose]);
+
   if (!report) return null;
-  return (
+
+  return createPortal(
     <div
       onClick={onClose}
       style={{
@@ -56,7 +70,7 @@ export default function ReportModal({ report, onClose }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        background: 'rgba(0,0,0,0.75)',
+        background: 'rgba(0,0,0,0.78)',
       }}
     >
       <div
@@ -81,7 +95,7 @@ export default function ReportModal({ report, onClose }) {
               {(report.totals?.input || 0) + (report.totals?.output || 0)} tokens
             </div>
           </div>
-          <button onClick={onClose} className="text-neutral-500 hover:text-white shrink-0">✕</button>
+          <button onClick={onClose} className="text-neutral-500 hover:text-white shrink-0 text-xl">✕</button>
         </div>
 
         <div className="border border-[#1e1e1e] rounded-lg p-4 bg-[#0a0a0a]">
@@ -99,7 +113,8 @@ export default function ReportModal({ report, onClose }) {
               {Object.entries(report.outputs).map(([k, text]) => (
                 <div key={k} className="border border-[#1e1e1e] rounded-lg p-3">
                   <div className="text-xs font-semibold mb-1.5">
-                    {AGENTS[k]?.nickname || k} <span className="text-neutral-600 font-normal">— {AGENTS[k]?.title}</span>
+                    {AGENTS[k]?.nickname || k}{' '}
+                    <span className="text-neutral-600 font-normal">— {AGENTS[k]?.title}</span>
                   </div>
                   <div className="text-[11px] text-neutral-400">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD}>
@@ -112,6 +127,7 @@ export default function ReportModal({ report, onClose }) {
           </details>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
