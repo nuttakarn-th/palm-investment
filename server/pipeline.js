@@ -36,6 +36,15 @@ const STOCK_PRICE_TOOL = {
   },
 };
 
+// Appended to every agent's system prompt — enforces THB-first currency display
+const GLOBAL_CURRENCY_RULE = `
+
+## กฎรูปแบบเงิน (บังคับ ห้ามฝ่าฝืน)
+ทุกครั้งที่พูดถึงยอดเงินลงทุน มูลค่ารวม หรือจำนวนเงินที่เป็น USD: ต้องแสดงเป็นบาท (฿) ก่อน แล้วตามด้วยวงเล็บ USD เสมอ
+format: ฿210,000 ($6,000) | ฿35,000 ($1,000) | ฿1,750,000 ($50,000)
+อัตรา: ใช้อัตราแลกเปลี่ยน USD/THB ปัจจุบัน (ถ้าไม่ทราบใช้ประมาณ 33 บาท/$)
+ข้อยกเว้น: ราคาต่อหุ้น/เหรียญเดียว (SPY $587.23) ใช้ $ ได้ตามปกติ แต่ถ้าเป็นยอดเงินไม่ว่าจะซื้อเท่าไร ต้องแสดงบาทด้วย`;
+
 // Yahoo Finance fallback (for SET stocks and when Polygon key is absent)
 async function yahooPrice(ticker, signal) {
   try {
@@ -242,7 +251,7 @@ function buildUserPrompt({ role, command, portfolio, outputs, mode, includePortf
     }
   }
   if (mode === 'weekly') {
-    sections.push('## โหมด\nนี่คือ Weekly Report ประจำสัปดาห์ — เน้นรีวิวพอร์ต ความเสี่ยง และแผนสัปดาห์หน้า');
+    sections.push('โหมด\nนี่คือ Weekly Report ประจำสัปดาห์ — เน้นรีวิวพอร์ต ความเสี่ยง และแผนสัปดาห์หน้า');
   }
   sections.push('ทำหน้าที่ของคุณตาม role ที่กำหนด ตอบตามรูปแบบผลลัพธ์ กระชับ');
   return sections.join('\n\n');
@@ -269,7 +278,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal,
     const stream = anthropic.messages.stream({
       model: role.model,
       max_tokens: role.maxTokens,
-      system: role.system,
+      system: role.system + GLOBAL_CURRENCY_RULE,
       tools,
       messages,
     });
