@@ -42,7 +42,7 @@ export default function CommandBox({ onRun, running, onCancel }) {
           }}
           placeholder={
             running
-              ? 'พิมพ์คำสั่งใหม่เพื่อเริ่มต้นใหม่ทันทีโหมด…'
+              ? 'พิมพ์คำสั่งใหม่เพื่อเริ่มต้นใหม่ทันที…'
               : 'ถามอะไรก็ได้… ราคา NVDA, อธิบาย P/E, น่าลงทุนอะไร'
           }
           rows={3}

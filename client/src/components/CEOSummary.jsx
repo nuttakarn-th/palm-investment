@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import MiniChart from './MiniChart.jsx';
 
 const MD_COMPONENTS = {
   h1: ({ children }) => (
@@ -50,7 +51,7 @@ const MD_COMPONENTS = {
   hr: () => <hr className="border-[#1e1e1e] my-3" />,
 };
 
-export default function CEOSummary({ report, notified, onReset }) {
+export default function CEOSummary({ report, notified, onReset, portfolio }) {
   if (!report) return null;
 
   return (
@@ -76,6 +77,17 @@ export default function CEOSummary({ report, notified, onReset }) {
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
         {report.summary}
       </ReactMarkdown>
+
+      {portfolio && portfolio.length > 0 && (
+        <div className="mt-5 border-t border-[#1e1e1e] pt-4">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">📈 Price Charts</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {portfolio.map(item => (
+              <MiniChart key={item.id} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#1e1e1e] pt-3 text-[11px] text-neutral-600">
         <span>

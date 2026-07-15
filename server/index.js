@@ -110,6 +110,42 @@ app.get('/api/market', requireAuth, async (req, res) => {
   res.json(result);
 });
 
+// ── Price history (Yahoo Finance OHLC) ───────────────────────────────────────
+
+const chartCache = new Map();
+const CHART_TTL = 30 * 60 * 1000;
+
+app.get('/api/chart/:ticker', requireAuth, async (req, res) => {
+  const { ticker } = req.params;
+  const period = ['1mo', '3mo', '6mo', '1y'].includes(req.query.period) ? req.query.period : '3mo';
+  const cacheKey = `${ticker}:${period}`;
+  const cached = chartCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < CHART_TTL) return res.json(cached.data);
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${period}&includePrePost=false`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; palm-investment/1.0)' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return res.status(r.status).json({ error: `Yahoo Finance ${r.status}` });
+    const data = await r.json();
+    const result = data?.chart?.result?.[0];
+    if (!result) return res.json({ timestamps: [], closes: [], currency: 'USD', symbol: ticker, currentPrice: null });
+    const quote = result.indicators?.quote?.[0] || {};
+    const payload = {
+      timestamps: result.timestamp || [],
+      closes: quote.close || [],
+      currency: result.meta?.currency || 'USD',
+      symbol: result.meta?.symbol || ticker,
+      currentPrice: result.meta?.regularMarketPrice || null,
+    };
+    chartCache.set(cacheKey, { data: payload, ts: Date.now() });
+    res.json(payload);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ---- meta ----------------------------------------------------------------
 
 app.get('/api/health', (_req, res) => {

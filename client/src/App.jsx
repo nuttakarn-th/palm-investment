@@ -357,7 +357,7 @@ function AppPage() {
 
           <div ref={summaryRef}>
             {pipe.status === 'done' && (
-              <CEOSummary report={pipe.report} notified={pipe.notified} onReset={pipe.reset} />
+              <CEOSummary report={pipe.report} notified={pipe.notified} onReset={pipe.reset} portfolio={portfolio.items} />
             )}
           </div>
         </main>

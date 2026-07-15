@@ -45,6 +45,7 @@ format: ฿210,000 ($6,000) | ฿35,000 ($1,000) | ฿1,750,000 ($50,000)
 อัตรา: ใช้อัตราแลกเปลี่ยน USD/THB ปัจจุบัน (ถ้าไม่ทราบใช้ประมาณ 33 บาท/$)
 ข้อยกเว้น: ราคาต่อหุ้น/เหรียญเดียว (SPY $587.23) ใช้ $ ได้ตามปกติ แต่ถ้าเป็นยอดเงินไม่ว่าจะซื้อเท่าไร ต้องแสดงบาทด้วย`;
 
+
 // Yahoo Finance fallback (for SET stocks and when Polygon key is absent)
 async function yahooPrice(ticker, signal) {
   try {
@@ -182,12 +183,14 @@ export const PIPELINES = {
   // Ideas: research → analysis → strategy → committee → report (no portfolio required)
   ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
-  risk:  [['rat'], ['lungchai'], ['pom'], ['nat']],
+  risk: [['rat'], ['lungchai'], ['pom'], ['nat']],
+  // Quick: single agent for price checks and simple finance questions
   quick: [['swift']],
 };
 
 // Only these pipelines receive the user's portfolio data
 const PORTFOLIO_PIPELINES = new Set(['full', 'risk']);
+
 
 // Classify a free-text query into the appropriate pipeline using Haiku
 async function classifyQuery(command) {
@@ -203,7 +206,7 @@ async function classifyQuery(command) {
     const t = (res.content[0]?.text || '').trim().toLowerCase().split(/\s/)[0];
     return ['quick', 'macro', 'ideas', 'full', 'risk'].includes(t) ? t : 'ideas';
   } catch {
-    return 'ideas';
+    return 'ideas'; // safe fallback
   }
 }
 
@@ -264,7 +267,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal,
 
   const tools = [];
   if (role.usesSearch) {
-    tools.push(STOCK_PRICE_TOOL);
+    tools.push(STOCK_PRICE_TOOL); // no API key needed — always available
     if (process.env.TAVILY_API_KEY) tools.push(WEB_SEARCH_TOOL);
   }
   let messages = [{ role: 'user', content: buildUserPrompt({ role, command, portfolio, outputs, mode, includePortfolio }) }];
@@ -337,6 +340,7 @@ async function runAgent({ role, command, portfolio, outputs, mode, emit, signal,
 }
 
 export async function runPipeline({ command, portfolio = [], pipeline = 'full', mode = 'manual', emit = () => {}, signal }) {
+  // Auto-routing: classify the query with a fast haiku call
   if (pipeline === 'auto') {
     pipeline = await classifyQuery(command);
     emit({ type: 'pipeline_classified', resolved: pipeline });
