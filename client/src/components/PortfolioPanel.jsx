@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { pnl } from '../hooks/usePortfolio.js';
 
-const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', currentPrice: '', buyDate: '', note: '' };
+const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', stopLoss: '', currentPrice: '', buyDate: '', note: '' };
 const MARKET_LABEL = { us: 'US', set: 'SET', crypto: 'CRYPTO' };
 
 function LiveBadge({ loading, lastUpdate }) {
@@ -206,15 +206,24 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
-          <input
-            placeholder="ราคาซื้อ"
-            type="number"
-            value={draft.buyPrice}
-            onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
-            className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
-          />
+          <div className="flex gap-1.5">
+            <input
+              placeholder="ราคาซื้อ"
+              type="number"
+              value={draft.buyPrice}
+              onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
+              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
+            />
+            <input
+              placeholder="Stop-Loss"
+              type="number"
+              value={draft.stopLoss}
+              onChange={(e) => setDraft({ ...draft, stopLoss: e.target.value })}
+              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#d9695f]/40 px-2 py-1 focus:outline-none focus:border-[#d9695f]"
+            />
+          </div>
           <div className="text-[11px] text-neutral-600 px-1">
-            💡 ราคาปัจจุบันดึงอัตโนมัติจาก Yahoo Finance
+            💡 ราคาปัจจุบันดึงอัตโนมัติ · Stop-Loss ใช้แสดงในกราฟ
           </div>
           <input
             type="date"
