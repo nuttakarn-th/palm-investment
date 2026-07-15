@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const KEY = 'palm-os:portfolio';
 
-// localStorage = fast initial load; server = cross-device source of truth.
+// Server = source of truth across devices.
+// localStorage = fast initial paint while server fetch is in flight.
 export function usePortfolio() {
   const [items, setItems] = useState(() => {
     try {
@@ -12,23 +13,24 @@ export function usePortfolio() {
     }
   });
 
-  // Prevent the write-back effect from POSTing data that originally came from the server.
+  // Prevents the write-back effect from re-POSTing data that came from the server.
   const skipNextPost = useRef(true);
+  // Once the user edits locally, don't overwrite with a late-arriving server response.
+  const userEdited = useRef(false);
 
-  // On mount: pull from server so portfolio is visible on every device.
+  // On mount: always pull from server so every device sees the latest portfolio.
   useEffect(() => {
     let cancelled = false;
     fetch('/api/portfolio', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((serverItems) => {
-        if (cancelled || !Array.isArray(serverItems) || serverItems.length === 0) return;
-        setItems((local) => {
-          // Only override if local is empty (avoids race with in-flight user edits).
-          if (local.length > 0) return local;
-          skipNextPost.current = true;
-          localStorage.setItem(KEY, JSON.stringify(serverItems));
-          return serverItems;
-        });
+        if (cancelled || !Array.isArray(serverItems)) return;
+        // If the user already made changes before the response arrived, keep their edits.
+        // Their POST will have already won on the server side.
+        if (userEdited.current) return;
+        skipNextPost.current = true;
+        localStorage.setItem(KEY, JSON.stringify(serverItems));
+        setItems(serverItems);
       })
       .catch(() => {});
     return () => {
@@ -52,14 +54,17 @@ export function usePortfolio() {
   }, [items]);
 
   const add = useCallback((item) => {
+    userEdited.current = true;
     setItems((xs) => [...xs, { ...item, id: `pos_${Date.now().toString(36)}` }]);
   }, []);
 
   const update = useCallback((id, patch) => {
+    userEdited.current = true;
     setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   }, []);
 
   const remove = useCallback((id) => {
+    userEdited.current = true;
     setItems((xs) => xs.filter((x) => x.id !== id));
   }, []);
 
