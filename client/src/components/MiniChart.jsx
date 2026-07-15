@@ -57,6 +57,7 @@ export default function MiniChart({ item }) {
   const { data, currency, currentPrice, loading, error } = usePriceHistory(item.ticker, item.market, period);
 
   const entry = parseFloat(item.buyPrice) || null;
+  const targetPrice = parseFloat(item.targetPrice) || null;
   const stopLoss = parseFloat(item.stopLoss) || null;
   const live = currentPrice ?? (data.length ? data[data.length - 1].price : null);
   const lastPoint = data.length ? data[data.length - 1] : null;
@@ -70,6 +71,7 @@ export default function MiniChart({ item }) {
   // Y-axis domain — include all levels with padding
   const allPrices = data.map(d => d.price).filter(Boolean);
   if (entry) allPrices.push(entry);
+  if (targetPrice) allPrices.push(targetPrice);
   if (stopLoss) allPrices.push(stopLoss);
   if (live) allPrices.push(live);
   const rawMin = allPrices.length ? Math.min(...allPrices) : 0;
@@ -186,6 +188,17 @@ export default function MiniChart({ item }) {
             />
           )}
 
+          {/* Target / take-profit line */}
+          {targetPrice && (
+            <ReferenceLine
+              y={targetPrice}
+              stroke="#5fb87a"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+              label={{ value: `TP ${fmt(targetPrice, currency)}`, position: 'insideTopLeft', fill: '#5fb87a', fontSize: 10 }}
+            />
+          )}
+
           {/* Stop-loss line */}
           {stopLoss && (
             <ReferenceLine
@@ -225,14 +238,16 @@ export default function MiniChart({ item }) {
       <div style={{ display: 'flex', gap: 14, marginTop: 10, paddingLeft: 4, flexWrap: 'wrap' }}>
         {entry && <LegendItem color="#4F8EF7" label={`เข้า ${fmt(entry, currency)}`} />}
         {live != null && <LegendItem color={lineColor} label={`ปัจจุบัน ${fmt(live, currency)}`} />}
+        {targetPrice && <LegendItem color="#5fb87a" label={`TP ${fmt(targetPrice, currency)}`} />}
         {stopLoss && <LegendItem color="#d9695f" label={`SL ${fmt(stopLoss, currency)}`} />}
       </div>
 
       {/* Stat cards */}
-      {(entry || stopLoss) && (
+      {(entry || targetPrice || stopLoss) && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           {entry && <StatCard label="ราคาเข้า" value={fmt(entry, currency)} color="#4F8EF7" />}
           {live != null && <StatCard label="ปัจจุบัน" value={fmt(live, currency)} color={pct != null ? (pct >= 0 ? '#5fb87a' : '#d9695f') : '#f5f3ee'} />}
+          {targetPrice && <StatCard label="ราคาออก / TP" value={fmt(targetPrice, currency)} color="#5fb87a" />}
           {stopLoss && <StatCard label="Stop-Loss" value={fmt(stopLoss, currency)} color="#d9695f" />}
         </div>
       )}

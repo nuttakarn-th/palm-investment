@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { pnl } from '../hooks/usePortfolio.js';
 
-const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', stopLoss: '', currentPrice: '', buyDate: '', note: '' };
+const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', targetPrice: '', stopLoss: '', currentPrice: '', buyDate: '', note: '' };
 const MARKET_LABEL = { us: 'US', set: 'SET', crypto: 'CRYPTO' };
 
 function LiveBadge({ loading, lastUpdate }) {
@@ -206,13 +206,20 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
+          <input
+            placeholder="ราคาซื้อ (เข้า)"
+            type="number"
+            value={draft.buyPrice}
+            onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
+            className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
+          />
           <div className="flex gap-1.5">
             <input
-              placeholder="ราคาซื้อ"
+              placeholder="ราคาออก / TP"
               type="number"
-              value={draft.buyPrice}
-              onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
-              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
+              value={draft.targetPrice}
+              onChange={(e) => setDraft({ ...draft, targetPrice: e.target.value })}
+              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#5fb87a]/40 px-2 py-1 focus:outline-none focus:border-[#5fb87a]"
             />
             <input
               placeholder="Stop-Loss"
@@ -223,7 +230,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             />
           </div>
           <div className="text-[11px] text-neutral-600 px-1">
-            💡 ราคาปัจจุบันดึงอัตโนมัติ · Stop-Loss ใช้แสดงในกราฟ
+            💡 ราคาปัจจุบันดึงอัตโนมัติ · TP / SL แสดงเป็นเส้นในกราฟ
           </div>
           <input
             type="date"
