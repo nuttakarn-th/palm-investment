@@ -35,8 +35,6 @@ export default function PortfolioPanel({ portfolio, marketData }) {
     rows: items.filter((x) => x.market === m),
   }));
 
-  // Aggregate totals: current_value = invested * (livePrice / buyPrice)
-  // Works across currencies because we're scaling the THB investment by the price ratio
   const totals = items.reduce(
     (acc, item) => {
       const invested = parseFloat(item.amount) || 0;
@@ -135,7 +133,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center justify-between rounded px-2 py-1.5 hover:bg-[#141414] text-xs"
+                  className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-[#141414] text-xs"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -153,23 +151,22 @@ export default function PortfolioPanel({ portfolio, marketData }) {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center gap-3 ml-2">
                     {p !== null && (
-                      <span className={`font-medium ${p >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`font-medium tabular-nums ${p >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {p >= 0 ? '+' : ''}{p.toFixed(1)}%
                       </span>
                     )}
-                    {/* On mobile: always visible. On desktop: show on hover only */}
                     <button
                       onClick={() => { setDraft({ ...EMPTY, ...item }); setEditingId(item.id); }}
-                      className="text-neutral-500 hover:text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      className="text-neutral-600 hover:text-white active:text-white transition-colors text-sm leading-none"
                       title="แก้ไข"
                     >
                       ✎
                     </button>
                     <button
                       onClick={() => remove(item.id)}
-                      className="text-neutral-500 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      className="text-neutral-600 hover:text-red-400 active:text-red-400 transition-colors text-sm leading-none"
                       title="ลบ"
                     >
                       ×
