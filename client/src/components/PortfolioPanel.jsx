@@ -159,16 +159,17 @@ export default function PortfolioPanel({ portfolio, marketData }) {
                         {p >= 0 ? '+' : ''}{p.toFixed(1)}%
                       </span>
                     )}
+                    {/* On mobile: always visible. On desktop: show on hover only */}
                     <button
                       onClick={() => { setDraft({ ...EMPTY, ...item }); setEditingId(item.id); }}
-                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-white"
+                      className="text-neutral-500 hover:text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       title="แก้ไข"
                     >
                       ✎
                     </button>
                     <button
                       onClick={() => remove(item.id)}
-                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400"
+                      className="text-neutral-500 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       title="ลบ"
                     >
                       ×
