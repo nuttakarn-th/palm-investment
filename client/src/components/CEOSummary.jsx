@@ -51,8 +51,42 @@ const MD_COMPONENTS = {
   hr: () => <hr className="border-[#1e1e1e] my-3" />,
 };
 
+// Extract <!--CHARTS:[...]-->  from report text
+function parseChartsBlock(text) {
+  if (!text) return null;
+  const match = text.match(/<!--CHARTS:(\[[\s\S]*?\])-->/);
+  if (!match) return null;
+  try {
+    const charts = JSON.parse(match[1]);
+    return Array.isArray(charts) && charts.length > 0 ? charts : null;
+  } catch {
+    return null;
+  }
+}
+
+function stripChartsBlock(text) {
+  return text.replace(/<!--CHARTS:\[[\s\S]*?\]-->/, '').trim();
+}
+
 export default function CEOSummary({ report, notified, onReset, portfolio }) {
   if (!report) return null;
+
+  const reportCharts = parseChartsBlock(report.summary);
+  const displayText = reportCharts ? stripChartsBlock(report.summary) : report.summary;
+
+  // AI-report charts take priority; fall back to portfolio items
+  const chartsToShow = reportCharts
+    ? reportCharts
+    : portfolio?.length > 0
+      ? portfolio.map(item => ({
+          ticker: item.ticker,
+          market: item.market,
+          entry: parseFloat(item.buyPrice) || null,
+          tp: parseFloat(item.targetPrice) || null,
+          sl: parseFloat(item.stopLoss) || null,
+          _id: item.id,
+        }))
+      : null;
 
   return (
     <div className="rounded-xl border border-[#FCD34D]/30 bg-[#0d0c08] p-5">
@@ -60,7 +94,7 @@ export default function CEOSummary({ report, notified, onReset, portfolio }) {
         <div className="text-[11px] uppercase tracking-widest text-[#FCD34D]">CEO Summary Panel</div>
         <div className="flex gap-2 shrink-0">
           <button
-            onClick={() => navigator.clipboard.writeText(report.summary)}
+            onClick={() => navigator.clipboard.writeText(displayText)}
             className="text-[11px] rounded border border-[#333] px-2 py-1 text-neutral-400 hover:text-white"
           >
             📋 Copy
@@ -75,15 +109,24 @@ export default function CEOSummary({ report, notified, onReset, portfolio }) {
       </div>
 
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
-        {report.summary}
+        {displayText}
       </ReactMarkdown>
 
-      {portfolio && portfolio.length > 0 && (
+      {chartsToShow && chartsToShow.length > 0 && (
         <div className="mt-5 border-t border-[#1e1e1e] pt-4">
-          <div className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">📈 Price Charts</div>
+          <div className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">
+            📈 Price Charts {reportCharts ? '— ตามรายงาน AI' : '— พอร์ตของคุณ'}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {portfolio.map(item => (
-              <MiniChart key={item.id} item={item} />
+            {chartsToShow.map((c, i) => (
+              <MiniChart
+                key={c._id || `${c.ticker}-${i}`}
+                ticker={c.ticker}
+                market={c.market || 'us'}
+                entry={c.entry}
+                tp={c.tp}
+                sl={c.sl}
+              />
             ))}
           </div>
         </div>
