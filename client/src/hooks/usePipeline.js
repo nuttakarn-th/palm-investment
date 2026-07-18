@@ -88,7 +88,9 @@ export function usePipeline() {
     abortRef.current = controller;
     hasSse.current = true;
 
-    const stages = PIPELINE_STAGES[p] || PIPELINE_STAGES.full;
+    // For 'auto' pipeline, don't pre-initialize agents — wait for pipeline_start event
+    const isAuto = p === 'auto';
+    const stages = isAuto ? [] : (PIPELINE_STAGES[p] || PIPELINE_STAGES.full);
     const initial = {};
     stages.flat().forEach((k) => (initial[k] = { ...IDLE_AGENT }));
 
@@ -122,6 +124,17 @@ export function usePipeline() {
         switch (event.type) {
           case 'run_id':
             break; // server confirms run started
+          case 'pipeline_start':
+            // Always sync the resolved pipeline name; for auto-routing also init agents
+            setPipeline(event.pipeline);
+            if (isAuto) {
+              const actualAgents = {};
+              event.stages.flat().forEach((k) => (actualAgents[k] = { ...IDLE_AGENT }));
+              setAgents(actualAgents);
+            }
+            break;
+          case 'pipeline_classified':
+            break; // pipeline_start that follows will update state
           case 'agent_start':
             setAgents((a) => ({ ...a, [event.agent]: { ...a[event.agent], status: 'active' } }));
             break;

@@ -9,7 +9,7 @@ export default function CommandBox({ onRun, running, onCancel }) {
 
   const submit = () => {
     if (!text.trim()) return;
-    onRun({ command: text.trim(), pipeline: 'ideas' });
+    onRun({ command: text.trim(), pipeline: 'auto' });
     setText('');
   };
 
@@ -43,7 +43,7 @@ export default function CommandBox({ onRun, running, onCancel }) {
           placeholder={
             running
               ? 'พิมพ์คำสั่งใหม่เพื่อเริ่มต้นใหม่ทันที…'
-              : 'พิมพ์คำสั่งให้ป้อม (CIO)… เช่น วิเคราะห์ NVDA'
+              : 'ถามอะไรก็ได้… ราคา NVDA, อธิบาย P/E, น่าลงทุนอะไร'
           }
           rows={3}
           className="w-full resize-none rounded-lg bg-[#111] border border-[#242424] px-3 py-2 text-sm placeholder:text-neutral-600 focus:outline-none focus:border-[#4F8EF7]"
@@ -63,7 +63,7 @@ export default function CommandBox({ onRun, running, onCancel }) {
             disabled={!text.trim()}
             className="flex-1 rounded-lg bg-[#4F8EF7] text-black font-semibold text-sm py-2 disabled:opacity-30 hover:brightness-110 transition active:scale-95"
           >
-            {running ? '↺ เริ่มใหม่' : '▶ RUN PIPELINE'}
+            {running ? '↺ เริ่มใหม่' : '▶ RUN · AUTO'}
           </button>
         </div>
       </div>

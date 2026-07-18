@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { AGENTS, TEAM_COLORS, PIPELINE_STAGES } from '../agents.js';
 
 const WORKING_MSG = {
@@ -11,6 +12,7 @@ const WORKING_MSG = {
   kaew: 'กำลังร่าง action plan ตาม risk-return trade-off...',
   pom: 'กำลังสรุปผล investment committee และตัดสินใจขั้นสุดท้าย...',
   nat: 'กำลังจัดทำรายงาน CEO summary ฉบับสมบูรณ์...',
+  swift: 'กำลังตอบคำถาม...',
 };
 
 const TEAM_LABEL = {
@@ -105,7 +107,7 @@ function AgentModal({ agentKey, state, onClose }) {
 
   const tok = (usage?.input ?? 0) + (usage?.output ?? 0);
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
@@ -177,7 +179,8 @@ function AgentModal({ agentKey, state, onClose }) {
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -387,12 +390,12 @@ export default function PipelineView({ pipeline, agents, status }) {
           {groups.map(({ label, keys, color }, gi) => (
             <div key={label}>
               <div style={{ fontSize:'11px', letterSpacing:'.12em', fontWeight:700, color:`${color}60`, textTransform:'uppercase', marginBottom:'6px' }}>{label}</div>
-              <div style={{ display:'flex', gap:'8px' }}>
+              <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                 {keys.map((k, i) => {
                   const agent = AGENTS[k];
                   return (
                     <div key={k} style={{
-                      flex:1, display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'12px',
+                      flex:'1 1 120px', minWidth:0, display:'flex', alignItems:'center', gap:'10px', padding:'10px 12px', borderRadius:'12px',
                       background:`${color}08`, border:`1px solid ${color}20`,
                       animation:`agent-breath 3s ease-in-out ${(gi*2+i)*0.25}s infinite`,
                     }}>
@@ -431,7 +434,9 @@ export default function PipelineView({ pipeline, agents, status }) {
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
-        <div className="text-sm font-bold text-neutral-500 animate-pulse">กำลังเริ่ม pipeline…</div>
+        <div className="text-sm font-bold text-neutral-500 animate-pulse">
+          {pipeline === 'auto' ? '🤖 กำลังวิเคราะห์คำถาม…' : 'กำลังเริ่ม pipeline…'}
+        </div>
       </div>
     );
   }
@@ -477,7 +482,7 @@ export default function PipelineView({ pipeline, agents, status }) {
         return (
           <div key={i}>
             <SectionLabel>Stage {i + 1} · {teamLabel}</SectionLabel>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {stage.map((k) => (
                 <MainCard key={k} agentKey={k} state={agents[k]} onCardClick={openModal} />
               ))}

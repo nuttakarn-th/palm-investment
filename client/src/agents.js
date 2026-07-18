@@ -18,6 +18,7 @@ export const AGENTS = {
   lungchai: { key: 'lungchai', nickname: 'ลุงชาย', title: 'Portfolio Risk Manager', team: 'risk', avatar: 'lungchai.jpg', model: 'sonnet' },
   kaew: { key: 'kaew', nickname: 'แก้ว', title: 'Portfolio Strategist', team: 'strategy', avatar: 'kaew.jpg', model: 'sonnet' },
   nat: { key: 'nat', nickname: 'นัท', title: 'Report Presenter', team: 'presenter', avatar: 'nat.jpg', model: 'haiku' },
+  swift: { key: 'swift', nickname: 'ปิยะ', title: 'Quick Analyst', team: 'research', avatar: 'piya.jpg', model: 'haiku' },
 };
 
 export const PIPELINE_STAGES = {
@@ -25,10 +26,12 @@ export const PIPELINE_STAGES = {
   ideas: [['piya', 'min'], ['nem', 'ko'], ['kaew'], ['pom'], ['nat']],
   macro: [['piya'], ['pom'], ['nat']],
   risk:  [['rat'], ['lungchai'], ['pom'], ['nat']],
+  quick: [['swift']],
 };
 
 // group: 'general' = ไม่ต้องการข้อมูลพอร์ต | group: 'portfolio' = ต้องการข้อมูลพอร์ต
 export const PRESETS = [
+  { group: 'general',   icon: '💹', label: 'ราคาปัจจุบัน',      pipeline: 'quick', needsTicker: true, tickerPrompt: 'Ticker? เช่น NVDA, BTC-USD, PTT.BK, ^SPX', command: (t) => `ราคาปัจจุบันของ ${t} เท่าไหร่ และเปลี่ยนแปลงยังไงบ้าง` },
   { group: 'general',   icon: '💡', label: 'น่าลงทุนอะไรบ้าง',  pipeline: 'ideas', command: () => 'ช่วงนี้มีอะไรน่าลงทุนบ้างใน US / SET / Crypto ที่เหมาะกับโปรไฟล์ความเสี่ยงปานกลาง-ต่ำ' },
   { group: 'general',   icon: '📰', label: 'ข่าวตลาดวันนี้',     pipeline: 'macro', command: () => 'มีข่าวหรือแนวโน้มตลาดอะไรที่น่าห่วงหรือเป็นโอกาสบ้าง สรุปภาพ macro ให้หน่อย' },
   { group: 'general',   icon: '📊', label: 'วิเคราะห์หุ้น',      pipeline: 'ideas', needsTicker: true, command: (t) => `วิเคราะห์ ${t} แบบเต็มรูปแบบ ควรซื้อ ถือ หรือเลี่ยง?` },

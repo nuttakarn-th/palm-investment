@@ -10,6 +10,7 @@ import { ROLE_LIST } from './roles/index.js';
 import { store } from './store.js';
 import { notifyAll, sendEmail, sendTelegram } from './notify.js';
 import { startScheduler, runWeeklyReport } from './scheduler.js';
+import { scanAll, getStoredResults } from './patternScanner.js';
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
@@ -110,6 +111,42 @@ app.get('/api/market', requireAuth, async (req, res) => {
   res.json(result);
 });
 
+// ── Price history (Yahoo Finance OHLC) ───────────────────────────────────────
+
+const chartCache = new Map();
+const CHART_TTL = 30 * 60 * 1000;
+
+app.get('/api/chart/:ticker', requireAuth, async (req, res) => {
+  const { ticker } = req.params;
+  const period = ['1mo', '3mo', '6mo', '1y'].includes(req.query.period) ? req.query.period : '3mo';
+  const cacheKey = `${ticker}:${period}`;
+  const cached = chartCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < CHART_TTL) return res.json(cached.data);
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${period}&includePrePost=false`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; palm-investment/1.0)' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return res.status(r.status).json({ error: `Yahoo Finance ${r.status}` });
+    const data = await r.json();
+    const result = data?.chart?.result?.[0];
+    if (!result) return res.json({ timestamps: [], closes: [], currency: 'USD', symbol: ticker, currentPrice: null });
+    const quote = result.indicators?.quote?.[0] || {};
+    const payload = {
+      timestamps: result.timestamp || [],
+      closes: quote.close || [],
+      currency: result.meta?.currency || 'USD',
+      symbol: result.meta?.symbol || ticker,
+      currentPrice: result.meta?.regularMarketPrice || null,
+    };
+    chartCache.set(cacheKey, { data: payload, ts: Date.now() });
+    res.json(payload);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ---- meta ----------------------------------------------------------------
 
 app.get('/api/health', (_req, res) => {
@@ -156,7 +193,8 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY ยังไม่ได้ตั้งค่าใน .env' });
   }
-  if (!PIPELINES[pipeline]) return res.status(400).json({ error: `unknown pipeline: ${pipeline}` });
+  // 'auto' is a special routing mode resolved inside runPipeline — allow it through
+  if (pipeline !== 'auto' && !PIPELINES[pipeline]) return res.status(400).json({ error: `unknown pipeline: ${pipeline}` });
 
   // Cancel any existing run before starting a new one
   if (memRun?.status === 'running') {
@@ -168,7 +206,8 @@ app.post('/api/pipeline/run', requireAuth, async (req, res) => {
   }
 
   const runId = `run_${Date.now().toString(36)}`;
-  const stages = PIPELINES[pipeline] || PIPELINES.full;
+  // For 'auto', use full pipeline stages as placeholder until classifyQuery resolves
+  const stages = PIPELINES[pipeline] ?? PIPELINES.full;
   const initialAgents = Object.fromEntries(
     stages.flat().map((k) => [k, { status: 'pending' }])
   );
@@ -296,6 +335,41 @@ app.post('/api/weekly/run', requireAuth, async (_req, res) => {
   }
 });
 
+// ── Pattern scanner ───────────────────────────────────────────────────────────
+
+// Build a telegram sender that sends raw text (not a full report object)
+async function patternTelegramFn(text) {
+  const settings = await store.getSettings();
+  const token  = settings.telegramBotToken  || process.env.TELEGRAM_BOT_TOKEN  || '';
+  const chatId = settings.telegramChatId    || process.env.TELEGRAM_CHAT_ID    || '';
+  if (!token || !chatId) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
+    signal: AbortSignal.timeout(8000),
+  });
+}
+
+// GET  /api/patterns — return latest stored results
+app.get('/api/patterns', requireAuth, (_req, res) => {
+  res.json(getStoredResults());
+});
+
+// POST /api/patterns/scan — trigger a manual scan (includes user portfolio tickers)
+app.post('/api/patterns/scan', requireAuth, async (req, res) => {
+  const { portfolio = [] } = req.body || {};
+  const extraTickers = portfolio
+    .filter(item => item.ticker)
+    .map(item => ({ ticker: item.ticker.toUpperCase(), market: item.market || 'us' }));
+  try {
+    const result = await scanAll({ telegramFn: patternTelegramFn, extraTickers });
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ---- Vercel Cron — GET /api/cron/weekly (Sunday 08:00 Asia/Bangkok) --------
 
 app.get('/api/cron/weekly', async (req, res) => {
@@ -310,6 +384,25 @@ app.get('/api/cron/weekly', async (req, res) => {
     }
     const { report, notified } = await runWeeklyReport();
     res.json({ ok: true, reportId: report.id, notified });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ---- Vercel Cron — GET /api/cron/patterns (every hour) ---------------------
+
+app.get('/api/cron/patterns', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const portfolio = await store.getPortfolio();
+    const extraTickers = (portfolio || [])
+      .filter(item => item.ticker)
+      .map(item => ({ ticker: item.ticker.toUpperCase(), market: item.market || 'us' }));
+    const result = await scanAll({ telegramFn: patternTelegramFn, extraTickers });
+    res.json({ ok: true, ...result });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

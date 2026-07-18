@@ -3,13 +3,17 @@
   "outputDirectory": "client/dist",
   "functions": {
     "api/index.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   },
   "crons": [
     {
       "path": "/api/cron/weekly",
       "schedule": "0 1 * * 0"
+    },
+    {
+      "path": "/api/cron/patterns",
+      "schedule": "0 * * * *"
     }
   ],
   "rewrites": [

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { pnl } from '../hooks/usePortfolio.js';
 
-const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', currentPrice: '', buyDate: '', note: '' };
+const EMPTY = { ticker: '', market: 'us', amount: '', buyPrice: '', targetPrice: '', stopLoss: '', currentPrice: '', buyDate: '', note: '' };
 const MARKET_LABEL = { us: 'US', set: 'SET', crypto: 'CRYPTO' };
 
 function LiveBadge({ loading, lastUpdate }) {
@@ -35,8 +35,6 @@ export default function PortfolioPanel({ portfolio, marketData }) {
     rows: items.filter((x) => x.market === m),
   }));
 
-  // Aggregate totals: current_value = invested * (livePrice / buyPrice)
-  // Works across currencies because we're scaling the THB investment by the price ratio
   const totals = items.reduce(
     (acc, item) => {
       const invested = parseFloat(item.amount) || 0;
@@ -135,7 +133,7 @@ export default function PortfolioPanel({ portfolio, marketData }) {
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center justify-between rounded px-2 py-1.5 hover:bg-[#141414] text-xs"
+                  className="flex items-center justify-between rounded px-2 py-1.5 hover:bg-[#141414] text-xs"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -153,22 +151,22 @@ export default function PortfolioPanel({ portfolio, marketData }) {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center gap-3 ml-2">
                     {p !== null && (
-                      <span className={`font-medium ${p >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`font-medium tabular-nums ${p >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {p >= 0 ? '+' : ''}{p.toFixed(1)}%
                       </span>
                     )}
                     <button
                       onClick={() => { setDraft({ ...EMPTY, ...item }); setEditingId(item.id); }}
-                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-white"
+                      className="text-neutral-600 hover:text-white active:text-white transition-colors text-sm leading-none"
                       title="แก้ไข"
                     >
                       ✎
                     </button>
                     <button
                       onClick={() => remove(item.id)}
-                      className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400"
+                      className="text-neutral-600 hover:text-red-400 active:text-red-400 transition-colors text-sm leading-none"
                       title="ลบ"
                     >
                       ×
@@ -209,14 +207,30 @@ export default function PortfolioPanel({ portfolio, marketData }) {
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
           <input
-            placeholder="ราคาซื้อ"
+            placeholder="ราคาซื้อ (เข้า)"
             type="number"
             value={draft.buyPrice}
             onChange={(e) => setDraft({ ...draft, buyPrice: e.target.value })}
             className="w-full rounded bg-[#181818] border border-[#2a2a2a] px-2 py-1 focus:outline-none focus:border-[#4F8EF7]"
           />
+          <div className="flex gap-1.5">
+            <input
+              placeholder="ราคาออก / TP"
+              type="number"
+              value={draft.targetPrice}
+              onChange={(e) => setDraft({ ...draft, targetPrice: e.target.value })}
+              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#5fb87a]/40 px-2 py-1 focus:outline-none focus:border-[#5fb87a]"
+            />
+            <input
+              placeholder="Stop-Loss"
+              type="number"
+              value={draft.stopLoss}
+              onChange={(e) => setDraft({ ...draft, stopLoss: e.target.value })}
+              className="flex-1 min-w-0 rounded bg-[#181818] border border-[#d9695f]/40 px-2 py-1 focus:outline-none focus:border-[#d9695f]"
+            />
+          </div>
           <div className="text-[11px] text-neutral-600 px-1">
-            💡 ราคาปัจจุบันดึงอัตโนมัติจาก Yahoo Finance
+            💡 ราคาปัจจุบันดึงอัตโนมัติ · TP / SL แสดงเป็นเส้นในกราฟ
           </div>
           <input
             type="date"
