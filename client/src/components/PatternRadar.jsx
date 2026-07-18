@@ -195,24 +195,26 @@ export default function PatternRadar({ portfolio = [] }) {
   const countAB = all.filter(x => x.pattern.grade === 'A' || x.pattern.grade === 'B').length;
 
   return (
-    <div style={{
-      background: '#0a0a0c',
-      border: '1px solid #1a1a22',
+    <div id="pattern-radar" style={{
+      background: '#0c0c10',
+      border: '1px solid rgba(79,142,247,0.3)',
       borderRadius: 16,
       overflow: 'hidden',
+      boxShadow: '0 0 0 1px rgba(79,142,247,0.06), 0 2px 16px rgba(0,0,0,0.4)',
     }}>
       {/* Header */}
       <div
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '12px 16px',
-          borderBottom: collapsed ? 'none' : '1px solid #141418',
+          background: '#0f0f16',
+          borderBottom: collapsed ? 'none' : '1px solid #1e1e2a',
           cursor: 'pointer',
         }}
         onClick={() => setCollapsed(v => !v)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: '#6b6862', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: '#8b8b9a', textTransform: 'uppercase' }}>
             📡 Pattern Radar
           </span>
           {countAB > 0 && (
@@ -226,7 +228,7 @@ export default function PatternRadar({ portfolio = [] }) {
             </span>
           )}
           {data?.lastScan && (
-            <span style={{ fontSize: 10, color: '#333' }}>{fmtTime(data.lastScan)}</span>
+            <span style={{ fontSize: 10, color: '#444' }}>{fmtTime(data.lastScan)}</span>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -234,14 +236,17 @@ export default function PatternRadar({ portfolio = [] }) {
             onClick={e => { e.stopPropagation(); scan(); }}
             disabled={scanning}
             style={{
-              fontSize: 11, color: scanning ? '#444' : '#555',
-              background: 'transparent', border: '1px solid #222',
-              borderRadius: 6, padding: '3px 9px', cursor: scanning ? 'default' : 'pointer',
+              fontSize: 11,
+              color: scanning ? '#555' : '#7a9fd4',
+              background: scanning ? 'transparent' : 'rgba(79,142,247,0.08)',
+              border: `1px solid ${scanning ? '#252525' : 'rgba(79,142,247,0.3)'}`,
+              borderRadius: 6, padding: '3px 10px', cursor: scanning ? 'default' : 'pointer',
+              fontWeight: 600,
             }}
           >
             {scanning ? '⟳ กำลังสแกน…' : '↻ Scan'}
           </button>
-          <span style={{ fontSize: 12, color: '#333' }}>{collapsed ? '▼' : '▲'}</span>
+          <span style={{ fontSize: 12, color: '#555' }}>{collapsed ? '▼' : '▲'}</span>
         </div>
       </div>
 
@@ -289,8 +294,10 @@ export default function PatternRadar({ portfolio = [] }) {
 
           {/* Results */}
           {!data && (
-            <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#444' }}>
-              กด Scan เพื่อเริ่มตรวจหา pattern
+            <div style={{ textAlign: 'center', padding: '28px 0' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📡</div>
+              <div style={{ fontSize: 13, color: '#8b8b9a', marginBottom: 4 }}>กด <strong style={{ color: '#7a9fd4' }}>↻ Scan</strong> เพื่อเริ่มตรวจหา Pattern</div>
+              <div style={{ fontSize: 11, color: '#444' }}>สแกน US · SET · Crypto — ใช้เวลา ~20 วินาที</div>
             </div>
           )}
           {data && !scanning && filtered.length === 0 && (
