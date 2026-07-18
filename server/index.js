@@ -10,6 +10,7 @@ import { ROLE_LIST } from './roles/index.js';
 import { store } from './store.js';
 import { notifyAll, sendEmail, sendTelegram } from './notify.js';
 import { startScheduler, runWeeklyReport } from './scheduler.js';
+import { scanAll, getStoredResults } from './patternScanner.js';
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
@@ -334,6 +335,41 @@ app.post('/api/weekly/run', requireAuth, async (_req, res) => {
   }
 });
 
+// ── Pattern scanner ───────────────────────────────────────────────────────────
+
+// Build a telegram sender that sends raw text (not a full report object)
+async function patternTelegramFn(text) {
+  const settings = await store.getSettings();
+  const token  = settings.telegramBotToken  || process.env.TELEGRAM_BOT_TOKEN  || '';
+  const chatId = settings.telegramChatId    || process.env.TELEGRAM_CHAT_ID    || '';
+  if (!token || !chatId) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
+    signal: AbortSignal.timeout(8000),
+  });
+}
+
+// GET  /api/patterns — return latest stored results
+app.get('/api/patterns', requireAuth, (_req, res) => {
+  res.json(getStoredResults());
+});
+
+// POST /api/patterns/scan — trigger a manual scan (includes user portfolio tickers)
+app.post('/api/patterns/scan', requireAuth, async (req, res) => {
+  const { portfolio = [] } = req.body || {};
+  const extraTickers = portfolio
+    .filter(item => item.ticker)
+    .map(item => ({ ticker: item.ticker.toUpperCase(), market: item.market || 'us' }));
+  try {
+    const result = await scanAll({ telegramFn: patternTelegramFn, extraTickers });
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ---- Vercel Cron — GET /api/cron/weekly (Sunday 08:00 Asia/Bangkok) --------
 
 app.get('/api/cron/weekly', async (req, res) => {
@@ -348,6 +384,25 @@ app.get('/api/cron/weekly', async (req, res) => {
     }
     const { report, notified } = await runWeeklyReport();
     res.json({ ok: true, reportId: report.id, notified });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ---- Vercel Cron — GET /api/cron/patterns (every hour) ---------------------
+
+app.get('/api/cron/patterns', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const portfolio = await store.getPortfolio();
+    const extraTickers = (portfolio || [])
+      .filter(item => item.ticker)
+      .map(item => ({ ticker: item.ticker.toUpperCase(), market: item.market || 'us' }));
+    const result = await scanAll({ telegramFn: patternTelegramFn, extraTickers });
+    res.json({ ok: true, ...result });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

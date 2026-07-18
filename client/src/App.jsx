@@ -12,6 +12,7 @@ import CommandBox from './components/CommandBox.jsx';
 import PipelineView from './components/PipelineView.jsx';
 import PortfolioPanel from './components/PortfolioPanel.jsx';
 import CEOSummary from './components/CEOSummary.jsx';
+import PatternRadar from './components/PatternRadar.jsx';
 import ReportHistory from './components/ReportHistory.jsx';
 import ReportModal from './components/ReportModal.jsx';
 import Settings from './components/Settings.jsx';
@@ -354,6 +355,9 @@ function AppPage() {
               </button>
             </div>
           )}
+
+          {/* Pattern Radar — always visible */}
+          <PatternRadar portfolio={portfolio.items} />
 
           <div ref={summaryRef}>
             {pipe.status === 'done' && (
