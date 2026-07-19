@@ -124,8 +124,8 @@ function AppPage() {
         }
       `}</style>
       {/* HEADER */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#1a1a1a] bg-[#080808]/90 backdrop-blur px-4 py-3">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 flex items-center border-b border-[#1a1a1a] bg-[#080808]/90 backdrop-blur px-4 py-3 gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {/* Hamburger — mobile only */}
           <button
             onClick={() => setSidebarOpen(true)}
@@ -151,7 +151,37 @@ function AppPage() {
             Mission Control
           </span>
         </div>
-        <div className="flex items-center gap-2 text-[11px]">
+
+        {/* Pattern Radar — center pill, always visible */}
+        <button
+          onClick={() => {
+            setSidebarOpen(false);
+            const el = document.getElementById('pattern-radar');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              el.style.transition = 'box-shadow 0.3s';
+              el.style.boxShadow = '0 0 0 2px rgba(79,142,247,0.7), 0 0 40px rgba(79,142,247,0.25)';
+              setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+            }
+          }}
+          style={{
+            flex: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '6px 12px',
+            background: 'rgba(79,142,247,0.08)',
+            border: '1px solid rgba(79,142,247,0.3)',
+            borderRadius: 8,
+            cursor: 'pointer',
+            minWidth: 0,
+            maxWidth: 180,
+            margin: '0 auto',
+          }}
+        >
+          <span style={{ fontSize: 14 }}>📡</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#7a9fd4', whiteSpace: 'nowrap' }}>Pattern Radar</span>
+        </button>
+
+        <div className="flex items-center gap-2 text-[11px] shrink-0">
           <span
             className={
               running
@@ -175,21 +205,6 @@ function AppPage() {
           {health && !health.hasApiKey && (
             <span className="text-red-400" title="ตั้ง ANTHROPIC_API_KEY ใน .env">⚠ NO KEY</span>
           )}
-          <button
-            onClick={() => {
-              const el = document.getElementById('pattern-radar');
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                el.style.transition = 'box-shadow 0.3s';
-                el.style.boxShadow = '0 0 0 2px rgba(79,142,247,0.6), 0 0 32px rgba(79,142,247,0.2)';
-                setTimeout(() => { el.style.boxShadow = ''; }, 1800);
-              }
-            }}
-            className="inline-flex items-center gap-1 rounded border border-[#2a2a3a] px-2 py-1 text-[#7a9fd4] hover:text-white hover:border-[#4F8EF7] hover:bg-[rgba(79,142,247,0.08)] transition"
-            title="Pattern Radar"
-          >
-            📡 <span className="hidden sm:inline">Radar</span>
-          </button>
           <button
             onClick={() => navigate('/team')}
             className="hidden sm:inline-flex rounded border border-[#242424] px-2 py-1 text-neutral-400 hover:text-white hover:border-neutral-500 transition"
