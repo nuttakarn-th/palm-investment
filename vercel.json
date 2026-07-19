@@ -13,7 +13,7 @@
     },
     {
       "path": "/api/cron/patterns",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     }
   ],
   "rewrites": [
