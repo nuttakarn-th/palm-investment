@@ -176,6 +176,21 @@ function AppPage() {
             <span className="text-red-400" title="ตั้ง ANTHROPIC_API_KEY ใน .env">⚠ NO KEY</span>
           )}
           <button
+            onClick={() => {
+              const el = document.getElementById('pattern-radar');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.style.transition = 'box-shadow 0.3s';
+                el.style.boxShadow = '0 0 0 2px rgba(79,142,247,0.6), 0 0 32px rgba(79,142,247,0.2)';
+                setTimeout(() => { el.style.boxShadow = ''; }, 1800);
+              }
+            }}
+            className="inline-flex items-center gap-1 rounded border border-[#2a2a3a] px-2 py-1 text-[#7a9fd4] hover:text-white hover:border-[#4F8EF7] hover:bg-[rgba(79,142,247,0.08)] transition"
+            title="Pattern Radar"
+          >
+            📡 <span className="hidden sm:inline">Radar</span>
+          </button>
+          <button
             onClick={() => navigate('/team')}
             className="hidden sm:inline-flex rounded border border-[#242424] px-2 py-1 text-neutral-400 hover:text-white hover:border-neutral-500 transition"
           >
