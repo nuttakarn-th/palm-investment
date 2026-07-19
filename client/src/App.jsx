@@ -252,6 +252,40 @@ function AppPage() {
           </div>
           <PortfolioPanel portfolio={portfolio} marketData={marketData} />
           <CommandBox onRun={onRun} running={running} onCancel={pipe.cancel} />
+
+          {/* Pattern Radar shortcut — mobile */}
+          <button
+            onClick={() => {
+              setSidebarOpen(false);
+              setTimeout(() => {
+                const el = document.getElementById('pattern-radar');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  el.style.transition = 'box-shadow 0.3s';
+                  el.style.boxShadow = '0 0 0 2px rgba(79,142,247,0.7), 0 0 40px rgba(79,142,247,0.25)';
+                  setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+                }
+              }, 350);
+            }}
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px',
+              background: 'rgba(79,142,247,0.07)',
+              border: '1px solid rgba(79,142,247,0.25)',
+              borderRadius: 10,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: 18 }}>📡</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#7a9fd4' }}>Pattern Radar</div>
+              <div style={{ fontSize: 10, color: '#444' }}>สแกนหา chart pattern — US · SET · Crypto</div>
+            </div>
+            <span style={{ marginLeft: 'auto', fontSize: 11, color: '#3a5a7a' }}>→</span>
+          </button>
+
           <ReportHistory reports={history.reports} onOpen={setOpenReport} />
         </aside>
 
