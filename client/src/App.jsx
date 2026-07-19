@@ -292,6 +292,9 @@ function AppPage() {
         {/* MAIN */}
         <main className="flex-1 p-4 lg:p-6 space-y-6 overflow-x-hidden min-w-0"
           style={{ backgroundImage:'radial-gradient(circle,#141414 1px,transparent 1px)', backgroundSize:'28px 28px' }}>
+          {/* Pattern Radar — top of main, always visible */}
+          <PatternRadar portfolio={portfolio.items} />
+
           <PipelineView pipeline={pipe.pipeline} agents={pipe.agents} status={pipe.status} />
 
           {/* Mission briefing — shown when idle */}
@@ -404,9 +407,6 @@ function AppPage() {
               </button>
             </div>
           )}
-
-          {/* Pattern Radar — always visible */}
-          <PatternRadar portfolio={portfolio.items} />
 
           <div ref={summaryRef}>
             {pipe.status === 'done' && (
