@@ -224,8 +224,8 @@ function StockInfoModal({ ticker, market, onClose }) {
   const fmtNum = (v, dec = 2) => v != null ? v.toFixed(dec) : '—';
 
   return createPortal(
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '88dvh', background: '#0f0f1a', borderRadius: '16px 16px 0 0', border: '1px solid #1e1e30', borderBottom: 'none', overflowY: 'auto' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '85dvh', background: '#0f0f1a', borderRadius: 16, border: '1px solid #1e1e30', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#0f0f1a', borderBottom: '1px solid #1e1e2a' }}>
           <div>

@@ -127,52 +127,71 @@ app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
   const cached = infoCache.get(sym);
   if (cached && Date.now() - cached.ts < INFO_TTL) return res.json(cached.data);
 
+  const YH = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', Accept: 'application/json', 'Accept-Language': 'en-US,en;q=0.9' };
+
+  // Step 1: always fetch chart endpoint (known to work) for basic info
+  let baseData = { name: sym, symbol: sym, currency: 'USD', currentPrice: null, week52High: null, week52Low: null };
+  try {
+    const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1mo`;
+    const cr = await fetch(chartUrl, { headers: YH, signal: AbortSignal.timeout(8000) });
+    if (cr.ok) {
+      const cd = await cr.json();
+      const meta = cd?.chart?.result?.[0]?.meta || {};
+      baseData = {
+        name:         meta.longName || meta.shortName || sym,
+        symbol:       sym,
+        currency:     meta.currency || 'USD',
+        currentPrice: meta.regularMarketPrice || null,
+        week52High:   meta.fiftyTwoWeekHigh || null,
+        week52Low:    meta.fiftyTwoWeekLow  || null,
+        exchangeName: meta.exchangeName || null,
+        sector:       null, industry: null, description: null,
+        marketCap:    null, pe: null, forwardPE: null, eps: null,
+        revenueGrowth: null, grossMargins: null, debtToEquity: null,
+        returnOnEquity: null, employees: null, website: null, country: null,
+      };
+    }
+  } catch {}
+
+  // Step 2: try quoteSummary for fundamental data (may fail — that's ok)
   try {
     const modules = 'summaryProfile,defaultKeyStatistics,financialData,price';
-    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&corsDomain=finance.yahoo.com&formatted=false`;
-    const r = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; palm-investment/1.0)', Accept: 'application/json' },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!r.ok) return res.status(r.status).json({ error: `Yahoo ${r.status}` });
-    const json = await r.json();
-    const q = json?.quoteSummary?.result?.[0];
-    if (!q) return res.json({ name: sym, error: 'no data' });
+    const qsUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&formatted=false&lang=en-US&region=US`;
+    const qr = await fetch(qsUrl, { headers: YH, signal: AbortSignal.timeout(8000) });
+    if (qr.ok) {
+      const qj = await qr.json();
+      const q = qj?.quoteSummary?.result?.[0];
+      if (q) {
+        const price = q.price || {};
+        const profile = q.summaryProfile || {};
+        const stats = q.defaultKeyStatistics || {};
+        const fin = q.financialData || {};
+        baseData = {
+          ...baseData,
+          name:          price.longName || price.shortName || baseData.name,
+          sector:        profile.sector || null,
+          industry:      profile.industry || null,
+          description:   profile.longBusinessSummary || null,
+          marketCap:     price.marketCap || null,
+          pe:            stats.trailingPE || null,
+          forwardPE:     stats.forwardPE || null,
+          eps:           stats.trailingEps || null,
+          week52High:    stats.fiftyTwoWeekHigh || baseData.week52High,
+          week52Low:     stats.fiftyTwoWeekLow  || baseData.week52Low,
+          revenueGrowth: fin.revenueGrowth || null,
+          grossMargins:  fin.grossMargins  || null,
+          debtToEquity:  fin.debtToEquity  || null,
+          returnOnEquity: fin.returnOnEquity || null,
+          employees:     profile.fullTimeEmployees || null,
+          website:       profile.website || null,
+          country:       profile.country || null,
+        };
+      }
+    }
+  } catch {}
 
-    const price = q.price || {};
-    const profile = q.summaryProfile || {};
-    const stats = q.defaultKeyStatistics || {};
-    const fin = q.financialData || {};
-
-    const data = {
-      name:         price.longName || price.shortName || sym,
-      symbol:       sym,
-      sector:       profile.sector || null,
-      industry:     profile.industry || null,
-      description:  profile.longBusinessSummary || null,
-      marketCap:    price.marketCap || null,
-      currency:     price.currency || 'USD',
-      currentPrice: price.regularMarketPrice || null,
-      change:       price.regularMarketChangePercent || null,
-      pe:           stats.trailingPE || fin.currentRatio || null,
-      forwardPE:    stats.forwardPE || null,
-      eps:          stats.trailingEps || null,
-      week52High:   stats.fiftyTwoWeekHigh || price['52WeekHigh'] || null,
-      week52Low:    stats.fiftyTwoWeekLow  || price['52WeekLow']  || null,
-      revenueGrowth: fin.revenueGrowth || null,
-      grossMargins:  fin.grossMargins  || null,
-      debtToEquity:  fin.debtToEquity  || null,
-      returnOnEquity: fin.returnOnEquity || null,
-      employees:    profile.fullTimeEmployees || null,
-      website:      profile.website || null,
-      country:      profile.country || null,
-    };
-
-    infoCache.set(sym, { data, ts: Date.now() });
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  infoCache.set(sym, { data: baseData, ts: Date.now() });
+  res.json(baseData);
 });
 
 // ── Price history (Yahoo Finance OHLC) ───────────────────────────────────────
