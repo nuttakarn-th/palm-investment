@@ -111,6 +111,70 @@ app.get('/api/market', requireAuth, async (req, res) => {
   res.json(result);
 });
 
+// ── Stock info (Yahoo Finance quoteSummary) ──────────────────────────────────
+
+const infoCache = new Map();
+const INFO_TTL  = 60 * 60 * 1000; // 1 hour
+
+app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
+  const rawTicker = req.params.ticker;
+  const market    = (req.query.market || 'us').toLowerCase();
+
+  let sym = rawTicker.toUpperCase();
+  if (market === 'set') sym = `${sym}.BK`;
+  if (market === 'crypto') sym = `${sym}-USD`;
+
+  const cached = infoCache.get(sym);
+  if (cached && Date.now() - cached.ts < INFO_TTL) return res.json(cached.data);
+
+  try {
+    const modules = 'summaryProfile,defaultKeyStatistics,financialData,price';
+    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&corsDomain=finance.yahoo.com&formatted=false`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; palm-investment/1.0)', Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return res.status(r.status).json({ error: `Yahoo ${r.status}` });
+    const json = await r.json();
+    const q = json?.quoteSummary?.result?.[0];
+    if (!q) return res.json({ name: sym, error: 'no data' });
+
+    const price = q.price || {};
+    const profile = q.summaryProfile || {};
+    const stats = q.defaultKeyStatistics || {};
+    const fin = q.financialData || {};
+
+    const data = {
+      name:         price.longName || price.shortName || sym,
+      symbol:       sym,
+      sector:       profile.sector || null,
+      industry:     profile.industry || null,
+      description:  profile.longBusinessSummary || null,
+      marketCap:    price.marketCap || null,
+      currency:     price.currency || 'USD',
+      currentPrice: price.regularMarketPrice || null,
+      change:       price.regularMarketChangePercent || null,
+      pe:           stats.trailingPE || fin.currentRatio || null,
+      forwardPE:    stats.forwardPE || null,
+      eps:          stats.trailingEps || null,
+      week52High:   stats.fiftyTwoWeekHigh || price['52WeekHigh'] || null,
+      week52Low:    stats.fiftyTwoWeekLow  || price['52WeekLow']  || null,
+      revenueGrowth: fin.revenueGrowth || null,
+      grossMargins:  fin.grossMargins  || null,
+      debtToEquity:  fin.debtToEquity  || null,
+      returnOnEquity: fin.returnOnEquity || null,
+      employees:    profile.fullTimeEmployees || null,
+      website:      profile.website || null,
+      country:      profile.country || null,
+    };
+
+    infoCache.set(sym, { data, ts: Date.now() });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Price history (Yahoo Finance OHLC) ───────────────────────────────────────
 
 const chartCache = new Map();

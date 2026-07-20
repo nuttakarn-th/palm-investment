@@ -202,14 +202,118 @@ function ScoreBar({ score }) {
   );
 }
 
+function StockInfoModal({ ticker, market, onClose }) {
+  const [info, setInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/stock-info/${encodeURIComponent(ticker)}?market=${market}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setInfo(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [ticker, market]);
+
+  const fmtCap = (v) => {
+    if (!v) return '—';
+    if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+    if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`;
+    if (v >= 1e6)  return `$${(v / 1e6).toFixed(1)}M`;
+    return `$${v.toLocaleString()}`;
+  };
+  const fmtPct = (v) => v != null ? `${(v * 100).toFixed(1)}%` : '—';
+  const fmtNum = (v, dec = 2) => v != null ? v.toFixed(dec) : '—';
+
+  return createPortal(
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '88dvh', background: '#0f0f1a', borderRadius: '16px 16px 0 0', border: '1px solid #1e1e30', borderBottom: 'none', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#0f0f1a', borderBottom: '1px solid #1e1e2a' }}>
+          <div>
+            <span style={{ fontSize: 15, fontWeight: 800, color: '#e2e2f0' }}>{ticker}</span>
+            {info?.name && info.name !== ticker && (
+              <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 8 }}>{info.name}</span>
+            )}
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '16px 18px 32px' }}>
+          {loading && <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: '#555' }}>กำลังโหลดข้อมูล…</div>}
+
+          {!loading && !info && <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: '#555' }}>ไม่พบข้อมูล</div>}
+
+          {!loading && info && (<>
+            {/* Sector / Industry */}
+            {(info.sector || info.industry) && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                {info.sector && <span style={{ fontSize: 11, fontWeight: 600, background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.25)', borderRadius: 99, padding: '2px 10px', color: '#4F8EF7' }}>{info.sector}</span>}
+                {info.industry && <span style={{ fontSize: 11, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 99, padding: '2px 10px', color: '#6b7280' }}>{info.industry}</span>}
+                {info.country && <span style={{ fontSize: 11, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 99, padding: '2px 10px', color: '#6b7280' }}>🌍 {info.country}</span>}
+              </div>
+            )}
+
+            {/* Description */}
+            {info.description && (
+              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.7, marginBottom: 16, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 10, padding: '12px 14px' }}>
+                {info.description.length > 400 ? info.description.slice(0, 400) + '…' : info.description}
+              </div>
+            )}
+
+            {/* Key stats grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+              {[
+                ['Market Cap', fmtCap(info.marketCap)],
+                ['PE (Trailing)', fmtNum(info.pe)],
+                ['PE (Forward)', fmtNum(info.forwardPE)],
+                ['EPS', fmtNum(info.eps)],
+                ['52w High', info.week52High ? `${info.currency === 'THB' ? '฿' : '$'}${fmtNum(info.week52High)}` : '—'],
+                ['52w Low',  info.week52Low  ? `${info.currency === 'THB' ? '฿' : '$'}${fmtNum(info.week52Low)}` : '—'],
+                ['Revenue Growth', fmtPct(info.revenueGrowth)],
+                ['Gross Margin',   fmtPct(info.grossMargins)],
+                ['Return on Equity', fmtPct(info.returnOnEquity)],
+                ['Debt/Equity', fmtNum(info.debtToEquity)],
+              ].map(([label, value]) => (
+                <div key={label} style={{ background: '#13131f', border: '1px solid #1e1e30', borderRadius: 8, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, color: '#555', marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#e2e2f0', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {info.website && (
+              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 8 }}>🔗 {info.website}</div>
+            )}
+            {info.employees && (
+              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4 }}>👥 {info.employees.toLocaleString()} พนักงาน</div>
+            )}
+          </>)}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 function PatternCard({ item, pattern }) {
   const [expanded, setExpanded] = useState(false);
+  const [showInfo, setShowInfo]   = useState(false);
+  const [name, setName]           = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/stock-info/${encodeURIComponent(item.ticker)}?market=${item.market}`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.name && d.name !== item.ticker) setName(d.name); })
+      .catch(() => {});
+  }, [item.ticker, item.market]);
+
   const meta = PATTERN_META[pattern.pattern] || { icon: '◈', color: '#8a8780', desc: pattern.label };
   const gc   = GRADE_COLOR[pattern.grade] || '#555';
   const gb   = GRADE_BG[pattern.grade]    || 'transparent';
   const isBearish = pattern.bias === 'bearish';
 
   return (
+    <>
+    {showInfo && <StockInfoModal ticker={item.ticker} market={item.market} onClose={() => setShowInfo(false)} />}
     <div style={{
       background: '#0f0f11',
       border: `1px solid ${isBearish ? 'rgba(217,105,95,0.2)' : 'rgba(95,184,122,0.18)'}`,
@@ -218,18 +322,30 @@ function PatternCard({ item, pattern }) {
       transition: 'border-color 0.2s',
     }}>
       <div style={{ padding: '12px 14px' }}>
-        {/* Row 1: ticker + grade + pattern name */}
+        {/* Row 1: ticker + name + grade + pattern name */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#e8e6e1', letterSpacing: 0.5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#e8e6e1', letterSpacing: 0.5, flexShrink: 0 }}>
               {item.ticker}
             </span>
-            <span style={{ fontSize: 10, color: '#555', background: '#1a1a1a', borderRadius: 4, padding: '1px 5px' }}>
+            <span style={{ fontSize: 10, color: '#555', background: '#1a1a1a', borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>
               {MARKET_LABEL[item.market] || item.market}
             </span>
-            <span style={{ fontSize: 11, color: isBearish ? '#d9695f' : '#5fb87a' }}>
+            <span style={{ fontSize: 11, color: isBearish ? '#d9695f' : '#5fb87a', flexShrink: 0 }}>
               {isBearish ? '▼' : '▲'}
             </span>
+            {name && (
+              <span style={{ fontSize: 10, color: '#4b5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                {name}
+              </span>
+            )}
+            <button
+              onClick={e => { e.stopPropagation(); setShowInfo(true); }}
+              title="ข้อมูลพื้นฐาน"
+              style={{ flexShrink: 0, width: 18, height: 18, borderRadius: '50%', border: '1px solid #2a2a32', background: 'transparent', color: '#3a3a4a', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+            >
+              i
+            </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{
@@ -323,6 +439,7 @@ function PatternCard({ item, pattern }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
