@@ -231,7 +231,7 @@ function PatternCard({ item, pattern }) {
               {isBearish ? '▼' : '▲'}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{
               fontSize: 10, fontWeight: 700, color: gc,
               background: gb, borderRadius: 5, padding: '2px 7px',
@@ -242,6 +242,21 @@ function PatternCard({ item, pattern }) {
             <span style={{ fontSize: 11, color: meta.color, fontWeight: 600 }}>
               {meta.icon} {pattern.label}
             </span>
+            {pattern.entry != null && pattern.tp != null && pattern.sl != null && (() => {
+              const up = ((pattern.tp - pattern.entry) / pattern.entry * 100).toFixed(1);
+              const dn = Math.abs((pattern.sl - pattern.entry) / pattern.entry * 100).toFixed(1);
+              const rr = dn > 0 ? (parseFloat(up) / parseFloat(dn)).toFixed(1) : null;
+              return rr ? (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, color: '#FCD34D',
+                  background: 'rgba(252,211,77,0.08)', borderRadius: 4,
+                  padding: '1px 6px', border: '1px solid rgba(252,211,77,0.2)',
+                  whiteSpace: 'nowrap',
+                }}>
+                  R:R 1:{rr}
+                </span>
+              ) : null;
+            })()}
           </div>
         </div>
 

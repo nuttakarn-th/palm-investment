@@ -240,10 +240,42 @@ export default function MiniChart({ ticker, market = 'us', entry = null, tp = nu
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           {entry && <StatCard label="ราคาเข้า" value={fmt(entry, currency)} color="#4F8EF7" />}
           {live != null && <StatCard label="ปัจจุบัน" value={fmt(live, currency)} color={pct != null ? (pct >= 0 ? '#5fb87a' : '#d9695f') : '#f5f3ee'} />}
-          {tp && <StatCard label="ราคาออก / TP" value={fmt(tp, currency)} color="#5fb87a" />}
-          {sl && <StatCard label="Stop-Loss" value={fmt(sl, currency)} color="#d9695f" />}
+          {tp && (
+            <StatCard
+              label="ราคาออก / TP"
+              value={fmt(tp, currency)}
+              color="#5fb87a"
+              sub={entry ? `+${(((tp - entry) / entry) * 100).toFixed(1)}%` : null}
+              subColor="#5fb87a"
+            />
+          )}
+          {sl && (
+            <StatCard
+              label="Stop-Loss"
+              value={fmt(sl, currency)}
+              color="#d9695f"
+              sub={entry ? `${(((sl - entry) / entry) * 100).toFixed(1)}%` : null}
+              subColor="#d9695f"
+            />
+          )}
         </div>
       )}
+
+      {/* R:R summary row */}
+      {entry && tp && sl && (() => {
+        const upside  = ((tp - entry) / entry) * 100;
+        const downside = Math.abs((sl - entry) / entry * 100);
+        const rr = downside > 0 ? (upside / downside).toFixed(2) : null;
+        return (
+          <div style={{ display: 'flex', gap: 10, marginTop: 8, padding: '7px 10px', background: '#111113', border: '1px solid #2a2a2e', borderRadius: 8, fontSize: 11 }}>
+            <span style={{ color: '#555' }}>Risk : Reward</span>
+            <span style={{ color: '#5fb87a' }}>▲ +{upside.toFixed(1)}%</span>
+            <span style={{ color: '#555' }}>·</span>
+            <span style={{ color: '#d9695f' }}>▼ -{downside.toFixed(1)}%</span>
+            {rr && <><span style={{ color: '#555' }}>·</span><span style={{ color: '#FCD34D', fontWeight: 700 }}>R:R 1 : {rr}</span></>}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -257,11 +289,12 @@ function LegendItem({ color, label }) {
   );
 }
 
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, color, sub, subColor }) {
   return (
     <div style={{ flex: 1, background: '#111113', border: '1px solid #2a2a2e', borderRadius: 10, padding: '10px 12px' }}>
       <div style={{ fontSize: 10, color: '#555', marginBottom: 3 }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 600, color }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, fontWeight: 700, color: subColor || color, marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
