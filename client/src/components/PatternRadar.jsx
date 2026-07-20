@@ -202,6 +202,22 @@ function ScoreBar({ score }) {
   );
 }
 
+// Split Thai text at a safe word boundary (space or sentence end) before maxChars
+function splitAtBoundary(text, maxChars = 240) {
+  if (!text || text.length <= maxChars) return { preview: text, rest: null };
+  let cut = maxChars;
+  while (cut > maxChars * 0.55) {
+    const c = text[cut];
+    if (c === '\n') { cut++; break; }
+    if ((c === '.' || c === '!' || c === '?') && text[cut + 1] === ' ') { cut++; break; }
+    if (c === ' ') break;
+    cut--;
+  }
+  const preview = text.slice(0, cut).trimEnd();
+  const rest = text.slice(cut).trimStart();
+  return { preview, rest: rest.length > 10 ? rest : null };
+}
+
 function StockInfoModal({ ticker, market, onClose }) {
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -256,29 +272,26 @@ function StockInfoModal({ ticker, market, onClose }) {
               </div>
             )}
 
-            {/* Description (Thai summary first, expandable English full text) */}
-            {(info.descriptionTh || info.description) && (
-              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.8, marginBottom: 16, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 10, padding: '12px 14px' }}>
-                <div style={{ color: '#c4c4d4', marginBottom: info.description && !descExpanded ? 8 : 0 }}>
-                  {info.descriptionTh || info.description}
-                </div>
-                {info.description && (
-                  <div>
-                    {descExpanded && (
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #1e1e30', color: '#6b7280', fontSize: 11, lineHeight: 1.7 }}>
-                        {info.description}
-                      </div>
-                    )}
+            {/* Description (Thai) with sentence-safe expand */}
+            {(info.descriptionTh || info.description) && (() => {
+              const thText = info.descriptionTh || info.description;
+              const { preview, rest } = splitAtBoundary(thText, 240);
+              return (
+                <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.8, marginBottom: 16, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ color: '#c4c4d4' }}>
+                    {descExpanded ? thText : preview}
+                  </div>
+                  {rest && (
                     <button
                       onClick={() => setDescExpanded(p => !p)}
-                      style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#4F8EF7', cursor: 'pointer', textDecoration: 'underline' }}
+                      style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#4F8EF7', cursor: 'pointer', textDecoration: 'underline' }}
                     >
-                      {descExpanded ? 'ย่อลง' : 'ดูข้อมูลเต็ม (EN)'}
+                      {descExpanded ? 'ย่อลง' : 'ดูเพิ่มเติม'}
                     </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Key stats grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>

@@ -239,15 +239,15 @@ app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
     }
   } catch {}
 
-  // Step 3: summarize description in Thai via Claude Haiku (cached with rest of data)
+  // Step 3: translate full description to Thai via Claude Haiku (cached with rest of data)
   if (baseData.description) {
     try {
       const msg = await _ai.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        max_tokens: 900,
         messages: [{
           role: 'user',
-          content: `สรุปธุรกิจบริษัทต่อไปนี้เป็นภาษาไทย 2-3 ประโยค กระชับ ครบถ้วน ห้ามตัดกลางประโยค ไม่ใส่คำนำหรือคำลงท้ายพิเศษ:\n\n${baseData.description.slice(0, 1500)}`,
+          content: `แปลข้อมูลบริษัทต่อไปนี้เป็นภาษาไทยทั้งหมด ให้ครบทุกประโยค สมบูรณ์ ไม่ตัดกลางประโยค ไม่ใส่คำนำหรือคำลงท้ายพิเศษ:\n\n${baseData.description.slice(0, 2000)}`,
         }],
       });
       baseData.descriptionTh = msg.content[0]?.text?.trim() || null;
