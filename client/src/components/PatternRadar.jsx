@@ -197,7 +197,7 @@ function ScoreBar({ score }) {
       <div style={{ flex: 1, height: 3, background: '#1e1e1e', borderRadius: 2 }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
       </div>
-      <span style={{ fontSize: 10, color: '#555', minWidth: 26, textAlign: 'right' }}>{pct}</span>
+      <span style={{ fontSize: 10, color: '#555', minWidth: 28, textAlign: 'right' }}>{Math.round(pct)}</span>
     </div>
   );
 }
@@ -668,7 +668,7 @@ export default function PatternRadar({ portfolio = [] }) {
               <div style={{ fontSize: 10, color: '#333', marginBottom: 10 }}>
                 พบ {filtered.length} setups · เรียงตาม score
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 520px), 1fr))', gap: 8 }}>
                 {filtered.map(({ ticker, market, pattern }, i) => (
                   <PatternCard
                     key={`${ticker}-${pattern.pattern}-${i}`}
