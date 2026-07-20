@@ -5,12 +5,15 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import Anthropic from '@anthropic-ai/sdk';
 import { runPipeline, PIPELINES } from './pipeline.js';
 import { ROLE_LIST } from './roles/index.js';
 import { store } from './store.js';
 import { notifyAll, sendEmail, sendTelegram } from './notify.js';
 import { startScheduler, runWeeklyReport } from './scheduler.js';
 import { scanAll, getStoredResults } from './patternScanner.js';
+
+const _ai = new Anthropic();
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
@@ -235,6 +238,21 @@ app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
       _yhCrumb = null;
     }
   } catch {}
+
+  // Step 3: summarize description in Thai via Claude Haiku (cached with rest of data)
+  if (baseData.description) {
+    try {
+      const msg = await _ai.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `สรุปธุรกิจบริษัทต่อไปนี้เป็นภาษาไทย 2-3 ประโยค กระชับ ครบถ้วน ห้ามตัดกลางประโยค ไม่ใส่คำนำหรือคำลงท้ายพิเศษ:\n\n${baseData.description.slice(0, 1500)}`,
+        }],
+      });
+      baseData.descriptionTh = msg.content[0]?.text?.trim() || null;
+    } catch { baseData.descriptionTh = null; }
+  }
 
   infoCache.set(sym, { data: baseData, ts: Date.now() });
   res.json(baseData);

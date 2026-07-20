@@ -205,6 +205,7 @@ function ScoreBar({ score }) {
 function StockInfoModal({ ticker, market, onClose }) {
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
     fetch(`/api/stock-info/${encodeURIComponent(ticker)}?market=${market}`, { credentials: 'include' })
@@ -213,19 +214,22 @@ function StockInfoModal({ ticker, market, onClose }) {
       .catch(() => setLoading(false));
   }, [ticker, market]);
 
+  const prefix = info?.currency === 'THB' ? '฿' : '$';
   const fmtCap = (v) => {
     if (!v) return '—';
-    if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
-    if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`;
-    if (v >= 1e6)  return `$${(v / 1e6).toFixed(1)}M`;
-    return `$${v.toLocaleString()}`;
+    if (v >= 1e12) return `${prefix}${(v / 1e12).toFixed(2)}T`;
+    if (v >= 1e9)  return `${prefix}${(v / 1e9).toFixed(1)}B`;
+    if (v >= 1e6)  return `${prefix}${(v / 1e6).toFixed(1)}M`;
+    return `${prefix}${v.toLocaleString()}`;
   };
   const fmtPct = (v) => v != null ? `${(v * 100).toFixed(1)}%` : '—';
-  const fmtNum = (v, dec = 2) => v != null ? v.toFixed(dec) : '—';
+  const fmtNum = (v, dec = 2) => v != null ? Number(v).toFixed(dec) : '—';
+  const fmtPrice = (v) => v != null ? `${prefix}${fmtNum(v)}` : '—';
 
   return createPortal(
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '85dvh', background: '#0f0f1a', borderRadius: 16, border: '1px solid #1e1e30', overflowY: 'auto' }}>
+
         {/* Header */}
         <div style={{ position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#0f0f1a', borderBottom: '1px solid #1e1e2a' }}>
           <div>
@@ -239,39 +243,56 @@ function StockInfoModal({ ticker, market, onClose }) {
 
         <div style={{ padding: '16px 18px 32px' }}>
           {loading && <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: '#555' }}>กำลังโหลดข้อมูล…</div>}
-
           {!loading && !info && <div style={{ textAlign: 'center', padding: '40px 0', fontSize: 13, color: '#555' }}>ไม่พบข้อมูล</div>}
 
           {!loading && info && (<>
-            {/* Sector / Industry */}
-            {(info.sector || info.industry) && (
+
+            {/* Sector / Industry chips */}
+            {(info.sector || info.industry || info.country) && (
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-                {info.sector && <span style={{ fontSize: 11, fontWeight: 600, background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.25)', borderRadius: 99, padding: '2px 10px', color: '#4F8EF7' }}>{info.sector}</span>}
+                {info.sector   && <span style={{ fontSize: 11, fontWeight: 600, background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.25)', borderRadius: 99, padding: '2px 10px', color: '#4F8EF7' }}>{info.sector}</span>}
                 {info.industry && <span style={{ fontSize: 11, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 99, padding: '2px 10px', color: '#6b7280' }}>{info.industry}</span>}
-                {info.country && <span style={{ fontSize: 11, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 99, padding: '2px 10px', color: '#6b7280' }}>🌍 {info.country}</span>}
+                {info.country  && <span style={{ fontSize: 11, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 99, padding: '2px 10px', color: '#6b7280' }}>🌍 {info.country}</span>}
               </div>
             )}
 
-            {/* Description */}
-            {info.description && (
-              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.7, marginBottom: 16, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 10, padding: '12px 14px' }}>
-                {info.description.length > 400 ? info.description.slice(0, 400) + '…' : info.description}
+            {/* Description (Thai summary first, expandable English full text) */}
+            {(info.descriptionTh || info.description) && (
+              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.8, marginBottom: 16, background: '#13131f', border: '1px solid #1e1e30', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ color: '#c4c4d4', marginBottom: info.description && !descExpanded ? 8 : 0 }}>
+                  {info.descriptionTh || info.description}
+                </div>
+                {info.description && (
+                  <div>
+                    {descExpanded && (
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #1e1e30', color: '#6b7280', fontSize: 11, lineHeight: 1.7 }}>
+                        {info.description}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setDescExpanded(p => !p)}
+                      style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#4F8EF7', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      {descExpanded ? 'ย่อลง' : 'ดูข้อมูลเต็ม (EN)'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Key stats grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
               {[
-                ['Market Cap', fmtCap(info.marketCap)],
-                ['PE (Trailing)', fmtNum(info.pe)],
-                ['PE (Forward)', fmtNum(info.forwardPE)],
-                ['EPS', fmtNum(info.eps)],
-                ['52w High', info.week52High ? `${info.currency === 'THB' ? '฿' : '$'}${fmtNum(info.week52High)}` : '—'],
-                ['52w Low',  info.week52Low  ? `${info.currency === 'THB' ? '฿' : '$'}${fmtNum(info.week52Low)}` : '—'],
-                ['Revenue Growth', fmtPct(info.revenueGrowth)],
-                ['Gross Margin',   fmtPct(info.grossMargins)],
-                ['Return on Equity', fmtPct(info.returnOnEquity)],
-                ['Debt/Equity', fmtNum(info.debtToEquity)],
+                ['มูลค่าตลาด',          fmtCap(info.marketCap)],
+                ['P/E (ย้อนหลัง)',      fmtNum(info.pe)],
+                ['P/E (คาดการณ์)',      fmtNum(info.forwardPE)],
+                ['EPS (กำไรต่อหุ้น)',  fmtNum(info.eps)],
+                ['สูงสุด 52 สัปดาห์',  fmtPrice(info.week52High)],
+                ['ต่ำสุด 52 สัปดาห์',  fmtPrice(info.week52Low)],
+                ['การเติบโตรายได้',     fmtPct(info.revenueGrowth)],
+                ['อัตรากำไรขั้นต้น',   fmtPct(info.grossMargins)],
+                ['ROE',                  fmtPct(info.returnOnEquity)],
+                ['D/E Ratio',            fmtNum(info.debtToEquity)],
               ].map(([label, value]) => (
                 <div key={label} style={{ background: '#13131f', border: '1px solid #1e1e30', borderRadius: 8, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10, color: '#555', marginBottom: 3 }}>{label}</div>
@@ -280,11 +301,16 @@ function StockInfoModal({ ticker, market, onClose }) {
               ))}
             </div>
 
-            {info.website && (
-              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 8 }}>🔗 {info.website}</div>
-            )}
-            {info.employees && (
-              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4 }}>👥 {info.employees.toLocaleString()} พนักงาน</div>
+            {/* Footer info */}
+            {(info.employees || info.website) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {info.employees && (
+                  <div style={{ fontSize: 11, color: '#4b5563' }}>👥 {info.employees.toLocaleString()} พนักงาน</div>
+                )}
+                {info.website && (
+                  <div style={{ fontSize: 11, color: '#4b5563' }}>🔗 {info.website}</div>
+                )}
+              </div>
             )}
           </>)}
         </div>
