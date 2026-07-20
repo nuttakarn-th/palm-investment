@@ -111,10 +111,43 @@ app.get('/api/market', requireAuth, async (req, res) => {
   res.json(result);
 });
 
+// ── Yahoo Finance crumb manager ──────────────────────────────────────────────
+
+let _yhCrumb = null; // { crumb, cookie, ts }
+const CRUMB_TTL = 90 * 60 * 1000;
+
+async function getYahooCrumb() {
+  if (_yhCrumb && Date.now() - _yhCrumb.ts < CRUMB_TTL) return _yhCrumb;
+  try {
+    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    const r1 = await fetch('https://fc.yahoo.com', {
+      headers: { 'User-Agent': UA },
+      signal: AbortSignal.timeout(6000),
+      redirect: 'follow',
+    });
+    const rawCookies = r1.headers.getSetCookie
+      ? r1.headers.getSetCookie().join('; ')
+      : (r1.headers.get('set-cookie') || '');
+    const r2 = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
+      headers: { 'User-Agent': UA, Cookie: rawCookies, Accept: '*/*' },
+      signal: AbortSignal.timeout(6000),
+    });
+    const crumb = (await r2.text()).trim();
+    if (r2.ok && crumb && !crumb.startsWith('{') && !crumb.startsWith('<')) {
+      _yhCrumb = { crumb, cookie: rawCookies, ts: Date.now() };
+      return _yhCrumb;
+    }
+  } catch {}
+  return null;
+}
+
 // ── Stock info (Yahoo Finance quoteSummary) ──────────────────────────────────
 
 const infoCache = new Map();
 const INFO_TTL  = 60 * 60 * 1000; // 1 hour
+
+// Yahoo Finance may return values as plain numbers OR as { raw, fmt } objects
+const getRaw = v => (v != null && typeof v === 'object' && v.raw != null) ? v.raw : (v ?? null);
 
 app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
   const rawTicker = req.params.ticker;
@@ -127,7 +160,11 @@ app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
   const cached = infoCache.get(sym);
   if (cached && Date.now() - cached.ts < INFO_TTL) return res.json(cached.data);
 
-  const YH = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', Accept: 'application/json', 'Accept-Language': 'en-US,en;q=0.9' };
+  const YH = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept: 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
 
   // Step 1: always fetch chart endpoint (known to work) for basic info
   let baseData = { name: sym, symbol: sym, currency: 'USD', currentPrice: null, week52High: null, week52Low: null };
@@ -153,40 +190,49 @@ app.get('/api/stock-info/:ticker', requireAuth, async (req, res) => {
     }
   } catch {}
 
-  // Step 2: try quoteSummary for fundamental data (may fail — that's ok)
+  // Step 2: quoteSummary with crumb auth for fundamental data
   try {
+    const crumbInfo = await getYahooCrumb();
     const modules = 'summaryProfile,defaultKeyStatistics,financialData,price';
-    const qsUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&formatted=false&lang=en-US&region=US`;
-    const qr = await fetch(qsUrl, { headers: YH, signal: AbortSignal.timeout(8000) });
+    let qsUrl = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(sym)}?modules=${modules}&formatted=false&lang=en-US&region=US`;
+    const qHeaders = { ...YH };
+    if (crumbInfo) {
+      qsUrl += `&crumb=${encodeURIComponent(crumbInfo.crumb)}`;
+      qHeaders.Cookie = crumbInfo.cookie;
+    }
+    const qr = await fetch(qsUrl, { headers: qHeaders, signal: AbortSignal.timeout(8000) });
     if (qr.ok) {
       const qj = await qr.json();
       const q = qj?.quoteSummary?.result?.[0];
       if (q) {
-        const price = q.price || {};
+        const price   = q.price || {};
         const profile = q.summaryProfile || {};
-        const stats = q.defaultKeyStatistics || {};
-        const fin = q.financialData || {};
+        const stats   = q.defaultKeyStatistics || {};
+        const fin     = q.financialData || {};
         baseData = {
           ...baseData,
-          name:          price.longName || price.shortName || baseData.name,
-          sector:        profile.sector || null,
-          industry:      profile.industry || null,
-          description:   profile.longBusinessSummary || null,
-          marketCap:     price.marketCap || null,
-          pe:            stats.trailingPE || null,
-          forwardPE:     stats.forwardPE || null,
-          eps:           stats.trailingEps || null,
-          week52High:    stats.fiftyTwoWeekHigh || baseData.week52High,
-          week52Low:     stats.fiftyTwoWeekLow  || baseData.week52Low,
-          revenueGrowth: fin.revenueGrowth || null,
-          grossMargins:  fin.grossMargins  || null,
-          debtToEquity:  fin.debtToEquity  || null,
-          returnOnEquity: fin.returnOnEquity || null,
-          employees:     profile.fullTimeEmployees || null,
-          website:       profile.website || null,
-          country:       profile.country || null,
+          name:           price.longName || price.shortName || baseData.name,
+          sector:         profile.sector || null,
+          industry:       profile.industry || null,
+          description:    profile.longBusinessSummary || null,
+          marketCap:      getRaw(price.marketCap),
+          pe:             getRaw(stats.trailingPE),
+          forwardPE:      getRaw(stats.forwardPE),
+          eps:            getRaw(stats.trailingEps),
+          week52High:     getRaw(stats.fiftyTwoWeekHigh) || baseData.week52High,
+          week52Low:      getRaw(stats.fiftyTwoWeekLow)  || baseData.week52Low,
+          revenueGrowth:  getRaw(fin.revenueGrowth),
+          grossMargins:   getRaw(fin.grossMargins),
+          debtToEquity:   getRaw(fin.debtToEquity),
+          returnOnEquity: getRaw(fin.returnOnEquity),
+          employees:      profile.fullTimeEmployees || null,
+          website:        profile.website || null,
+          country:        profile.country || null,
         };
       }
+    } else if (qr.status === 401) {
+      // Crumb expired — invalidate so next request re-fetches
+      _yhCrumb = null;
     }
   } catch {}
 
